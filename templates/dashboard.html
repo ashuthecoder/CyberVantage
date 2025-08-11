@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: 20px;">
+
+    <a href="{{ url_for('page_one') }}" style="text-decoration: none; color: inherit;">
+        <div style="background: lightblue; padding: 50px; text-align: center; font-size: 1.5em; border-radius: 8px; cursor: pointer;">
+            Section 1 — Go to Page One
+        </div>
+    </a>
+
+    <a href="{{ url_for('page_two') }}" style="text-decoration: none; color: inherit;">
+        <div style="background: lightgray; padding: 50px; text-align: center; font-size: 1.5em; border-radius: 8px; cursor: pointer;">
+            Section 2 — Go to Page Two
+        </div>
+    </a>
+
+    <a href="{{ url_for('page_three') }}" style="text-decoration: none; color: inherit;">
+        <div style="background: lightgreen; padding: 50px; text-align: center; font-size: 1.5em; border-radius: 8px; cursor: pointer;">
+            Section 3 — Go to Page Three
+        </div>
+    </a>
+
+</div>
+{% endblock %}
