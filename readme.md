@@ -60,12 +60,3 @@ The project is divided into **four phases**:
 
 **Database:**
 - PostgreSQL / MySQL / SQLite (configurable)
-
----
-
-## 📦 Installation
-
-1. **Clone the Repository**
-```bash
-git clone https://github.com/yourusername/cybervantage.git
-cd cybervantage
