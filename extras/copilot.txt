@@ -1,0 +1,67 @@
+# CyberVantage Project Spec
+
+We are building "CyberVantage", a Flask-based web platform to teach school students about spam emails and basic cyber safety.
+
+## Functional Requirements
+
+### User Authentication
+- JWT-based login & registration (no flask-login)
+- Password hashing with bcrypt
+- Email validation on registration
+- Input sanitization for all form fields
+- Store user data in encrypted database (AES-256 using cryptography)
+
+### Learning Phase
+- Serve PPT slides (static files)
+- Multiple-choice quizzes (MCQs) with correct/incorrect feedback
+- Track quiz scores in user profile
+
+### Simulation Phase
+**Part 1:**
+- AI (Google Gemini API) generates safe and spam emails
+- Students classify each email as "Safe" or "Spam"
+- Log their answers for analysis
+
+**Part 2:**
+- AI-generated spam emails contain clickable hyperlinks
+- When clicked, links route through a safe tracking endpoint
+- Server logs link clicks under the user's encrypted profile
+
+### Analysis Phase
+- Show performance report (accuracy, mistakes)
+- Personalized learning path based on errors
+- Visualizations using Plotly/Matplotlib
+
+### Final Assignment
+- User creates a fake spam email
+- Gemini API rates it on a 1–10 scale with feedback
+- Store rating and feedback in user profile
+
+## Non-Functional Requirements
+- Simple UI (HTML, CSS, JavaScript, Jinja2 templates)
+- Backend in Flask
+- ORM: SQLAlchemy + Alembic for migrations
+- Use `google-generativeai` to call Gemini
+- Environment variables from `.env` (python-dotenv)
+- Data visualizations in Plotly/Matplotlib
+- All sensitive fields stored encrypted
+- Database: SQLite/PostgreSQL (configurable)
+
+## Required Libraries
+flask, jinja2, flask-cors, werkzeug  
+pyjwt, passlib, bcrypt, email-validator, bleach, cryptography, zxcvbn  
+google-generativeai, numpy, pandas, scikit-learn, torch, transformers  
+sqlalchemy, flask-sqlalchemy, alembic  
+python-dotenv, tqdm  
+matplotlib, seaborn, plotly  
+beautifulsoup4, lxml, requests
+
+## Output Expectations from Copilot
+- Generate Flask routes for each phase
+- JWT auth middleware
+- Functions to hash passwords, validate emails, encrypt/decrypt data
+- API integration with Gemini for email generation & scoring
+- MCQ quiz logic with persistent results
+- Click tracking endpoint for simulation links
+- Performance analysis and visualization code
+- Clean HTML templates with Jinja2 for all pages
