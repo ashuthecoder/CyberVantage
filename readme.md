@@ -41,6 +41,15 @@ The project is divided into **four phases**:
 - All clickable links in simulation are routed through a safe server-side handler.
 
 ---
+### 🔒 Authentication & Security
+- **JWT-based authentication** (pyjwt) for stateless logins.
+- **Bcrypt** password hashing with salt.
+- **CSRF protection** via Flask-WTF (csrf_token in all forms).
+- **Email validation** using `email-validator`.
+- **HTML sanitization** using `bleach` for any rich text input.
+- All database-stored sensitive info is encrypted with **AES-256** via `cryptography`.
+
+
 
 ## 🏗 Tech Stack
 

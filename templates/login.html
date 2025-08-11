@@ -1,16 +1,22 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login</title>
-</head>
-<body>
-    <h2>Login</h2>
-    <form method="POST">
-        <label>Username:</label>
-        <input type="text" name="username" required><br>
-        <label>Password:</label>
-        <input type="password" name="password" required><br>
-        <button type="submit">Login</button>
-    </form>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Login - CyberVantage{% endblock %}
+
+{% block content %}
+<h2>🔐 Login to CyberVantage</h2>
+<form method="POST" action="{{ url_for('login') }}" autocomplete="off" novalidate>
+    <!-- CSRF Token -->
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required
+           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+           autocomplete="username" placeholder="Enter your email">
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required minlength="8"
+           autocomplete="current-password" placeholder="Enter your password">
+
+    <button type="submit">Login</button>
+</form>
+<p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+{% endblock %}
