@@ -1,3 +1,4 @@
+import flask
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
@@ -48,7 +49,7 @@ class User(db.Model):
 # Routes
 @app.route('/')
 def welcome():
-    return render_template("base.html")
+    return render_template("welcome.html")
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
