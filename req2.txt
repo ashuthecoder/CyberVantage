@@ -1,0 +1,5 @@
+google-generativeai
+email-validator
+bleach
+cryptography
+zxcvbn
