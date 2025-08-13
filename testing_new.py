@@ -225,7 +225,7 @@ def generate_ai_email(user_name, previous_responses):
     
     try:
         # Generate the email
-        model = genai.GenerativeModel('gemini-1.5-pro', safety_settings=safety_settings)
+        model = genai.GenerativeModel('gemini-2.5-pro', safety_settings=safety_settings)
         response = model.generate_content(prompt)
         
         # Parse and structure the response
@@ -290,7 +290,7 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
     
     try:
         # Generate the evaluation
-        model = genai.GenerativeModel('gemini-1.5-pro')
+        model = genai.GenerativeModel('gemini-2.5-pro')
         response = model.generate_content(prompt)
         
         # Calculate a score (you might want to extract this from the AI response)
@@ -637,8 +637,17 @@ def restart_simulation(current_user):
     return redirect(url_for('simulate'))
 
 
-
 if __name__ == '__main__':
     with app.app_context():
+        # Temporary: Reset all simulation data (comment out after one use)
+        SimulationEmail.query.filter(SimulationEmail.id > 5).delete()
+        db.session.commit()
+        
+        # Create tables
         db.create_all()
     app.run(debug=True)
+
+# if __name__ == '__main__':
+#     with app.app_context():
+#         db.create_all()
+#     app.run(debug=True)
