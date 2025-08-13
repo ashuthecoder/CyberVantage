@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulation Results - CyberVantage</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">CyberVantage</div>
+            <ul>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('learn') }}">Learn</a></li>
+                <li><a href="{{ url_for('simulate') }}" class="active">Simulate</a></li>
+                <li><a href="{{ url_for('analysis') }}">Analysis</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="results-container">
+        <h1>Your Phishing Simulation Results</h1>
+        
+        <div class="results-summary">
+            <h2>Overall Performance</h2>
+            
+            <div class="phase-results">
+                <div class="phase">
+                    <h3>Phase 1: Basic Recognition</h3>
+                    <p>You correctly identified <span class="highlight">{{ phase1_correct }}</span> out of {{ phase1_total }} emails.</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ (phase1_correct / phase1_total) * 100 }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="phase">
+                    <h3>Phase 2: Advanced Analysis</h3>
+                    <p>You correctly identified <span class="highlight">{{ phase2_correct }}</span> out of {{ phase2_total }} emails.</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ (phase2_correct / phase2_total) * 100 }}%"></div>
+                    </div>
+                    <p>Average Analysis Score: <span class="highlight">{{ "%.1f"|format(avg_score) }}/10</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="detailed-results">
+            <h2>Detailed Analysis</h2>
+            
+            <div class="result-cards">
+                {% for response in responses if response.email_id > 5 %}
+                    <div class="result-card">
+                        <h3>Advanced Email #{{ response.email_id - 5 }}</h3>
+                        <p>Your Answer: <span class="{{ 'correct' if response.user_response == response.is_spam_actual else 'incorrect' }}">
+                            {{ "Correct" if response.user_response == response.is_spam_actual else "Incorrect" }}
+                        </span></p>
+                        <p>Analysis Score: {{ response.score }}/10</p>
+                        <a href="{{ url_for('simulation_feedback', email_id=response.email_id) }}" class="btn small">View Feedback</a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="actions">
+            <a href="{{ url_for('analysis') }}" class="btn primary">Go to Full Analysis</a>
+            <a href="{{ url_for('dashboard') }}" class="btn secondary">Back to Dashboard</a>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 CyberVantage. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Analysis Feedback - CyberVantage</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">CyberVantage</div>
+            <ul>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('learn') }}">Learn</a></li>
+                <li><a href="{{ url_for('simulate') }}" class="active">Simulate</a></li>
+                <li><a href="{{ url_for('analysis') }}">Analysis</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="feedback-container">
+        <h1>AI Feedback on Your Analysis</h1>
+        
+        <div class="result-summary">
+            <h2>Your Answer: {{ "Correct" if response.user_response == response.is_spam_actual else "Incorrect" }}</h2>
+            <p>You said this email {{ "is" if response.user_response else "is not" }} a phishing/spam email.</p>
+            <p>The correct answer is: This email {{ "is" if response.is_spam_actual else "is not" }} a phishing/spam email.</p>
+            
+            {% if response.score %}
+                <div class="score">
+                    <p>Your analysis score: <span class="highlight">{{ response.score }}/10</span></p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="ai-feedback">
+            <h3>AI Evaluation of Your Analysis:</h3>
+            <div class="feedback-content">
+                {{ response.ai_feedback|safe }}
+            </div>
+        </div>
+        
+        <div class="actions">
+            <a href="{{ url_for('simulate') }}" class="btn primary">Continue Simulation</a>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 CyberVantage. All rights reserved.</p>
+    </footer>
+</body>
+</html>
