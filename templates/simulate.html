@@ -62,7 +62,7 @@
                 <div class="progress">
                     <p>Email {{ current_email }} of 5</p>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: {{ (current_email / 5 * 100)|round(0, 'floor') }}%"></div>
+                        <div class="progress-fill" style="width: {{ (current_email / 5) * 100 }}%"></div>
                     </div>
                 </div>
             </div>

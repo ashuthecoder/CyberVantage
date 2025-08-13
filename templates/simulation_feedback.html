@@ -21,6 +21,10 @@
     </header>
 
     <main class="feedback-container">
+        <div class="actions">
+    <a href="{{ url_for('simulate') }}" class="btn primary">Continue Simulation</a>
+    <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart Simulation</a>
+</div>
         <h1>AI Feedback on Your Analysis</h1>
         
         <div class="result-summary">
@@ -52,3 +56,4 @@
     </footer>
 </body>
 </html>
+
