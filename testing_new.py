@@ -35,8 +35,15 @@ csrf = CSRFProtect(app)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
+    print(f"✓ API key loaded successfully: {GOOGLE_API_KEY[:4]}...{GOOGLE_API_KEY[-4:]}")
 else:
     print("Warning: GOOGLE_API_KEY not found. AI features will be limited.")
+
+# Check current date - warning for future dates
+current_time = datetime.datetime.now()
+if current_time.year > 2024:  # Adjust as needed
+    print(f"⚠️ WARNING: Your system date appears to be set to the future: {current_time}")
+    print("   This may cause issues with authentication tokens and cookies.")
 
 # Encryption key for sensitive DB fields
 ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", Fernet.generate_key())
@@ -215,18 +222,50 @@ def generate_ai_email(user_name, previous_responses):
     Make each email unique and different from the predefined examples.
     """
     
-    # Configure safety settings
-    safety_settings = {
-        HarmCategory.HARASSMENT: HarmBlockThreshold.MEDIUM_AND_ABOVE,
-        HarmCategory.HATE_SPEECH: HarmBlockThreshold.MEDIUM_AND_ABOVE,
-        HarmCategory.SEXUALLY_EXPLICIT: HarmBlockThreshold.MEDIUM_AND_ABOVE,
-        HarmCategory.DANGEROUS_CONTENT: HarmBlockThreshold.MEDIUM_AND_ABOVE,
-    }
+    # Use a safer approach for safety settings
+    try:
+        # Try to use safety settings if available in this version
+        safety_settings = {}
+        
+        # Check if HarmCategory has specific attributes and add them if they exist
+        harm_categories = dir(HarmCategory)
+        if 'HARM_CATEGORY_HARASSMENT' in harm_categories:
+            safety_settings[HarmCategory.HARM_CATEGORY_HARASSMENT] = HarmBlockThreshold.MEDIUM_AND_ABOVE
+        if 'HARM_CATEGORY_HATE_SPEECH' in harm_categories:
+            safety_settings[HarmCategory.HARM_CATEGORY_HATE_SPEECH] = HarmBlockThreshold.MEDIUM_AND_ABOVE
+        if 'HARM_CATEGORY_SEXUALLY_EXPLICIT' in harm_categories:
+            safety_settings[HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT] = HarmBlockThreshold.MEDIUM_AND_ABOVE
+        if 'HARM_CATEGORY_DANGEROUS_CONTENT' in harm_categories:
+            safety_settings[HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT] = HarmBlockThreshold.MEDIUM_AND_ABOVE
+            
+        # Alternate naming in some versions
+        if 'HARASSMENT' in harm_categories:
+            safety_settings[HarmCategory.HARASSMENT] = HarmBlockThreshold.MEDIUM_AND_ABOVE
+        if 'HATE_SPEECH' in harm_categories:
+            safety_settings[HarmCategory.HATE_SPEECH] = HarmBlockThreshold.MEDIUM_AND_ABOVE
+        if 'SEXUALLY_EXPLICIT' in harm_categories:
+            safety_settings[HarmCategory.SEXUALLY_EXPLICIT] = HarmBlockThreshold.MEDIUM_AND_ABOVE
+        if 'DANGEROUS_CONTENT' in harm_categories:
+            safety_settings[HarmCategory.DANGEROUS_CONTENT] = HarmBlockThreshold.MEDIUM_AND_ABOVE
+    except Exception as e:
+        print(f"Warning: Could not set up safety settings: {e}")
+        # Fall back to dictionary-style safety settings if enum approach fails
+        safety_settings = {
+            "HARM_CATEGORY_HARASSMENT": "BLOCK_MEDIUM_AND_ABOVE",
+            "HARM_CATEGORY_HATE_SPEECH": "BLOCK_MEDIUM_AND_ABOVE",
+            "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_MEDIUM_AND_ABOVE",
+            "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_MEDIUM_AND_ABOVE"
+        }
     
     try:
-        # Generate the email
-        model = genai.GenerativeModel('gemini-2.5-pro', safety_settings=safety_settings)
-        response = model.generate_content(prompt)
+        # Generate the email - try without safety settings if they cause problems
+        try:
+            model = genai.GenerativeModel('gemini-2.5-pro', safety_settings=safety_settings)
+            response = model.generate_content(prompt)
+        except Exception as safety_error:
+            print(f"Error with safety settings: {safety_error}. Trying without them.")
+            model = genai.GenerativeModel('gemini-2.5-pro')
+            response = model.generate_content(prompt)
         
         # Parse and structure the response
         content = response.text
@@ -245,16 +284,40 @@ def generate_ai_email(user_name, previous_responses):
             "is_spam": is_spam
         }
     except Exception as e:
+        print(f"Error generating AI email: {str(e)}")
+        # Check for rate limits
+        error_str = str(e)
+        if "429" in error_str or "quota" in error_str.lower() or "rate limit" in error_str.lower():
+            # Record rate limit for future calls
+            app.config['RATE_LIMITED'] = True
+            app.config['RATE_LIMIT_TIME'] = datetime.datetime.now().timestamp()
+            print(f"Rate limit detected: {error_str}")
+        
         # Fallback if parsing fails
         return {
             "sender": f"ai-generated-{random.randint(1, 1000)}@example.com",
             "subject": f"AI Generated Email #{random.randint(1, 100)}",
             "date": datetime.datetime.now().strftime("%B %d, %Y"),
-            "content": f"<p>This is a {random.choice(['legitimate', 'phishing'])} email generated for testing.</p>",
+            "content": f"<p>This is a {random.choice(['legitimate', 'phishing'])} email generated for testing.</p><p>Note: AI generation encountered an error: {str(e)[:100]}</p>",
             "is_spam": random.choice([True, False])
         }
 
 def evaluate_explanation(email_content, is_spam, user_response, user_explanation):
+    # Check for recent rate limit errors
+    rate_limited = app.config.get('RATE_LIMITED', False)
+    rate_limit_time = app.config.get('RATE_LIMIT_TIME', 0)
+    current_time = datetime.datetime.now().timestamp()
+    
+    # If we hit a rate limit in the last 10 minutes, use fallback
+    if rate_limited and (current_time - rate_limit_time < 600):
+        print(f"Using fallback due to recent rate limit ({int((current_time - rate_limit_time))} seconds ago)")
+        correct = user_response == is_spam
+        base_score = 8 if correct else 3
+        return {
+            "feedback": f"<p>The user's conclusion was {'correct' if correct else 'incorrect'}.</p><p>This is placeholder feedback because the Gemini API rate limit has been reached. Please try again in a few minutes.</p>",
+            "score": base_score
+        }
+    
     if not GOOGLE_API_KEY:
         # Fallback if API key is not configured
         correct = user_response == is_spam
@@ -315,6 +378,13 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
             "score": score
         }
     except Exception as e:
+        error_str = str(e)
+        if "429" in error_str or "quota" in error_str.lower() or "rate limit" in error_str.lower():
+            # Record rate limit for future calls
+            app.config['RATE_LIMITED'] = True
+            app.config['RATE_LIMIT_TIME'] = current_time
+            print(f"Rate limit detected: {error_str}")
+        
         # Fallback if AI fails
         correct = user_response == is_spam
         base_score = 8 if correct else 3
@@ -489,7 +559,8 @@ def simulate(current_user):
         phase=phase, 
         current_email=current_email_id, 
         email=email,
-        username=current_user.name
+        username=current_user.name,
+        api_key_available=bool(GOOGLE_API_KEY)  # Add this for template messages
     )
 
 @app.route('/submit_simulation', methods=['POST'])
@@ -628,6 +699,10 @@ def restart_simulation(current_user):
     session.pop('simulation_phase', None)
     session.pop('current_email_id', None)
     
+    # Reset rate limit tracking
+    app.config.pop('RATE_LIMITED', None)
+    app.config.pop('RATE_LIMIT_TIME', None)
+    
     # Optional: Delete previous simulation responses to start completely fresh
     # This will remove all prior responses for this user
     SimulationResponse.query.filter_by(user_id=current_user.id).delete()
@@ -636,18 +711,31 @@ def restart_simulation(current_user):
     # Redirect to simulation page to start over
     return redirect(url_for('simulate'))
 
+# Debug route to check environment and status
+@app.route('/debug')
+def debug_info():
+    # Only allow this in debug mode
+    if not app.debug:
+        return "Debug information only available when debug=True"
+    
+    info = {
+        "Environment Variables": {
+            "GOOGLE_API_KEY": f"{os.getenv('GOOGLE_API_KEY')[:4]}...{os.getenv('GOOGLE_API_KEY')[-4:]}" if os.getenv('GOOGLE_API_KEY') else "Not set",
+            "FLASK_SECRET": f"{os.getenv('FLASK_SECRET')[:4]}...{os.getenv('FLASK_SECRET')[-4:]}" if os.getenv('FLASK_SECRET') else "Using default",
+        },
+        "Session Data": {k: v for k, v in session.items() if k != 'token'},
+        "Database Tables": [table for table in db.metadata.tables.keys()],
+        "System Time": str(datetime.datetime.now()),
+        "API Status": {
+            "Rate Limited": app.config.get('RATE_LIMITED', False),
+            "Rate Limit Time": datetime.datetime.fromtimestamp(app.config.get('RATE_LIMIT_TIME', 0)).strftime('%Y-%m-%d %H:%M:%S') if app.config.get('RATE_LIMIT_TIME') else "N/A",
+            "HarmCategory Keys": [attr for attr in dir(HarmCategory) if not attr.startswith('_')],
+        }
+    }
+    
+    return jsonify(info)
 
 if __name__ == '__main__':
     with app.app_context():
-        # Temporary: Reset all simulation data (comment out after one use)
-        SimulationEmail.query.filter(SimulationEmail.id > 5).delete()
-        db.session.commit()
-        
-        # Create tables
         db.create_all()
     app.run(debug=True)
-
-# if __name__ == '__main__':
-#     with app.app_context():
-#         db.create_all()
-#     app.run(debug=True)
