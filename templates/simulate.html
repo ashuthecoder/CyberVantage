@@ -3,24 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Phishing Simulation - CyberVantage</title>
+    <title>CyberVantage - Simulation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+        }
+        header {
+            background-color: #2a3f54;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .back-btn {
+            color: white;
+            text-decoration: none;
+        }
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        .email-container {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 2rem 0;
+        }
+        .email-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        .progress {
+            margin-top: 2rem;
+        }
+        .progress-bar {
+            background: #eee;
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+        }
+        .progress-fill {
+            background: #3498db;
+            height: 100%;
+            border-radius: 5px;
+        }
+        .options {
+            margin: 1rem 0;
+        }
+        .options label {
+            margin-right: 2rem;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-block;
+            border: none;
+            margin-top: 1rem;
+        }
+        .primary {
+            background-color: #2a3f54;
+            color: white;
+        }
+        .secondary {
+            background-color: #7f8c8d;
+            color: white;
+            margin-left: 1rem;
+        }
+        textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .explanation {
+            margin-top: 1.5rem;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <nav>
-            <div class="logo">CyberVantage</div>
-            <ul>
-                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                <li><a href="{{ url_for('learn') }}">Learn</a></li>
-                <li><a href="{{ url_for('simulate') }}" class="active">Simulate</a></li>
-                <li><a href="{{ url_for('analysis') }}">Analysis</a></li>
-                <li><a href="{{ url_for('logout') }}">Logout</a></li>
-            </ul>
-        </nav>
+        <a href="{{ url_for('dashboard') }}" class="back-btn">← Back to Dashboard</a>
+        <div>
+            <span>Welcome, {{ username }}</span>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
     </header>
 
-    <main class="simulation-container">
+    <div class="container">
         <h1>Email Phishing Simulation</h1>
         
         {% if phase == 1 and current_email <= 5 %}
@@ -129,10 +216,8 @@
                 </div>
             </div>
         {% endif %}
-    </main>
+    </div>
 
-    <footer>
-        <p>&copy; 2025 CyberVantage. All rights reserved.</p>
-    </footer>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>

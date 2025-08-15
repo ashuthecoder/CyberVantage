@@ -1,5 +1,5 @@
 import flask
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -14,6 +14,9 @@ from functools import wraps
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 import random
+import markdown
+import re
+import traceback
 
 # Load environment variables
 load_dotenv()
@@ -31,7 +34,7 @@ app.config['WTF_CSRF_SECRET_KEY'] = os.getenv("CSRF_SECRET", "csrf_secret")
 db = SQLAlchemy(app)
 csrf = CSRFProtect(app)
 
-# Configure Google Generative AI (Gemini) - AFTER loading env vars
+# Configure Google Generative AI (Gemini)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
@@ -39,9 +42,9 @@ if GOOGLE_API_KEY:
 else:
     print("Warning: GOOGLE_API_KEY not found. AI features will be limited.")
 
-# Check current date - warning for future dates
+# Check current date
 current_time = datetime.datetime.now()
-if current_time.year > 2024:  # Adjust as needed
+if current_time.year > 2024:
     print(f"⚠️ WARNING: Your system date appears to be set to the future: {current_time}")
     print("   This may cause issues with authentication tokens and cookies.")
 
@@ -63,7 +66,6 @@ class User(db.Model):
     def check_password(self, password):
         return bcrypt.verify(password, self.password_hash)
 
-# Simulation Models - BEFORE app.run()
 class SimulationResponse(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -75,7 +77,6 @@ class SimulationResponse(db.Model):
     score = db.Column(db.Integer, nullable=True)  # Score given by AI (if applicable)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     
-    # Relationship with User
     user = db.relationship('User', backref=db.backref('simulation_responses', lazy=True))
 
 class SimulationEmail(db.Model):
@@ -88,7 +89,7 @@ class SimulationEmail(db.Model):
     is_predefined = db.Column(db.Boolean, nullable=False)  # Whether it's predefined or AI-generated
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-# Token required decorator for protected routes
+# Token required decorator
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -97,7 +98,6 @@ def token_required(f):
             return redirect(url_for('login'))
         
         try:
-            # Decode the token
             data = jwt.decode(token, app.config['JWT_SECRET_KEY'], algorithms=["HS256"])
             current_user = User.query.filter_by(id=data['user_id']).first()
             if not current_user:
@@ -190,19 +190,75 @@ predefined_emails = [
     }
 ]
 
-# Helper functions for AI email generation and evaluation
+# Template emails for when AI generation fails
+template_emails = [
+    {
+        "sender": "security@company-portal.net",
+        "subject": "Password Reset Required",
+        "content": """
+            <p>Dear User,</p>
+            <p>Our systems have detected that your password will expire in 24 hours.</p>
+            <p>To reset your password, please click the link below:</p>
+            <p><a href="https://company-portal.net/reset">Reset Password</a></p>
+            <p>IT Department</p>
+        """,
+        "is_spam": True
+    },
+    {
+        "sender": "newsletter@legitimate-news.com",
+        "subject": "Weekly Technology Update",
+        "content": """
+            <p>Hello subscriber,</p>
+            <p>This week's top tech stories:</p>
+            <ul>
+                <li>New advances in AI development</li>
+                <li>Tech company quarterly results</li>
+                <li>Upcoming product releases</li>
+            </ul>
+            <p>Read more on our <a href="https://legitimate-news.com">website</a>.</p>
+        """,
+        "is_spam": False
+    },
+    {
+        "sender": "support@cloud-storage.com",
+        "subject": "Action Required: Account Verification",
+        "content": """
+            <p>Dear Customer,</p>
+            <p>We've noticed unusual login attempts on your account.</p>
+            <p>To secure your account, please verify your identity by clicking the link below:</p>
+            <p><a href="https://verification.cloud-storage.com/verify">Verify Account</a></p>
+            <p>If you ignore this message, your account may be temporarily restricted.</p>
+            <p>Cloud Storage Security Team</p>
+        """,
+        "is_spam": True
+    },
+    {
+        "sender": "updates@spotify.com",
+        "subject": "Your Weekly Music Recommendations",
+        "content": """
+            <p>Hey music lover!</p>
+            <p>Based on your listening history, we think you might enjoy these tracks:</p>
+            <ul>
+                <li>"Summer Nights" by The Melodics</li>
+                <li>"Distant Dreams" by Skywave</li>
+                <li>"Rhythm & Soul" by Urban Collective</li>
+            </ul>
+            <p>Check out your personalized playlist on the Spotify app or <a href="https://spotify.com/recommendations">website</a>.</p>
+            <p>The Spotify Team</p>
+        """,
+        "is_spam": False
+    }
+]
+
 def generate_ai_email(user_name, previous_responses):
+    """Generate an AI email with robust error handling"""
+    print(f"[GENERATE] Starting email generation for user: {user_name}")
+    
     if not GOOGLE_API_KEY:
-        # Fallback if API key is not configured
-        return {
-            "sender": f"ai-generated-{random.randint(1, 1000)}@example.com",
-            "subject": f"AI Generated Email #{random.randint(1, 100)}",
-            "date": datetime.datetime.now().strftime("%B %d, %Y"),
-            "content": "<p>This is a placeholder email because the Gemini API is not configured.</p>",
-            "is_spam": random.choice([True, False])
-        }
-        
-    # Create a prompt based on user's performance
+        print("[GENERATE] No API key - using template email")
+        return get_template_email()
+    
+    # Create prompt
     prompt = f"""
     Generate a realistic phishing or legitimate email for a cybersecurity training simulation.
     
@@ -222,112 +278,127 @@ def generate_ai_email(user_name, previous_responses):
     Make each email unique and different from the predefined examples.
     """
     
-    # Use a safer approach for safety settings
     try:
-        # Try to use safety settings if available in this version
-        safety_settings = {}
+        # Generate the email with simpler configuration
+        model = genai.GenerativeModel('gemini-1.5-pro')
+        print("[GENERATE] Sending request to Gemini API")
+        response = model.generate_content(prompt)
         
-        # Check if HarmCategory has specific attributes and add them if they exist
-        harm_categories = dir(HarmCategory)
-        if 'HARM_CATEGORY_HARASSMENT' in harm_categories:
-            safety_settings[HarmCategory.HARM_CATEGORY_HARASSMENT] = HarmBlockThreshold.MEDIUM_AND_ABOVE
-        if 'HARM_CATEGORY_HATE_SPEECH' in harm_categories:
-            safety_settings[HarmCategory.HARM_CATEGORY_HATE_SPEECH] = HarmBlockThreshold.MEDIUM_AND_ABOVE
-        if 'HARM_CATEGORY_SEXUALLY_EXPLICIT' in harm_categories:
-            safety_settings[HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT] = HarmBlockThreshold.MEDIUM_AND_ABOVE
-        if 'HARM_CATEGORY_DANGEROUS_CONTENT' in harm_categories:
-            safety_settings[HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT] = HarmBlockThreshold.MEDIUM_AND_ABOVE
+        # Extract content from response
+        content = None
+        
+        # Try multiple approaches to extract text
+        if hasattr(response, 'text'):
+            content = response.text
+            print("[GENERATE] Successfully extracted text via .text property")
+        elif hasattr(response, 'parts') and response.parts:
+            content = response.parts[0].text
+            print("[GENERATE] Successfully extracted text via .parts[0].text")
+        elif hasattr(response, 'candidates') and response.candidates:
+            candidate = response.candidates[0]
+            if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                content = candidate.content.parts[0].text
+                print("[GENERATE] Successfully extracted text via candidates structure")
+        
+        # If we still don't have content, try string representation
+        if not content:
+            content = str(response)
+            print("[GENERATE] Using string representation as fallback")
             
-        # Alternate naming in some versions
-        if 'HARASSMENT' in harm_categories:
-            safety_settings[HarmCategory.HARASSMENT] = HarmBlockThreshold.MEDIUM_AND_ABOVE
-        if 'HATE_SPEECH' in harm_categories:
-            safety_settings[HarmCategory.HATE_SPEECH] = HarmBlockThreshold.MEDIUM_AND_ABOVE
-        if 'SEXUALLY_EXPLICIT' in harm_categories:
-            safety_settings[HarmCategory.SEXUALLY_EXPLICIT] = HarmBlockThreshold.MEDIUM_AND_ABOVE
-        if 'DANGEROUS_CONTENT' in harm_categories:
-            safety_settings[HarmCategory.DANGEROUS_CONTENT] = HarmBlockThreshold.MEDIUM_AND_ABOVE
-    except Exception as e:
-        print(f"Warning: Could not set up safety settings: {e}")
-        # Fall back to dictionary-style safety settings if enum approach fails
-        safety_settings = {
-            "HARM_CATEGORY_HARASSMENT": "BLOCK_MEDIUM_AND_ABOVE",
-            "HARM_CATEGORY_HATE_SPEECH": "BLOCK_MEDIUM_AND_ABOVE",
-            "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_MEDIUM_AND_ABOVE",
-            "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_MEDIUM_AND_ABOVE"
-        }
-    
-    try:
-        # Generate the email - try without safety settings if they cause problems
+        if not content:
+            print("[GENERATE] Failed to extract content from response")
+            return get_template_email()
+            
+        print(f"[GENERATE] Response content length: {len(content)}")
+        print(f"[GENERATE] First 100 chars: {content[:100]}")
+        
+        # Parse the email components with better error handling
         try:
-            model = genai.GenerativeModel('gemini-2.5-pro', safety_settings=safety_settings)
-            response = model.generate_content(prompt)
-        except Exception as safety_error:
-            print(f"Error with safety settings: {safety_error}. Trying without them.")
-            model = genai.GenerativeModel('gemini-2.5-pro')
-            response = model.generate_content(prompt)
-        
-        # Parse and structure the response
-        content = response.text
-        # Parse the AI response to extract email components
-        sender = content.split("Sender: ")[1].split("\n")[0].strip()
-        subject = content.split("Subject: ")[1].split("\n")[0].strip()
-        date = content.split("Date: ")[1].split("\n")[0].strip()
-        email_content = content.split("Content: ")[1].split("Is_spam:")[0].strip()
-        is_spam = "true" in content.split("Is_spam: ")[1].lower()
-        
-        return {
-            "sender": sender,
-            "subject": subject,
-            "date": date,
-            "content": email_content,
-            "is_spam": is_spam
-        }
+            if "Sender:" not in content or "Subject:" not in content:
+                print("[GENERATE] Missing expected fields in response")
+                return get_template_email()
+                
+            sender = content.split("Sender:")[1].split("\n")[0].strip()
+            subject = content.split("Subject:")[1].split("\n")[0].strip()
+            
+            # Get date with fallback
+            try:
+                date = content.split("Date:")[1].split("\n")[0].strip()
+            except:
+                date = datetime.datetime.now().strftime("%B %d, %Y")
+                
+            # Extract email content between Content: and Is_spam:
+            if "Content:" in content and "Is_spam:" in content:
+                email_content = content.split("Content:")[1].split("Is_spam:")[0].strip()
+            else:
+                print("[GENERATE] Could not extract email content properly")
+                email_content = f"<p>Training email content.</p><p>{content}</p>"
+            
+            # Determine if spam
+            try:
+                is_spam_section = content.split("Is_spam:")[1].lower().strip()
+                is_spam = "true" in is_spam_section or "yes" in is_spam_section
+            except:
+                is_spam = random.choice([True, False])
+            
+            # Ensure email_content is proper HTML
+            if not email_content.strip().startswith("<"):
+                email_content = f"<p>{email_content.replace('\n\n', '</p><p>').replace('\n', '<br>')}</p>"
+            
+            return {
+                "sender": sender,
+                "subject": subject,
+                "date": date,
+                "content": email_content,
+                "is_spam": is_spam
+            }
+        except Exception as parse_error:
+            print(f"[GENERATE] Error parsing response: {parse_error}")
+            traceback.print_exc()
+            return get_template_email()
     except Exception as e:
-        print(f"Error generating AI email: {str(e)}")
+        print(f"[GENERATE] Error in AI email generation: {e}")
+        traceback.print_exc()
+        
         # Check for rate limits
         error_str = str(e)
         if "429" in error_str or "quota" in error_str.lower() or "rate limit" in error_str.lower():
-            # Record rate limit for future calls
             app.config['RATE_LIMITED'] = True
             app.config['RATE_LIMIT_TIME'] = datetime.datetime.now().timestamp()
-            print(f"Rate limit detected: {error_str}")
+            print(f"[GENERATE] API rate limit detected: {error_str}")
         
-        # Fallback if parsing fails
-        return {
-            "sender": f"ai-generated-{random.randint(1, 1000)}@example.com",
-            "subject": f"AI Generated Email #{random.randint(1, 100)}",
-            "date": datetime.datetime.now().strftime("%B %d, %Y"),
-            "content": f"<p>This is a {random.choice(['legitimate', 'phishing'])} email generated for testing.</p><p>Note: AI generation encountered an error: {str(e)[:100]}</p>",
-            "is_spam": random.choice([True, False])
-        }
+        return get_template_email()
+
+def get_template_email():
+    """Return a random template email when AI generation fails"""
+    template = random.choice(template_emails)
+    return {
+        "sender": template["sender"],
+        "subject": template["subject"],
+        "date": datetime.datetime.now().strftime("%B %d, %Y"),
+        "content": template["content"],
+        "is_spam": template["is_spam"]
+    }
 
 def evaluate_explanation(email_content, is_spam, user_response, user_explanation):
+    """Evaluate the user's explanation of why an email is phishing/legitimate"""
+    print(f"[EVALUATE] Starting evaluation. Is spam: {is_spam}, User said: {user_response}")
+    
     # Check for recent rate limit errors
     rate_limited = app.config.get('RATE_LIMITED', False)
     rate_limit_time = app.config.get('RATE_LIMIT_TIME', 0)
     current_time = datetime.datetime.now().timestamp()
     
-    # If we hit a rate limit in the last 10 minutes, use fallback
+    # Use fallbacks if needed
     if rate_limited and (current_time - rate_limit_time < 600):
-        print(f"Using fallback due to recent rate limit ({int((current_time - rate_limit_time))} seconds ago)")
-        correct = user_response == is_spam
-        base_score = 8 if correct else 3
-        return {
-            "feedback": f"<p>The user's conclusion was {'correct' if correct else 'incorrect'}.</p><p>This is placeholder feedback because the Gemini API rate limit has been reached. Please try again in a few minutes.</p>",
-            "score": base_score
-        }
+        print(f"[EVALUATE] Using fallback due to rate limit ({int(current_time - rate_limit_time)} seconds ago)")
+        return get_fallback_evaluation(is_spam, user_response)
     
     if not GOOGLE_API_KEY:
-        # Fallback if API key is not configured
-        correct = user_response == is_spam
-        base_score = 8 if correct else 3
-        return {
-            "feedback": f"<p>The user's conclusion was {'correct' if correct else 'incorrect'}.</p><p>This is placeholder feedback because the Gemini API is not configured.</p>",
-            "score": base_score
-        }
-        
-    # Create a prompt for evaluation
+        print("[EVALUATE] No API key - using fallback evaluation")
+        return get_fallback_evaluation(is_spam, user_response)
+    
+    # Create prompt for evaluation
     prompt = f"""
     Evaluate this user's analysis of a potential phishing email.
     
@@ -349,49 +420,141 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
     3. What did the user miss or get wrong?
     4. On a scale of 1-10, rate the user's analysis quality.
     5. Provide constructive feedback to improve their phishing detection skills.
+    
+    Format your response with Markdown formatting. Use headers (##) for each numbered section, bold for emphasis, and paragraphs for readability.
     """
     
     try:
-        # Generate the evaluation
-        model = genai.GenerativeModel('gemini-2.5-pro')
+        # Generate evaluation
+        model = genai.GenerativeModel('gemini-1.5-pro')
+        print("[EVALUATE] Sending evaluation request to Gemini API")
         response = model.generate_content(prompt)
         
-        # Calculate a score (you might want to extract this from the AI response)
-        if user_response == is_spam:
-            base_score = 8  # Base score for correct conclusion
-        else:
-            base_score = 3  # Base score for incorrect conclusion
-        
-        # Extract the actual score from AI if possible
+        # Get response text
+        ai_text = None
         try:
-            ai_score_text = response.text.split("scale of 1-10")[1].split("\n")[0]
+            # Try multiple ways to extract the text
+            if hasattr(response, 'text'):
+                ai_text = response.text
+            elif hasattr(response, 'parts') and response.parts:
+                ai_text = response.parts[0].text
+            elif hasattr(response, 'candidates') and response.candidates:
+                candidate = response.candidates[0]
+                if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                    ai_text = candidate.content.parts[0].text
+            
+            if not ai_text:
+                ai_text = str(response)
+                
+            print(f"[EVALUATE] Successfully got AI text, length: {len(ai_text)}")
+        except Exception as text_error:
+            print(f"[EVALUATE] Error extracting text: {text_error}")
+            return get_fallback_evaluation(is_spam, user_response)
+        
+        # Process text for better Markdown formatting
+        ai_text = ai_text.strip()
+        
+        # Format numbered sections as headers
+        for i in range(1, 6):
+            ai_text = re.sub(r"^" + str(i) + r"\.\s+(.+)$", r"## " + str(i) + r". \1", ai_text, flags=re.MULTILINE)
+            ai_text = re.sub(r"^" + str(i) + r"\)\s+(.+)$", r"## " + str(i) + r". \1", ai_text, flags=re.MULTILINE)
+            ai_text = re.sub(r"^#{1,5}\s+" + str(i) + r"\.\s+(.+)$", r"## " + str(i) + r". \1", ai_text, flags=re.MULTILINE)
+        
+        # Format bullet points and emphasis
+        ai_text = re.sub(r"^\*\s*(?=\S)", "* ", ai_text, flags=re.MULTILINE)
+        ai_text = re.sub(r"(?<!\*)\*\*(?=\S)", "** ", ai_text)
+        ai_text = re.sub(r"(?<=\S)\*\*(?!\*)", " **", ai_text)
+        
+        # Add paragraph breaks
+        ai_text = re.sub(r"(?<=[.!?])\s+(?=[A-Z])", "\n\n", ai_text)
+        ai_text = re.sub(r"(?<=[^\n])(?=^##)", "\n\n", ai_text, flags=re.MULTILINE)
+        
+        # Convert markdown to HTML
+        try:
+            formatted_html = markdown.markdown(ai_text, extensions=['extra'])
+            print("[EVALUATE] Successfully converted markdown to HTML")
+        except Exception as md_error:
+            print(f"[EVALUATE] Error in markdown conversion: {md_error}")
+            formatted_html = f"<p>{ai_text.replace('\n\n', '</p><p>').replace('\n', '<br>')}</p>"
+        
+        # Add styling
+        formatted_html = formatted_html.replace("<li>", "<li style='margin-bottom: 8px;'>")
+        formatted_html = formatted_html.replace("<h2>", "<h3 style='color: #2a3f54; margin-top: 20px;'>")
+        formatted_html = formatted_html.replace("</h2>", "</h3>")
+        formatted_html = formatted_html.replace("<strong>", "<strong style='color: #2a3f54;'>")
+        
+        # Calculate score
+        base_score = 8 if user_response == is_spam else 3
+        
+        try:
+            # Extract score from text
+            ai_score_text = ai_text.split("scale of 1-10")[1].split("\n")[0]
             ai_score = int(''.join(filter(str.isdigit, ai_score_text)))
-            if 1 <= ai_score <= 10:
-                score = ai_score
-            else:
-                score = base_score
+            score = ai_score if 1 <= ai_score <= 10 else base_score
         except:
             score = base_score
         
         return {
-            "feedback": response.text,
+            "feedback": formatted_html,
             "score": score
         }
     except Exception as e:
+        print(f"[EVALUATE] Error in evaluation: {e}")
+        traceback.print_exc()
+        
+        # Check for rate limits
         error_str = str(e)
         if "429" in error_str or "quota" in error_str.lower() or "rate limit" in error_str.lower():
-            # Record rate limit for future calls
             app.config['RATE_LIMITED'] = True
             app.config['RATE_LIMIT_TIME'] = current_time
-            print(f"Rate limit detected: {error_str}")
+            print(f"[EVALUATE] Rate limit detected: {error_str}")
         
-        # Fallback if AI fails
-        correct = user_response == is_spam
-        base_score = 8 if correct else 3
-        return {
-            "feedback": f"<p>The user's conclusion was {'correct' if correct else 'incorrect'}.</p><p>Error in AI evaluation: {str(e)}</p>",
-            "score": base_score
-        }
+        return get_fallback_evaluation(is_spam, user_response)
+
+def get_fallback_evaluation(is_spam, user_response):
+    """Generate a basic evaluation when AI isn't available"""
+    correct = user_response == is_spam
+    base_score = 8 if correct else 3
+    
+    if correct:
+        feedback = """
+        <h3 style='color: #2a3f54; margin-top: 20px;'>1. Is the user's conclusion correct?</h3>
+        <p>Yes, the user's conclusion was correct.</p>
+        
+        <h3 style='color: #2a3f54; margin-top: 20px;'>2. What did the user get right in their analysis?</h3>
+        <p>The user correctly identified whether this was a phishing email or not.</p>
+        
+        <h3 style='color: #2a3f54; margin-top: 20px;'>3. What did the user miss or get wrong?</h3>
+        <p>While the conclusion was correct, a more detailed analysis would help strengthen phishing detection skills.</p>
+        
+        <h3 style='color: #2a3f54; margin-top: 20px;'>4. Score</h3>
+        <p>On a scale of 1-10, the user's analysis rates an 8.</p>
+        
+        <h3 style='color: #2a3f54; margin-top: 20px;'>5. Constructive feedback</h3>
+        <p>Good job identifying this email correctly! To improve further, practice identifying specific red flags in phishing emails and security features in legitimate emails.</p>
+        """
+    else:
+        feedback = """
+        <h3 style='color: #2a3f54; margin-top: 20px;'>1. Is the user's conclusion correct?</h3>
+        <p>No, the user's conclusion was incorrect.</p>
+        
+        <h3 style='color: #2a3f54; margin-top: 20px;'>2. What did the user get right in their analysis?</h3>
+        <p>The user attempted to analyze the email, which is an important security practice.</p>
+        
+        <h3 style='color: #2a3f54; margin-top: 20px;'>3. What did the user miss or get wrong?</h3>
+        <p>The user missed critical indicators that would have led to the correct classification of this email.</p>
+        
+        <h3 style='color: #2a3f54; margin-top: 20px;'>4. Score</h3>
+        <p>On a scale of 1-10, the user's analysis rates a 3.</p>
+        
+        <h3 style='color: #2a3f54; margin-top: 20px;'>5. Constructive feedback</h3>
+        <p>For better results, carefully examine the sender's address, look for urgency cues in phishing emails, and check for suspicious links. With practice, your detection skills will improve.</p>
+        """
+    
+    return {
+        "feedback": feedback,
+        "score": base_score
+    }
 
 # Routes
 @app.route('/')
@@ -454,7 +617,7 @@ def login():
             algorithm="HS256"
         )
         
-        # Store token in session instead of returning it
+        # Store token in session
         session['token'] = token
         session['user_name'] = user.name
         
@@ -463,255 +626,385 @@ def login():
 
     return render_template("login.html")
 
-# Dashboard route
 @app.route('/dashboard')
 @token_required
 def dashboard(current_user):
     return render_template('dashboard.html', username=current_user.name)
 
-# Learn section route
 @app.route('/learn')
 @token_required
 def learn(current_user):
     return render_template('learn.html', username=current_user.name)
 
-# Simulation routes
 @app.route('/simulate', methods=['GET'])
 @token_required
 def simulate(current_user):
-    # Initialize simulation if first time
-    if 'simulation_phase' not in session:
+    try:
+        print(f"[SIMULATE] Starting with session: phase={session.get('simulation_phase')}, email_id={session.get('current_email_id')}")
+        
+        # Initialize simulation if first time
+        if 'simulation_phase' not in session:
+            session['simulation_phase'] = 1
+            session['current_email_id'] = 1
+            session.modified = True
+            print("[SIMULATE] Initialized new simulation")
+            
+        # Load predefined emails
+        if session.get('simulation_phase') == 1:
+            for email in predefined_emails:
+                existing = SimulationEmail.query.get(email['id'])
+                if not existing:
+                    new_email = SimulationEmail(
+                        id=email['id'],
+                        sender=email['sender'],
+                        subject=email['subject'],
+                        date=email['date'],
+                        content=email['content'],
+                        is_spam=email['is_spam'],
+                        is_predefined=True
+                    )
+                    db.session.add(new_email)
+            db.session.commit()
+        
+        # Get current phase and email
+        phase = session.get('simulation_phase', 1)
+        current_email_id = session.get('current_email_id', 1)
+        
+        print(f"[SIMULATE] Current phase: {phase}, Current email ID: {current_email_id}")
+        
+        # Check if simulation is complete
+        if (phase == 1 and current_email_id > 5) or (phase == 2 and current_email_id > 10):
+            print("[SIMULATE] Simulation complete")
+            return render_template('simulate.html', phase='complete', username=current_user.name)
+        
+        # Get the email for this stage
+        email = SimulationEmail.query.get(current_email_id)
+        print(f"[SIMULATE] Looking for email with ID {current_email_id}: {'Found' if email else 'Not found'}")
+        
+        if not email:
+            if phase == 1:
+                # Create predefined email
+                if 0 < current_email_id <= len(predefined_emails):
+                    print(f"[SIMULATE] Creating predefined email {current_email_id}")
+                    email_data = predefined_emails[current_email_id - 1]
+                    email = SimulationEmail(
+                        id=current_email_id,
+                        sender=email_data['sender'],
+                        subject=email_data['subject'],
+                        date=email_data['date'],
+                        content=email_data['content'],
+                        is_spam=email_data['is_spam'],
+                        is_predefined=True
+                    )
+                else:
+                    print(f"[SIMULATE] Error: Invalid predefined email ID {current_email_id}")
+                    # Reset to a valid state
+                    session['simulation_phase'] = 1
+                    session['current_email_id'] = 1
+                    session.modified = True
+                    return redirect(url_for('simulate'))
+            else:
+                # Generate AI email
+                print(f"[SIMULATE] Generating AI email {current_email_id}")
+                # Get performance from phase 1
+                previous_responses = SimulationResponse.query.filter_by(
+                    user_id=current_user.id
+                ).filter(SimulationResponse.email_id < 6).all()
+                
+                correct_count = sum(1 for r in previous_responses if r.user_response == r.is_spam_actual)
+                performance_summary = f"The user correctly identified {correct_count} out of 5 emails in phase 1."
+                print(f"[SIMULATE] Performance summary: {performance_summary}")
+                
+                try:
+                    # Generate AI email
+                    email_data = generate_ai_email(current_user.name, performance_summary)
+                    
+                    # Create a database entry for this AI email
+                    email = SimulationEmail(
+                        id=current_email_id,
+                        sender=email_data['sender'],
+                        subject=email_data['subject'],
+                        date=email_data['date'],
+                        content=email_data['content'],
+                        is_spam=email_data['is_spam'],
+                        is_predefined=False
+                    )
+                    print(f"[SIMULATE] Successfully created email {current_email_id}")
+                except Exception as e:
+                    print(f"[SIMULATE] Error generating email: {str(e)}")
+                    # Use a fallback email
+                    template = random.choice(template_emails)
+                    email = SimulationEmail(
+                        id=current_email_id,
+                        sender=template["sender"],
+                        subject=template["subject"],
+                        date=datetime.datetime.now().strftime("%B %d, %Y"),
+                        content=template["content"],
+                        is_spam=template["is_spam"],
+                        is_predefined=False
+                    )
+            
+            db.session.add(email)
+            db.session.commit()
+        
+        return render_template(
+            'simulate.html', 
+            phase=phase, 
+            current_email=current_email_id, 
+            email=email,
+            username=current_user.name,
+            api_key_available=bool(GOOGLE_API_KEY)
+        )
+    
+    except Exception as e:
+        print(f"[SIMULATE] Exception in simulate route: {str(e)}")
+        traceback.print_exc()
+        # Emergency reset
         session['simulation_phase'] = 1
         session['current_email_id'] = 1
-        
-        # Store predefined emails in database if not already
-        for email in predefined_emails:
-            # Check if email already exists
-            existing = SimulationEmail.query.filter_by(id=email['id']).first()
-            if not existing:
-                new_email = SimulationEmail(
-                    id=email['id'],
-                    sender=email['sender'],
-                    subject=email['subject'],
-                    date=email['date'],
-                    content=email['content'],
-                    is_spam=email['is_spam'],
-                    is_predefined=True
-                )
-                db.session.add(new_email)
-        db.session.commit()
-    
-    # Get current phase and email from session
-    phase = session.get('simulation_phase', 1)
-    current_email_id = session.get('current_email_id', 1)
-    
-    # Check if simulation is complete
-    if (phase == 1 and current_email_id > 5) or (phase == 2 and current_email_id > 10):
-        return render_template('simulate.html', phase='complete', username=current_user.name)
-    
-    # Get the appropriate email
-    if phase == 1:
-        # Use predefined emails for phase 1
-        email = SimulationEmail.query.get(current_email_id)
-        if not email:
-            email_data = predefined_emails[current_email_id - 1]
-            email = SimulationEmail(
-                id=email_data['id'],
-                sender=email_data['sender'],
-                subject=email_data['subject'],
-                date=email_data['date'],
-                content=email_data['content'],
-                is_spam=email_data['is_spam'],
-                is_predefined=True
-            )
-            db.session.add(email)
-            db.session.commit()
-    else:
-        # Phase 2: Get or generate AI email
-        email = SimulationEmail.query.get(current_email_id)
-        if not email:
-            # Get performance from phase 1
-            previous_responses = SimulationResponse.query.filter_by(
-                user_id=current_user.id
-            ).filter(SimulationResponse.email_id < 6).all()
-            
-            correct_count = sum(1 for r in previous_responses if r.user_response == r.is_spam_actual)
-            performance_summary = f"The user correctly identified {correct_count} out of 5 emails in phase 1."
-            
-            # Generate AI email
-            email_data = generate_ai_email(current_user.name, performance_summary)
-            
-            # Create a database entry for this AI email
-            email = SimulationEmail(
-                id=current_email_id,
-                sender=email_data['sender'],
-                subject=email_data['subject'],
-                date=email_data['date'],
-                content=email_data['content'],
-                is_spam=email_data['is_spam'],
-                is_predefined=False
-            )
-            db.session.add(email)
-            db.session.commit()
-    
-    return render_template(
-        'simulate.html', 
-        phase=phase, 
-        current_email=current_email_id, 
-        email=email,
-        username=current_user.name,
-        api_key_available=bool(GOOGLE_API_KEY)  # Add this for template messages
-    )
+        session.modified = True
+        return render_template(
+            'simulate.html',
+            phase=1,
+            current_email=1,
+            error_message=f"An error occurred and the simulation has been reset.",
+            username=current_user.name,
+            api_key_available=bool(GOOGLE_API_KEY)
+        )
 
 @app.route('/submit_simulation', methods=['POST'])
 @token_required
 def submit_simulation(current_user):
-    email_id = int(request.form.get('email_id'))
-    phase = int(request.form.get('phase'))
-    is_spam_response = request.form.get('is_spam') == 'true'
-    explanation = request.form.get('explanation', '')
-    
-    # Get the email
-    email = SimulationEmail.query.get(email_id)
-    if not email:
-        return redirect(url_for('simulate'))
-    
-    # Process AI feedback for phase 2
-    ai_feedback = None
-    score = None
-    if phase == 2:
-        eval_result = evaluate_explanation(
-            email.content, 
-            email.is_spam, 
-            is_spam_response,
-            explanation
+    try:
+        email_id = int(request.form.get('email_id'))
+        phase = int(request.form.get('phase'))
+        is_spam_response = request.form.get('is_spam') == 'true'
+        explanation = request.form.get('explanation', '')
+        
+        print(f"[SUBMIT] Processing submission: phase={phase}, email_id={email_id}")
+        print(f"[SUBMIT] Current session before: phase={session.get('simulation_phase')}, email_id={session.get('current_email_id')}")
+        
+        # Get the email
+        email = SimulationEmail.query.get(email_id)
+        if not email:
+            print(f"[SUBMIT] Error: Email ID {email_id} not found in database")
+            return redirect(url_for('reset_stuck_simulation'))
+        
+        # Process AI feedback for phase 2
+        ai_feedback = None
+        score = None
+        if phase == 2:
+            eval_result = evaluate_explanation(
+                email.content, 
+                email.is_spam, 
+                is_spam_response,
+                explanation
+            )
+            ai_feedback = eval_result["feedback"]
+            score = eval_result["score"]
+        
+        # Save the response to database
+        response = SimulationResponse(
+            user_id=current_user.id,
+            email_id=email_id,
+            is_spam_actual=email.is_spam,
+            user_response=is_spam_response,
+            user_explanation=explanation,
+            ai_feedback=ai_feedback,
+            score=score
         )
-        ai_feedback = eval_result["feedback"]
-        score = eval_result["score"]
-    
-    # Save the response to database
-    response = SimulationResponse(
-        user_id=current_user.id,
-        email_id=email_id,
-        is_spam_actual=email.is_spam,
-        user_response=is_spam_response,
-        user_explanation=explanation,
-        ai_feedback=ai_feedback,
-        score=score
-    )
-    db.session.add(response)
-    db.session.commit()
-    
-    # If we're in phase 2, show feedback
-    if phase == 2:
-        return redirect(url_for('simulation_feedback', email_id=email_id))
-    
-    # Update session for next email
-    next_email_id = email_id + 1
-    
-    # Check if we need to move to the next phase
-    if phase == 1 and next_email_id > 5:
-        session['simulation_phase'] = 2
-        session['current_email_id'] = 6
-    else:
-        session['current_email_id'] = next_email_id
-    
-    # If phase 2 is complete, redirect to results
-    if phase == 2 and next_email_id > 10:
-        return redirect(url_for('simulation_results'))
-    
-    return redirect(url_for('simulate'))
+        db.session.add(response)
+        db.session.commit()
+        
+        # If we're in phase 2, show feedback
+        if phase == 2:
+            return redirect(url_for('simulation_feedback', email_id=email_id))
+        
+        # Update session for next email
+        next_email_id = email_id + 1
+        
+        # Check if we need to move to the next phase
+        if phase == 1 and next_email_id > 5:
+            session['simulation_phase'] = 2
+            session['current_email_id'] = 6
+            print(f"[SUBMIT] Advancing to phase 2, email 6")
+        else:
+            session['current_email_id'] = next_email_id
+            print(f"[SUBMIT] Advancing to email {next_email_id} in phase {phase}")
+        
+        # Force session to save
+        session.modified = True
+        
+        print(f"[SUBMIT] Session after update: phase={session.get('simulation_phase')}, email_id={session.get('current_email_id')}")
+        
+        # If phase 2 is complete, redirect to results
+        if phase == 2 and next_email_id > 10:
+            return redirect(url_for('simulation_results'))
+        
+        return redirect(url_for('simulate'))
+        
+    except Exception as e:
+        print(f"[SUBMIT] Exception in submit_simulation: {str(e)}")
+        traceback.print_exc()
+        # Emergency recovery
+        return redirect(url_for('reset_stuck_simulation'))
 
 @app.route('/simulation_feedback/<int:email_id>')
 @token_required
 def simulation_feedback(current_user, email_id):
-    # Get the user's response
-    response = SimulationResponse.query.filter_by(
-        user_id=current_user.id,
-        email_id=email_id
-    ).first()
-    
-    if not response:
-        return redirect(url_for('simulate'))
-    
-    return render_template(
-        'simulation_feedback.html',
-        response=response,
-        username=current_user.name
-    )
+    try:
+        # Get the user's response
+        response = SimulationResponse.query.filter_by(
+            user_id=current_user.id,
+            email_id=email_id
+        ).first()
+        
+        if not response:
+            print(f"[FEEDBACK] No response found for email {email_id}")
+            return redirect(url_for('simulate'))
+        
+        # Ensure the feedback is treated as HTML
+        if response.ai_feedback:
+            # Diagnostic check - look for HTML tags in the feedback
+            if not response.ai_feedback.strip().startswith('<'):
+                print(f"[FEEDBACK] Warning: Feedback doesn't appear to be HTML: {response.ai_feedback[:50]}...")
+                # Try to wrap plain text in paragraph tags
+                response.ai_feedback = f"<p>{response.ai_feedback}</p>"
+        
+        return render_template(
+            'simulation_feedback.html',
+            response=response,
+            username=current_user.name
+        )
+    except Exception as e:
+        print(f"[FEEDBACK] Error in simulation_feedback: {e}")
+        traceback.print_exc()
+        return redirect(url_for('dashboard'))
 
 @app.route('/simulation_results')
 @token_required
 def simulation_results(current_user):
-    # Get all responses for this user
-    responses = SimulationResponse.query.filter_by(user_id=current_user.id).all()
-    
-    # Calculate statistics
-    phase1_correct = sum(1 for r in responses if r.email_id <= 5 and r.user_response == r.is_spam_actual)
-    phase2_correct = sum(1 for r in responses if r.email_id > 5 and r.user_response == r.is_spam_actual)
-    
-    phase2_scores = [r.score for r in responses if r.email_id > 5 and r.score is not None]
-    avg_score = sum(phase2_scores) / len(phase2_scores) if phase2_scores else 0
-    
-    # Reset simulation for potential future attempts
-    session.pop('simulation_phase', None)
-    session.pop('current_email_id', None)
-    
-    return render_template(
-        'simulation_results.html',
-        phase1_correct=phase1_correct,
-        phase1_total=5,
-        phase2_correct=phase2_correct,
-        phase2_total=5,
-        avg_score=avg_score,
-        responses=responses,
-        username=current_user.name
-    )
+    try:
+        # Get all responses for this user
+        responses = SimulationResponse.query.filter_by(user_id=current_user.id).all()
+        
+        # Calculate statistics
+        phase1_correct = sum(1 for r in responses if r.email_id <= 5 and r.user_response == r.is_spam_actual)
+        phase2_correct = sum(1 for r in responses if r.email_id > 5 and r.user_response == r.is_spam_actual)
+        
+        phase2_scores = [r.score for r in responses if r.email_id > 5 and r.score is not None]
+        avg_score = sum(phase2_scores) / len(phase2_scores) if phase2_scores else 0
+        
+        # Reset simulation for potential future attempts
+        session.pop('simulation_phase', None)
+        session.pop('current_email_id', None)
+        session.modified = True
+        
+        return render_template(
+            'simulation_results.html',
+            phase1_correct=phase1_correct,
+            phase1_total=5,
+            phase2_correct=phase2_correct,
+            phase2_total=5,
+            avg_score=avg_score,
+            responses=responses,
+            username=current_user.name
+        )
+    except Exception as e:
+        print(f"[RESULTS] Error in simulation_results: {e}")
+        traceback.print_exc()
+        return redirect(url_for('dashboard'))
 
-# Analysis section route
 @app.route('/analysis')
 @token_required
 def analysis(current_user):
     return render_template('analysis.html', username=current_user.name)
 
-# Logout route
 @app.route('/logout')
 def logout():
     session.pop('token', None)
     session.pop('user_name', None)
+    session.pop('simulation_phase', None)
+    session.pop('current_email_id', None)
     return redirect(url_for('login'))
-
-# Utility route to encrypt sensitive data
-@app.route('/encrypt/<string:data>')
-def encrypt_data(data):
-    encrypted = fernet.encrypt(data.encode())
-    return {"encrypted": encrypted.decode()}
-
-@app.route('/decrypt/<string:data>')
-def decrypt_data(data):
-    decrypted = fernet.decrypt(data.encode()).decode()
-    return {"decrypted": decrypted}
 
 @app.route('/restart_simulation')
 @token_required
 def restart_simulation(current_user):
-    # Clear all simulation progress from the session
-    session.pop('simulation_phase', None)
-    session.pop('current_email_id', None)
-    
-    # Reset rate limit tracking
-    app.config.pop('RATE_LIMITED', None)
-    app.config.pop('RATE_LIMIT_TIME', None)
-    
-    # Optional: Delete previous simulation responses to start completely fresh
-    # This will remove all prior responses for this user
-    SimulationResponse.query.filter_by(user_id=current_user.id).delete()
-    db.session.commit()
-    
-    # Redirect to simulation page to start over
-    return redirect(url_for('simulate'))
+    try:
+        print("[RESTART] Restarting simulation")
+        # Clear session
+        session.pop('simulation_phase', None)
+        session.pop('current_email_id', None)
+        session.modified = True
+        
+        # Reset rate limit tracking
+        if 'RATE_LIMITED' in app.config:
+            app.config.pop('RATE_LIMITED')
+        if 'RATE_LIMIT_TIME' in app.config:
+            app.config.pop('RATE_LIMIT_TIME')
+        
+        # Delete existing responses
+        SimulationResponse.query.filter_by(user_id=current_user.id).delete()
+        
+        # Delete AI-generated emails (IDs > 5)
+        SimulationEmail.query.filter(SimulationEmail.id > 5).delete()
+        
+        db.session.commit()
+        print("[RESTART] Simulation data reset complete")
+        
+        return redirect(url_for('simulate'))
+    except Exception as e:
+        print(f"[RESTART] Error in restart_simulation: {e}")
+        db.session.rollback()
+        return redirect(url_for('dashboard'))
 
-# Debug route to check environment and status
+@app.route('/reset_stuck_simulation')
+@token_required
+def reset_stuck_simulation(current_user):
+    """Emergency route to fix stuck simulations"""
+    try:
+        # Get current state
+        old_phase = session.get('simulation_phase')
+        old_email_id = session.get('current_email_id')
+        
+        # Clear session data
+        session.pop('simulation_phase', None)
+        session.pop('current_email_id', None)
+        session.modified = True
+        
+        # Reset rate limit tracking
+        if 'RATE_LIMITED' in app.config:
+            app.config.pop('RATE_LIMITED')
+        if 'RATE_LIMIT_TIME' in app.config:
+            app.config.pop('RATE_LIMIT_TIME')
+        
+        # Delete any Phase 2 emails that may be causing issues
+        try:
+            SimulationEmail.query.filter(SimulationEmail.id > 5).delete()
+            db.session.commit()
+            cleanup_status = "Success"
+        except Exception as e:
+            db.session.rollback()
+            cleanup_status = f"Failed: {str(e)}"
+            
+        # Start fresh
+        session['simulation_phase'] = 1
+        session['current_email_id'] = 1
+        session.modified = True
+        
+        return render_template(
+            'system_message.html',
+            title="Simulation Reset",
+            message="Your simulation has been reset due to a technical issue.",
+            action_text="Continue to Simulation",
+            action_url=url_for('simulate'),
+            username=current_user.name
+        )
+    except Exception as e:
+        print(f"[RESET] Exception in reset_stuck_simulation: {e}")
+        return redirect(url_for('dashboard'))
+
 @app.route('/debug')
 def debug_info():
     # Only allow this in debug mode
@@ -729,7 +1022,11 @@ def debug_info():
         "API Status": {
             "Rate Limited": app.config.get('RATE_LIMITED', False),
             "Rate Limit Time": datetime.datetime.fromtimestamp(app.config.get('RATE_LIMIT_TIME', 0)).strftime('%Y-%m-%d %H:%M:%S') if app.config.get('RATE_LIMIT_TIME') else "N/A",
-            "HarmCategory Keys": [attr for attr in dir(HarmCategory) if not attr.startswith('_')],
+        },
+        "Database Counts": {
+            "Users": User.query.count(),
+            "SimulationEmails": SimulationEmail.query.count(),
+            "SimulationResponses": SimulationResponse.query.count()
         }
     }
     
