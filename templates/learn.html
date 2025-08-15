@@ -10,6 +10,8 @@
             margin: 0;
             padding: 0;
             background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
         }
         header {
             background-color: #2a3f54;
@@ -35,6 +37,238 @@
             border-radius: 4px;
             text-decoration: none;
         }
+        .module {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .module-header {
+            background-color: #2a3f54;
+            color: white;
+            padding: 1rem 1.5rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .module-content {
+            padding: 1.5rem;
+        }
+        .example-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .danger-box {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .tip-box {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .phishing-example {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            background-color: #f9f9f9;
+        }
+        .red-flag {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .feature-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .clickbait {
+            cursor: pointer;
+            color: #0066cc;
+            text-decoration: underline;
+        }
+        .demo-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+        }
+        .demo-popup-content {
+            background-color: #2a3f54;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 600px;
+            text-align: center;
+        }
+        .close-popup {
+            background-color: white;
+            color: #2a3f54;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 1.5rem;
+        }
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .tab.active {
+            border: 1px solid #ddd;
+            border-bottom-color: white;
+            border-radius: 4px 4px 0 0;
+            margin-bottom: -1px;
+            background-color: white;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .progress-container {
+            margin: 2rem 0;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #3498db;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .url-anatomy {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+        .url-protocol {
+            color: #28a745;
+        }
+        .url-domain {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .url-path {
+            color: #6c757d;
+        }
+        .url-query {
+            color: #6610f2;
+        }
+        .collapsible {
+            background-color: #f1f1f1;
+            cursor: pointer;
+            padding: 1rem;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .collapsible:after {
+            content: '\002B';
+            font-weight: bold;
+            float: right;
+        }
+        .active-collapse:after {
+            content: "\2212";
+        }
+        .collapse-content {
+            padding: 0 18px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            background-color: white;
+        }
+        .simulate-btn {
+            display: block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #e74c3c;
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .simulate-btn:hover {
+            background-color: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -48,12 +282,701 @@
 
     <div class="container">
         <h1>Learning Center</h1>
-        <p>Welcome to the CyberVantage Learning Center. Here you can access various educational resources about cybersecurity.</p>
+        <p>Welcome to the CyberVantage Learning Center. Here you'll learn everything you need to know about identifying phishing attempts and protecting yourself online.</p>
         
-        <div style="margin-top: 30px;">
-            <h2>Available Courses</h2>
-            <p>Cybersecurity learning resources coming soon!</p>
+        <div class="progress-container">
+            <p>Your Learning Progress</p>
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="openTab(event, 'basics')">Phishing Basics</div>
+            <div class="tab" onclick="openTab(event, 'techniques')">Attack Techniques</div>
+            <div class="tab" onclick="openTab(event, 'protection')">Protection Methods</div>
+            <div class="tab" onclick="openTab(event, 'examples')">Interactive Examples</div>
+            <div class="tab" onclick="openTab(event, 'quiz')">Quiz</div>
+        </div>
+        
+        <!-- Phishing Basics Tab -->
+        <div id="basics" class="tab-content active">
+            <div class="module">
+                <div class="module-header">What is Phishing?</div>
+                <div class="module-content">
+                    <p>Phishing is a type of cyber attack where attackers attempt to steal sensitive information such as usernames, passwords, credit card details, or other personal data by disguising themselves as trustworthy entities in digital communications.</p>
+                    
+                    <p>These attacks typically come through:</p>
+                    <ul>
+                        <li>Emails (most common)</li>
+                        <li>Text messages (SMS phishing or "smishing")</li>
+                        <li>Voice calls (voice phishing or "vishing")</li>
+                        <li>Social media messages</li>
+                        <li>Fraudulent websites</li>
+                    </ul>
+                    
+                    <div class="warning-box">
+                        <h3>⚠️ The Danger of Phishing</h3>
+                        <p>Phishing remains one of the most effective attack vectors because it exploits human psychology rather than technical vulnerabilities. Even users with strong technical knowledge can fall victim if they're not vigilant.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="module">
+                <div class="module-header">Recognizing Phishing Red Flags</div>
+                <div class="module-content">
+                    <p>Learning to identify these common red flags can help you spot phishing attempts:</p>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">📧</div>
+                            <h3>Suspicious Sender</h3>
+                            <p>Email addresses that mimic legitimate companies but with slight misspellings or different domains (e.g., support@paypa1.com instead of @paypal.com)</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">❗</div>
+                            <h3>Urgency or Threats</h3>
+                            <p>Messages creating a sense of urgency or threatening negative consequences if immediate action isn't taken</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">🔗</div>
+                            <h3>Suspicious Links</h3>
+                            <p>Links that don't match the purported organization or lead to misspelled versions of legitimate websites</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">📎</div>
+                            <h3>Unexpected Attachments</h3>
+                            <p>Unexpected file attachments that might contain malware, especially executable files</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">❌</div>
+                            <h3>Poor Grammar</h3>
+                            <p>Spelling errors, grammar mistakes, or unusual phrasing that legitimate companies would typically catch</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">🔒</div>
+                            <h3>Requests for Information</h3>
+                            <p>Requests for personal information, passwords, or financial details that legitimate organizations wouldn't ask for via email</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="module">
+                <div class="module-header">Types of Phishing Attacks</div>
+                <div class="module-content">
+                    <div class="table-container">
+                        <table>
+                            <tr>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                            <tr>
+                                <td>Mass Phishing</td>
+                                <td>Generic attacks sent to thousands of recipients</td>
+                                <td>Fake Netflix account verification emails</td>
+                            </tr>
+                            <tr>
+                                <td>Spear Phishing</td>
+                                <td>Targeted attacks customized for specific individuals</td>
+                                <td>Email appearing to come from your actual bank with your correct name and partial account details</td>
+                            </tr>
+                            <tr>
+                                <td>Whaling</td>
+                                <td>Targeted attacks on high-profile individuals like executives</td>
+                                <td>Fake legal document requiring CEO's immediate review</td>
+                            </tr>
+                            <tr>
+                                <td>Clone Phishing</td>
+                                <td>Duplicates of legitimate emails with malicious content</td>
+                                <td>Copy of a real delivery notification with modified tracking link</td>
+                            </tr>
+                            <tr>
+                                <td>Smishing</td>
+                                <td>Phishing via SMS text messages</td>
+                                <td>"Your package delivery failed" text with suspicious link</td>
+                            </tr>
+                            <tr>
+                                <td>Vishing</td>
+                                <td>Phishing via phone calls</td>
+                                <td>Call claiming to be from "tech support" about your computer being infected</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Attack Techniques Tab -->
+        <div id="techniques" class="tab-content">
+            <div class="module">
+                <div class="module-header">Common Phishing Techniques</div>
+                <div class="module-content">
+                    <p>Phishers use a variety of techniques to trick victims into taking actions that compromise their security:</p>
+                    
+                    <button class="collapsible">1. URL Manipulation</button>
+                    <div class="collapse-content">
+                        <p>Attackers create URLs that look legitimate but actually lead to fraudulent websites. They use several methods:</p>
+                        <ul>
+                            <li><strong>Typosquatting:</strong> Using domains with common typos (amazom.com instead of amazon.com)</li>
+                            <li><strong>Lookalike domains:</strong> Using similar-looking characters (paypaI.com with a capital I instead of paypal.com)</li>
+                            <li><strong>Subdomain tricks:</strong> Using subdomains to confuse users (account-paypal.com instead of paypal.com)</li>
+                        </ul>
+                        
+                        <div class="url-anatomy">
+                            <span class="url-protocol">https://</span><span class="url-domain">secure-paypal.malicious-site.com</span><span class="url-path">/accounts/verification</span><span class="url-query">?token=123456</span>
+                        </div>
+                        <p>In the example above, the actual domain is <span class="url-domain">malicious-site.com</span>, not PayPal.</p>
+                    </div>
+                    
+                    <button class="collapsible">2. Social Engineering</button>
+                    <div class="collapse-content">
+                        <p>Social engineering is the psychological manipulation of people into performing actions or divulging information. Common tactics include:</p>
+                        <ul>
+                            <li><strong>Authority:</strong> Impersonating trusted figures like IT support, executives, or government agencies</li>
+                            <li><strong>Urgency:</strong> Creating time pressure to force quick decisions without proper verification</li>
+                            <li><strong>Fear:</strong> Threatening negative consequences (account suspension, legal action)</li>
+                            <li><strong>Curiosity:</strong> Baiting victims with intriguing content ("See who viewed your profile")</li>
+                            <li><strong>Familiarity:</strong> Posing as friends, colleagues, or known brands</li>
+                        </ul>
+                    </div>
+                    
+                    <button class="collapsible">3. Website Spoofing</button>
+                    <div class="collapse-content">
+                        <p>Attackers create fake websites that mimic legitimate ones to steal login credentials or payment information.</p>
+                        <ul>
+                            <li>Copied logos, layouts, and content from legitimate websites</li>
+                            <li>Fake login forms that send data to attackers</li>
+                            <li>Slight visual differences that might go unnoticed</li>
+                        </ul>
+                        <div class="example-box">
+                            <p>Example: A fake login page for your bank that looks almost identical to the real one, but the URL is different, and your credentials get sent to attackers.</p>
+                        </div>
+                    </div>
+                    
+                    <button class="collapsible">4. Email Spoofing</button>
+                    <div class="collapse-content">
+                        <p>Attackers forge email headers to make messages appear to come from trusted sources.</p>
+                        <ul>
+                            <li>Makes the "From" field show a trusted organization or individual</li>
+                            <li>Can sometimes bypass basic email filters</li>
+                            <li>Often combined with content that mimics legitimate communications</li>
+                        </ul>
+                        <div class="example-box">
+                            <p>Example: An email that appears to be from "support@microsoft.com" but was actually sent by an attacker.</p>
+                        </div>
+                    </div>
+                    
+                    <button class="collapsible">5. Malicious Attachments</button>
+                    <div class="collapse-content">
+                        <p>Attackers attach harmful files to emails that, when opened, install malware on the victim's system.</p>
+                        <ul>
+                            <li>Common malicious file types: .exe, .zip, .js, .vbs, .doc/.docm with macros</li>
+                            <li>Often disguised as invoices, shipping notices, or receipts</li>
+                            <li>May contain ransomware, keyloggers, or remote access trojans</li>
+                        </ul>
+                        <div class="danger-box">
+                            <p><strong>Warning:</strong> Never open attachments from unknown senders, and be very cautious even with known senders if you weren't expecting an attachment.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="module">
+                <div class="module-header">Consequences of Successful Phishing Attacks</div>
+                <div class="module-content">
+                    <p>Understanding what can happen after a successful phishing attack can help emphasize the importance of vigilance:</p>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">💳</div>
+                            <h3>Financial Loss</h3>
+                            <p>Direct theft from bank accounts, unauthorized credit card charges, or fraudulent transactions</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">🔒</div>
+                            <h3>Account Compromise</h3>
+                            <p>Attackers gain access to email, social media, or other online accounts, often leading to further attacks</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">🔑</div>
+                            <h3>Identity Theft</h3>
+                            <p>Stolen personal information used to open credit accounts, file fraudulent tax returns, or commit other identity fraud</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">💻</div>
+                            <h3>Malware Infection</h3>
+                            <p>Installation of ransomware, keyloggers, spyware, or other harmful software on systems</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">🏢</div>
+                            <h3>Corporate Data Breach</h3>
+                            <p>Access to company systems leading to data theft, business disruption, or further network penetration</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">📱</div>
+                            <h3>Device Compromise</h3>
+                            <p>Remote control of devices, data encryption, or use in botnets for further attacks</p>
+                        </div>
+                    </div>
+                    
+                    <div class="danger-box">
+                        <h3>⚠️ The Ripple Effect</h3>
+                        <p>A single compromised account can lead to multiple security breaches. Attackers often use accessed accounts to target contacts, impersonate the victim, or gain access to connected services.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Protection Methods Tab -->
+        <div id="protection" class="tab-content">
+            <div class="module">
+                <div class="module-header">Protecting Yourself from Phishing</div>
+                <div class="module-content">
+                    <p>While no solution is perfect, these best practices can significantly reduce your risk of falling victim to phishing attacks:</p>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">🔍</div>
+                            <h3>Verify Sender Identity</h3>
+                            <p>Check the full email address, not just the display name. Look for subtle misspellings or different domains.</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">🖱️</div>
+                            <h3>Hover Before Clicking</h3>
+                            <p>Hover over links to see where they actually lead. Never click if the destination looks suspicious.</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">🔐</div>
+                            <h3>Use Multi-Factor Authentication</h3>
+                            <p>Enable MFA/2FA on all accounts that support it to add an extra layer of security beyond passwords.</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">🚫</div>
+                            <h3>Be Skeptical of Urgency</h3>
+                            <p>Be extra cautious with messages creating urgency or threatening consequences if you don't act immediately.</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">🌐</div>
+                            <h3>Go Directly to Websites</h3>
+                            <p>Instead of clicking links, manually navigate to the official website by typing the URL yourself.</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">🔄</div>
+                            <h3>Keep Software Updated</h3>
+                            <p>Regularly update your operating system, browsers, and security software to protect against known vulnerabilities.</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">📞</div>
+                            <h3>Verify via Official Channels</h3>
+                            <p>When in doubt, contact the organization directly using their official phone number or website (not from the suspicious message).</p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">🔑</div>
+                            <h3>Use Unique, Strong Passwords</h3>
+                            <p>Create different strong passwords for each account and consider using a password manager.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tip-box">
+                        <h3>💡 Pro Tip: The STOP Method</h3>
+                        <p>When you receive a suspicious message:</p>
+                        <ul>
+                            <li><strong>S</strong>top and think before acting</li>
+                            <li><strong>T</strong>ake time to check the sender and links</li>
+                            <li><strong>O</strong>pt to go directly to websites instead of clicking links</li>
+                            <li><strong>P</strong>rotect your information by never sharing sensitive details via email</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="module">
+                <div class="module-header">Advanced Security Measures</div>
+                <div class="module-content">
+                    <button class="collapsible">Email Security Features</button>
+                    <div class="collapse-content">
+                        <p>Modern email services offer several security features to help identify phishing:</p>
+                        <ul>
+                            <li><strong>Spam filters:</strong> Automatically detect and quarantine suspicious emails</li>
+                            <li><strong>DMARC/SPF/DKIM:</strong> Email authentication protocols that verify sender legitimacy</li>
+                            <li><strong>Security warnings:</strong> Alerts about suspicious content, attachments, or senders</li>
+                            <li><strong>External email tags:</strong> Labels that mark emails coming from outside your organization</li>
+                        </ul>
+                        <div class="tip-box">
+                            <p>Make sure spam filtering is enabled in your email settings, and periodically check your spam folder for legitimate messages that may have been incorrectly filtered.</p>
+                        </div>
+                    </div>
+                    
+                    <button class="collapsible">Browser Security Tools</button>
+                    <div class="collapse-content">
+                        <p>Modern browsers include features to help identify and block phishing websites:</p>
+                        <ul>
+                            <li><strong>Safe Browsing:</strong> Built-in features that warn about known malicious sites</li>
+                            <li><strong>HTTPS indicators:</strong> Visual cues showing if a connection is secure</li>
+                            <li><strong>Anti-phishing extensions:</strong> Add-ons that provide additional protection</li>
+                            <li><strong>URL filtering:</strong> Tools that check links against databases of known threats</li>
+                        </ul>
+                    </div>
+                    
+                    <button class="collapsible">Security Software</button>
+                    <div class="collapse-content">
+                        <p>Additional software that can help protect against phishing:</p>
+                        <ul>
+                            <li><strong>Antivirus/Anti-malware:</strong> Detects and blocks malicious software</li>
+                            <li><strong>Email security gateways:</strong> Filter out suspicious emails before they reach inboxes</li>
+                            <li><strong>Password managers:</strong> Generate and store unique passwords and can help avoid autofilling credentials on phishing sites</li>
+                            <li><strong>VPNs:</strong> Add encryption to your connection and can include additional security features</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Interactive Examples Tab -->
+        <div id="examples" class="tab-content">
+            <div class="module">
+                <div class="module-header">Interactive Phishing Examples</div>
+                <div class="module-content">
+                    <p>The following examples demonstrate common phishing techniques. Hover over the highlighted sections to see why they're suspicious.</p>
+                    
+                    <div class="phishing-example">
+                        <h3>Example 1: Banking Phishing Email</h3>
+                        <hr>
+                        <p><strong>From:</strong> <span class="red-flag" title="Look carefully: This is 'secur1ty@bank.com' with the number '1' instead of the letter 'i'">secur1ty@bank.com</span></p>
+                        <p><strong>Subject:</strong> <span class="red-flag" title="Urgency is a common phishing tactic to make you act without thinking">URGENT: Your account has been locked</span></p>
+                        <p><strong>Date:</strong> August 15, 2025</p>
+                        <hr>
+                        <p>Dear Valued Customer,</p>
+                        <p>We have detected <span class="red-flag" title="Vague 'unusual activity' claims are common in phishing emails">unusual activity</span> on your account. To protect your funds, your online banking access has been temporarily suspended.</p>
+                        <p>To restore your account access, please <span class="red-flag" title="Legitimate banks would ask you to log in to their site directly, not click on an email link">click here</span> to verify your identity and update your information.</p>
+                        <p>If you do not complete this verification within <span class="red-flag" title="Creating urgency to pressure you into acting quickly without thinking">24 hours</span>, your account will be permanently locked.</p>
+                        <p>Bank Security Team</p>
+                        <hr>
+                        <p><strong>Why this is phishing:</strong> The email uses urgency tactics, has a subtly misspelled sender address, asks you to click a suspicious link, and threatens negative consequences. A real bank would ask you to log in directly to their website (by typing the URL yourself) and wouldn't threaten to lock your account permanently with such a short timeline.</p>
+                    </div>
+                    
+                    <div class="phishing-example">
+                        <h3>Example 2: Package Delivery Notification</h3>
+                        <hr>
+                        <p><strong>From:</strong> <span class="red-flag" title="This is not an official Amazon domain">delivery-notification@amazon-shipments.com</span></p>
+                        <p><strong>Subject:</strong> Your Amazon package #38721 could not be delivered</p>
+                        <p><strong>Date:</strong> August 16, 2025</p>
+                        <hr>
+                        <p>Hello,</p>
+                        <p>Our courier attempted to deliver your package today, but <span class="red-flag" title="Creating a problem that needs immediate resolution">was unable to complete the delivery due to an addressing issue</span>.</p>
+                        <p>Your package will be returned to our facility unless you <span class="red-flag" title="Legitimate delivery services would typically provide another delivery attempt without requiring immediate action from you">confirm your delivery details within 24 hours</span>.</p>
+                        <p>To reschedule your delivery:</p>
+                        <p><span class="red-flag" title="This link would go to a phishing site, not to Amazon">Click here to verify your delivery address</span></p>
+                        <p>Amazon Delivery Services</p>
+                        <hr>
+                        <p><strong>Why this is phishing:</strong> The sender's email domain is not an official Amazon domain. The message creates urgency and a problem that needs immediate action. Amazon would typically send such notifications from amazon.com domains and would not require you to "confirm details" via an email link to avoid a return.</p>
+                    </div>
+                    
+                    <h3>Interactive Demonstration: Phishing Link Payloads</h3>
+                    <p>Below are examples of what can happen when you click on phishing links. These are safe demonstrations - clicking them will only show a simulation of the attack technique.</p>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">🎣</div>
+                            <h3>Fake Login Page</h3>
+                            <p>Phishers create convincing duplicates of login pages to steal your credentials.</p>
+                            <p><a href="#" class="clickbait" onclick="showDemoPopup('login-theft')">more details</a></p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">📝</div>
+                            <h3>Data Entry Form</h3>
+                            <p>Forms that request excessive personal or financial information.</p>
+                            <p><a href="#" class="clickbait" onclick="showDemoPopup('data-theft')">more details</a></p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">📎</div>
+                            <h3>Malicious Download</h3>
+                            <p>Links that automatically download malware to your device.</p>
+                            <p><a href="#" class="clickbait" onclick="showDemoPopup('malware')">more details</a></p>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">🔒</div>
+                            <h3>Credential Harvester</h3>
+                            <p>Pages that steal your login information for multiple services.</p>
+                            <p><a href="#" class="clickbait" onclick="showDemoPopup('credential-harvester')">more details</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quiz Tab -->
+        <div id="quiz" class="tab-content">
+            <div class="module">
+                <div class="module-header">Test Your Knowledge</div>
+                <div class="module-content">
+                    <p>Take this quick quiz to test your understanding of phishing detection and prevention.</p>
+                    
+                    <form id="phishing-quiz">
+                        <div class="quiz-question">
+                            <p><strong>1. Which of the following is a common sign of a phishing email?</strong></p>
+                            <label><input type="radio" name="q1" value="a"> Personalized greeting with your correct name</label><br>
+                            <label><input type="radio" name="q1" value="b"> Links that match the company's official domain name</label><br>
+                            <label><input type="radio" name="q1" value="c"> Poor grammar and spelling mistakes</label><br>
+                            <label><input type="radio" name="q1" value="d"> Being sent during normal business hours</label><br>
+                        </div>
+                        
+                        <div class="quiz-question">
+                            <p><strong>2. If you receive an email claiming to be from your bank requesting urgent account verification, what should you do?</strong></p>
+                            <label><input type="radio" name="q2" value="a"> Click the link in the email and enter your information</label><br>
+                            <label><input type="radio" name="q2" value="b"> Reply to the email asking for more information</label><br>
+                            <label><input type="radio" name="q2" value="c"> Open any attachments to see what they contain</label><br>
+                            <label><input type="radio" name="q2" value="d"> Contact your bank directly using their official phone number or website</label><br>
+                        </div>
+                        
+                        <div class="quiz-question">
+                            <p><strong>3. What does the 'https://' at the beginning of a URL indicate?</strong></p>
+                            <label><input type="radio" name="q3" value="a"> The website is completely safe and can never be a phishing site</label><br>
+                            <label><input type="radio" name="q3" value="b"> The connection to the website is encrypted</label><br>
+                            <label><input type="radio" name="q3" value="c"> The website is owned by a verified company</label><br>
+                            <label><input type="radio" name="q3" value="d"> The website has been approved by a government agency</label><br>
+                        </div>
+                        
+                        <div class="quiz-question">
+                            <p><strong>4. Which of these URL addresses is most likely to be a phishing site?</strong></p>
+                            <label><input type="radio" name="q4" value="a"> https://www.paypal.com/account/login</label><br>
+                            <label><input type="radio" name="q4" value="b"> https://accounts.google.com/signin</label><br>
+                            <label><input type="radio" name="q4" value="c"> https://www.amazon.com/gp/css/order-history</label><br>
+                            <label><input type="radio" name="q4" value="d"> https://www.paypa1.com/account/verify</label><br>
+                        </div>
+                        
+                        <div class="quiz-question">
+                            <p><strong>5. What is "spear phishing"?</strong></p>
+                            <label><input type="radio" name="q5" value="a"> Phishing that targets military personnel</label><br>
+                            <label><input type="radio" name="q5" value="b"> Highly targeted phishing attacks customized for specific individuals</label><br>
+                            <label><input type="radio" name="q5" value="c"> Phishing attempts that only happen during fishing season</label><br>
+                            <label><input type="radio" name="q5" value="d"> Mass phishing emails sent to thousands of people at once</label><br>
+                        </div>
+                        
+                        <button type="button" onclick="checkQuiz()" style="margin-top: 20px; padding: 10px 20px; background-color: #2a3f54; color: white; border: none; border-radius: 4px; cursor: pointer;">Submit Quiz</button>
+                    </form>
+                    
+                    <div id="quiz-results" style="display: none; margin-top: 20px; padding: 15px; background-color: #f1f7ff; border-left: 4px solid #3498db; border-radius: 4px;">
+                        <h3>Quiz Results</h3>
+                        <p id="quiz-score"></p>
+                        <div id="quiz-feedback"></div>
+                        <a href="{{ url_for('simulate') }}" class="simulate-btn">Go to Simulation →</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Demo Popups -->
+    <div id="login-theft" class="demo-popup">
+        <div class="demo-popup-content">
+            <h2>⚠️ Fake Login Page Demo</h2>
+            <p>This is what happens when you click on a phishing link that leads to a fake login page:</p>
+            <ol>
+                <li>You're directed to a page that looks identical to a legitimate service (like Gmail or Facebook)</li>
+                <li>The website address is slightly different from the real one, but many users don't notice</li>
+                <li>When you enter your credentials, they're sent directly to the attacker</li>
+                <li>The page may redirect you to the real website afterward, making you think nothing happened</li>
+            </ol>
+            <p><strong>Result:</strong> The attacker now has your username and password and can access your account.</p>
+            <button class="close-popup" onclick="closeDemoPopup()">Close Demo</button>
+        </div>
+    </div>
+    
+    <div id="data-theft" class="demo-popup">
+        <div class="demo-popup-content">
+            <h2>⚠️ Data Entry Form Demo</h2>
+            <p>This is what happens when you click on a phishing link that leads to a data entry form:</p>
+            <ol>
+                <li>You're shown a form that claims to need your personal information (often with a compelling reason)</li>
+                <li>The form requests excessive personal details like:
+                    <ul>
+                        <li>Full name, address, phone number</li>
+                        <li>Date of birth, Social Security Number</li>
+                        <li>Credit card details including CVV code</li>
+                    </ul>
+                </li>
+                <li>All information entered is sent directly to the attacker</li>
+            </ol>
+            <p><strong>Result:</strong> The attacker collects enough information to commit identity theft or financial fraud.</p>
+            <button class="close-popup" onclick="closeDemoPopup()">Close Demo</button>
+        </div>
+    </div>
+    
+    <div id="malware" class="demo-popup">
+        <div class="demo-popup-content">
+            <h2>⚠️ Malicious Download Demo</h2>
+            <p>This is what happens when you click on a phishing link that triggers a malware download:</p>
+            <ol>
+                <li>The link initiates an automatic download of a malicious file</li>
+                <li>The file may be disguised as a PDF, invoice, or other innocent document</li>
+                <li>If you open it, malware is installed on your device without visible signs</li>
+                <li>Depending on the type of malware, it might:
+                    <ul>
+                        <li>Record your keystrokes to steal passwords</li>
+                        <li>Encrypt your files and demand ransom (ransomware)</li>
+                        <li>Give hackers remote access to your device</li>
+                        <li>Spy on your activities or steal your files</li>
+                    </ul>
+                </li>
+            </ol>
+            <p><strong>Result:</strong> Your device is compromised, potentially leading to data theft, financial loss, or privacy violations.</p>
+            <button class="close-popup" onclick="closeDemoPopup()">Close Demo</button>
+        </div>
+    </div>
+    
+    <div id="credential-harvester" class="demo-popup">
+        <div class="demo-popup-content">
+            <h2>⚠️ Credential Harvester Demo</h2>
+            <p>This is what happens when you encounter a credential harvesting attack:</p>
+            <ol>
+                <li>You're presented with a page that may first ask for one set of credentials</li>
+                <li>After entering those, you're asked for additional credentials for "verification"</li>
+                <li>The page may request access to multiple services:
+                    <ul>
+                        <li>Email account</li>
+                        <li>Cloud storage</li>
+                        <li>Social media</li>
+                        <li>Banking information</li>
+                    </ul>
+                </li>
+                <li>All credentials are collected by the attacker</li>
+            </ol>
+            <p><strong>Result:</strong> The attacker gains access to multiple accounts, increasing the damage potential and making recovery more difficult.</p>
+            <button class="close-popup" onclick="closeDemoPopup()">Close Demo</button>
+        </div>
+    </div>
+
+    <script>
+        // Track visited tabs for progress
+        let visitedTabs = new Set();
+        
+        // Tab navigation
+        function openTab(evt, tabName) {
+            // Hide all tab contents
+            var tabcontent = document.getElementsByClassName("tab-content");
+            for (var i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            
+            // Remove active class from all tabs
+            var tabs = document.getElementsByClassName("tab");
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+            
+            // Show the specific tab content
+            document.getElementById(tabName).classList.add("active");
+            
+            // Add active class to the clicked tab
+            evt.currentTarget.classList.add("active");
+            
+            // Track progress
+            visitedTabs.add(tabName);
+            updateProgress();
+        }
+        
+        // Update progress bar
+        function updateProgress() {
+            const totalTabs = document.getElementsByClassName("tab").length;
+            const progress = (visitedTabs.size / totalTabs) * 100;
+            document.getElementById("progress-fill").style.width = progress + "%";
+        }
+        
+        // Collapsible sections
+        var coll = document.getElementsByClassName("collapsible");
+        for (var i = 0; i < coll.length; i++) {
+            coll[i].addEventListener("click", function() {
+                this.classList.toggle("active-collapse");
+                var content = this.nextElementSibling;
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        }
+        
+        // Show demo popup
+        function showDemoPopup(id) {
+            document.getElementById(id).style.display = "flex";
+        }
+        
+        // Close demo popup
+        function closeDemoPopup() {
+            var popups = document.getElementsByClassName("demo-popup");
+            for (var i = 0; i < popups.length; i++) {
+                popups[i].style.display = "none";
+            }
+        }
+        
+        // Quiz checking
+        function checkQuiz() {
+            const answers = {
+                q1: "c",
+                q2: "d",
+                q3: "b",
+                q4: "d",
+                q5: "b"
+            };
+            
+            let score = 0;
+            let feedback = "";
+            
+            // Check each question
+            for (const question in answers) {
+                const selectedOption = document.querySelector(`input[name="${question}"]:checked`);
+                
+                if (!selectedOption) {
+                    feedback += `<p>Question ${question.substring(1)}: Not answered</p>`;
+                    continue;
+                }
+                
+                if (selectedOption.value === answers[question]) {
+                    score++;
+                    feedback += `<p>Question ${question.substring(1)}: <span style="color: green;">Correct!</span></p>`;
+                } else {
+                    feedback += `<p>Question ${question.substring(1)}: <span style="color: red;">Incorrect</span></p>`;
+                }
+            }
+            
+            // Show results
+            document.getElementById('quiz-score').textContent = `Your score: ${score} out of 5`;
+            document.getElementById('quiz-feedback').innerHTML = feedback;
+            document.getElementById('quiz-results').style.display = 'block';
+            
+            // Update progress
+            visitedTabs.add('quiz');
+            updateProgress();
+        }
+        
+        // Initialize first tab as visited
+        document.addEventListener('DOMContentLoaded', function() {
+            visitedTabs.add('basics');
+            updateProgress();
+        });
+    </script>
 </body>
 </html>
