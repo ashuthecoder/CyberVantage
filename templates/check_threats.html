@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberVantage - Check Threats</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: #2a3f54;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        main {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: #2a3f54;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+        }
+        
+        .section-tab {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .tab-btn {
+            padding: 0.5rem 2rem;
+            border: none;
+            background-color: #ecf0f1;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        .tab-btn:first-child {
+            border-radius: 4px 0 0 4px;
+        }
+        
+        .tab-btn:last-child {
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .tab-btn.active {
+            background-color: #9b59b6;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .content-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .scan-form {
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            background-color: #9b59b6;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .btn:hover {
+            background-color: #8e44ad;
+        }
+        
+        .scan-results {
+            margin-top: 2rem;
+            display: none;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .result-status {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .status-clean {
+            background-color: #2ecc71;
+        }
+        
+        .status-suspicious {
+            background-color: #f39c12;
+        }
+        
+        .status-malicious {
+            background-color: #e74c3c;
+        }
+        
+        .result-details {
+            margin-top: 1rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detection-list {
+            margin-top: 1rem;
+        }
+        
+        .detection-item {
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            background-color: #f8f9fa;
+        }
+        
+        .detection-engine {
+            font-weight: bold;
+        }
+        
+        .detection-result {
+            color: #e74c3c;
+        }
+        
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .loader-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #9b59b6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .search-history {
+            margin-top: 1rem;
+        }
+        
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-date {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .history-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.8rem;
+        }
+        
+        .recent-threats {
+            margin-top: 2rem;
+        }
+        
+        .threat-item {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+        }
+        
+        .threat-name {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .threat-description {
+            margin-bottom: 0.5rem;
+        }
+        
+        .threat-detection {
+            color: #e74c3c;
+            font-size: 0.9rem;
+        }
+        
+        .file-upload {
+            margin: 1rem 0;
+            padding: 2rem;
+            border: 2px dashed #ddd;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .file-upload:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .file-upload-input {
+            display: none;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: #2a3f54;
+            color: white;
+            margin-top: 2rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .section-tab {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .tab-btn {
+                width: 100%;
+                border-radius: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">CyberVantage</div>
+            <div class="user-info">
+                <span id="username">Welcome, {{ username }}</span>
+                <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Check Threats</h1>
+        <p class="subtitle">Scan files, URLs, and IP addresses for potential security threats</p>
+
+        <div class="section-tab">
+            <button class="tab-btn active" data-tab="url">URL Scanner</button>
+            <button class="tab-btn" data-tab="file">File Scanner</button>
+            <button class="tab-btn" data-tab="ip">IP Scanner</button>
+            <button class="tab-btn" data-tab="history">Scan History</button>
+        </div>
+
+        <!-- URL Scanner Tab -->
+        <div id="url-tab" class="tab-content active">
+            <div class="content-container">
+                <h2>URL Scanner</h2>
+                <p>Check if a website or URL is malicious or contains potential threats.</p>
+                
+                <div class="scan-form">
+                    <div class="form-group">
+                        <label for="url-input">Enter URL:</label>
+                        <input type="text" id="url-input" placeholder="https://example.com">
+                    </div>
+                    
+                    <button class="btn" id="url-scan-btn">Scan URL</button>
+                </div>
+                
+                <div class="loader" id="url-loader">
+                    <div class="loader-spinner"></div>
+                    <p>Scanning URL... This may take a few moments.</p>
+                </div>
+                
+                <div class="scan-results" id="url-results">
+                    <div class="result-header">
+                        <h3>Scan Results</h3>
+                        <div class="result-status status-suspicious">Potentially Malicious</div>
+                    </div>
+                    
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <span>URL:</span>
+                            <span id="result-url">https://example-malicious-site.com</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Detection Rate:</span>
+                            <span id="result-detection-rate">15/88 engines</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Scan Date:</span>
+                            <span id="result-scan-date">2025-08-15 15:54:30</span>
+                        </div>
+                    </div>
+                    
+                    <h4>Detection Details:</h4>
+                    <div class="detection-list" id="result-detections">
+                        <div class="detection-item">
+                            <span class="detection-engine">Kaspersky:</span>
+                            <span class="detection-result">Phishing</span>
+                        </div>
+                        <div class="detection-item">
+                            <span class="detection-engine">Google Safebrowsing:</span>
+                            <span class="detection-result">Malicious</span>
+                        </div>
+                        <div class="detection-item">
+                            <span class="detection-engine">ESET:</span>
+                            <span class="detection-result">Phishing.PayPal</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Scanner Tab -->
+        <div id="file-tab" class="tab-content">
+            <div class="content-container">
+                <h2>File Scanner</h2>
+                <p>Upload a file to check for malware, viruses, and other threats.</p>
+                
+                <div class="scan-form">
+                    <div class="file-upload" id="file-upload-area">
+                        <input type="file" id="file-input" class="file-upload-input">
+                        <div id="file-upload-text">
+                            <p>Drag and drop file here or click to browse</p>
+                            <p style="font-size: 0.9rem; color: #7f8c8d;">(Maximum file size: 32MB)</p>
+                        </div>
+                        <div id="file-selected" style="display: none;">
+                            <p>Selected file: <span id="selected-filename"></span></p>
+                        </div>
+                    </div>
+                    
+                    <button class="btn" id="file-scan-btn">Scan File</button>
+                </div>
+                
+                <div class="loader" id="file-loader">
+                    <div class="loader-spinner"></div>
+                    <p>Scanning file... This may take several moments.</p>
+                </div>
+                
+                <div class="scan-results" id="file-results">
+                    <div class="result-header">
+                        <h3>Scan Results</h3>
+                        <div class="result-status status-malicious">Malicious</div>
+                    </div>
+                    
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <span>File:</span>
+                            <span id="result-filename">document.pdf</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>File Type:</span>
+                            <span id="result-filetype">PDF Document</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Detection Rate:</span>
+                            <span id="result-file-detection-rate">42/68 engines</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Scan Date:</span>
+                            <span id="result-file-scan-date">2025-08-15 15:54:30</span>
+                        </div>
+                    </div>
+                    
+                    <h4>Detection Details:</h4>
+                    <div class="detection-list" id="result-file-detections">
+                        <div class="detection-item">
+                            <span class="detection-engine">Microsoft:</span>
+                            <span class="detection-result">Trojan:PDF/Phish.gen</span>
+                        </div>
+                        <div class="detection-item">
+                            <span class="detection-engine">ClamAV:</span>
+                            <span class="detection-result">PDF.Trojan.Agent</span>
+                        </div>
+                        <div class="detection-item">
+                            <span class="detection-engine">Avast:</span>
+                            <span class="detection-result">FileRepMalware</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- IP Scanner Tab -->
+        <div id="ip-tab" class="tab-content">
+            <div class="content-container">
+                <h2>IP Scanner</h2>
+                <p>Check if an IP address is associated with malicious activities.</p>
+                
+                <div class="scan-form">
+                    <div class="form-group">
+                        <label for="ip-input">Enter IP Address:</label>
+                        <input type="text" id="ip-input" placeholder="93.184.216.34">
+                    </div>
+                    
+                    <button class="btn" id="ip-scan-btn">Scan IP</button>
+                </div>
+                
+                <div class="loader" id="ip-loader">
+                    <div class="loader-spinner"></div>
+                    <p>Scanning IP... This may take a few moments.</p>
+                </div>
+                
+                <div class="scan-results" id="ip-results">
+                    <div class="result-header">
+                        <h3>Scan Results</h3>
+                        <div class="result-status status-clean">Clean</div>
+                    </div>
+                    
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <span>IP Address:</span>
+                            <span id="result-ip">93.184.216.34</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Detection Rate:</span>
+                            <span id="result-ip-detection-rate">0/88 engines</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Scan Date:</span>
+                            <span id="result-ip-scan-date">2025-08-15 15:54:30</span>
+                        </div>
+                    </div>
+                    
+                    <h4>Additional Information:</h4>
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <span>Location:</span>
+                            <span id="result-ip-location">United States</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>ASN:</span>
+                            <span id="result-ip-asn">AS15133 EdgeCast Networks, Inc.</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Reputation Score:</span>
+                            <span id="result-ip-reputation">100/100 (Good)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scan History Tab -->
+        <div id="history-tab" class="tab-content">
+            <div class="content-container">
+                <h2>Scan History</h2>
+                <p>View your recent scan activities and results.</p>
+                
+                <div class="search-history">
+                    <h3>Recent Scans</h3>
+                    <div class="history-item">
+                        <div>
+                            <strong>https://example-malicious-site.com</strong>
+                            <div class="history-date">2025-08-15 15:54:30</div>
+                        </div>
+                        <div class="history-status status-suspicious">Suspicious</div>
+                    </div>
+                    <div class="history-item">
+                        <div>
+                            <strong>document.pdf</strong>
+                            <div class="history-date">2025-08-15 14:30:12</div>
+                        </div>
+                        <div class="history-status status-malicious">Malicious</div>
+                    </div>
+                    <div class="history-item">
+                        <div>
+                            <strong>93.184.216.34</strong>
+                            <div class="history-date">2025-08-14 09:22:45</div>
+                        </div>
+                        <div class="history-status status-clean">Clean</div>
+                    </div>
+                    <div class="history-item">
+                        <div>
+                            <strong>https://example.com</strong>
+                            <div class="history-date">2025-08-13 18:15:33</div>
+                        </div>
+                        <div class="history-status status-clean">Clean</div>
+                    </div>
+                </div>
+                
+                <div class="recent-threats">
+                    <h3>Recent Detected Threats</h3>
+                    <div class="threat-item">
+                        <div class="threat-name">PDF.Trojan.Agent</div>
+                        <div class="threat-description">A malicious PDF document that contains embedded code designed to steal sensitive information.</div>
+                        <div class="threat-detection">Detected in: document.pdf</div>
+                    </div>
+                    <div class="threat-item">
+                        <div class="threat-name">Phishing.PayPal</div>
+                        <div class="threat-description">A phishing website that attempts to steal PayPal credentials.</div>
+                        <div class="threat-detection">Detected in: https://example-malicious-site.com</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 CyberVantage. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab functionality
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
+                    
+                    // Update active button
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Update active content
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+            
+            // URL Scanner functionality
+            const urlScanBtn = document.getElementById('url-scan-btn');
+            const urlInput = document.getElementById('url-input');
+            const urlLoader = document.getElementById('url-loader');
+            const urlResults = document.getElementById('url-results');
+            
+            urlScanBtn.addEventListener('click', function() {
+                const url = urlInput.value.trim();
+                if (!url) {
+                    alert('Please enter a URL to scan.');
+                    return;
+                }
+                
+                // Show loader and hide results
+                urlLoader.style.display = 'block';
+                urlResults.style.display = 'none';
+                
+                // Simulate API call with setTimeout
+                setTimeout(() => {
+                    // Hide loader and show results
+                    urlLoader.style.display = 'none';
+                    urlResults.style.display = 'block';
+                    
+                    // Update results with scanned URL
+                    document.getElementById('result-url').textContent = url;
+                    document.getElementById('result-scan-date').textContent = new Date().toISOString().replace('T', ' ').substring(0, 19);
+                    
+                    // In a real implementation, you would use the VirusTotal API here
+                }, 2000);
+            });
+            
+            // File upload functionality
+            const fileUploadArea = document.getElementById('file-upload-area');
+            const fileInput = document.getElementById('file-input');
+            const fileSelectedDiv = document.getElementById('file-selected');
+            const fileUploadText = document.getElementById('file-upload-text');
+            const selectedFilename = document.getElementById('selected-filename');
+            
+            fileUploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    selectedFilename.textContent = file.name;
+                    fileUploadText.style.display = 'none';
+                    fileSelectedDiv.style.display = 'block';
+                }
+            });
+            
+            // File Scanner functionality
+            const fileScanBtn = document.getElementById('file-scan-btn');
+            const fileLoader = document.getElementById('file-loader');
+            const fileResults = document.getElementById('file-results');
+            
+            fileScanBtn.addEventListener('click', function() {
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    alert('Please select a file to scan.');
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                
+                // Show loader and hide results
+                fileLoader.style.display = 'block';
+                fileResults.style.display = 'none';
+                
+                // Simulate API call with setTimeout
+                setTimeout(() => {
+                    // Hide loader and show results
+                    fileLoader.style.display = 'none';
+                    fileResults.style.display = 'block';
+                    
+                    // Update results with scanned file
+                    document.getElementById('result-filename').textContent = file.name;
+                    document.getElementById('result-filetype').textContent = file.type || 'Unknown';
+                    document.getElementById('result-file-scan-date').textContent = new Date().toISOString().replace('T', ' ').substring(0, 19);
+                    
+                    // In a real implementation, you would use the VirusTotal API here
+                }, 3000);
+            });
+            
+            // IP Scanner functionality
+            const ipScanBtn = document.getElementById('ip-scan-btn');
+            const ipInput = document.getElementById('ip-input');
+            const ipLoader = document.getElementById('ip-loader');
+            const ipResults = document.getElementById('ip-results');
+            
+            ipScanBtn.addEventListener('click', function() {
+                const ip = ipInput.value.trim();
+                if (!ip) {
+                    alert('Please enter an IP address to scan.');
+                    return;
+                }
+                
+                // Show loader and hide results
+                ipLoader.style.display = 'block';
+                ipResults.style.display = 'none';
+                
+                // Simulate API call with setTimeout
+                setTimeout(() => {
+                    // Hide loader and show results
+                    ipLoader.style.display = 'none';
+                    ipResults.style.display = 'block';
+                    
+                    // Update results with scanned IP
+                    document.getElementById('result-ip').textContent = ip;
+                    document.getElementById('result-ip-scan-date').textContent = new Date().toISOString().replace('T', ' ').substring(0, 19);
+                    
+                    // In a real implementation, you would use the VirusTotal API here
+                }, 2000);
+            });
+            
+            // Drag and drop functionality for file upload
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                fileUploadArea.classList.add('highlighted');
+            }
+            
+            function unhighlight() {
+                fileUploadArea.classList.remove('highlighted');
+            }
+            
+            fileUploadArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files && files.length > 0) {
+                    fileInput.files = files;
+                    const file = files[0];
+                    selectedFilename.textContent = file.name;
+                    fileUploadText.style.display = 'none';
+                    fileSelectedDiv.style.display = 'block';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1313,6 +1313,10 @@ def reset_stuck_simulation(current_user):
     except Exception as e:
         print(f"[RESET] Exception in reset_stuck_simulation: {e}")
         return redirect(url_for('dashboard'))
+@app.route('/check_threats')
+@token_required
+def check_threats():
+    return render_template('check_threats.html', username=session.get('username', 'User'))
 
 @app.route('/debug_simulation')
 @token_required

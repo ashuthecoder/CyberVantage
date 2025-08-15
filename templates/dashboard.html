@@ -122,6 +122,10 @@
             background-color: #2ecc71;
         }
         
+        #threats-section::after {
+            background-color: #9b59b6;
+        }
+        
         .section-card:hover::after {
             height: 10px;
         }
@@ -158,6 +162,13 @@
             margin-top: 2rem;
         }
         
+        .current-time {
+            text-align: center;
+            margin: 1rem 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
         /* Responsive Design */
         @media (max-width: 768px) {
             .sections-container {
@@ -185,6 +196,7 @@
     <main>
         <h1>Dashboard</h1>
         <p class="subtitle">Choose a path to enhance your cybersecurity knowledge</p>
+        <p class="current-time">Current Date and Time: 2025-08-15 15:54:30</p>
 
         <div class="sections-container">
             <a href="{{ url_for('learn') }}" class="section-card" id="learn-section">
@@ -208,6 +220,14 @@
                     <div class="section-icon">📊</div>
                     <h2>Analysis</h2>
                     <p>Review your performance metrics, progress tracking, and personalized recommendations.</p>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('check_threats') }}" class="section-card" id="threats-section">
+                <div class="section-content">
+                    <div class="section-icon">🔍</div>
+                    <h2>Check Threats</h2>
+                    <p>Scan files, URLs, and IPs using VirusTotal to identify potential malware and security threats.</p>
                 </div>
             </a>
         </div>
