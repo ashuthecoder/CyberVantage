@@ -1,59 +1,518 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberVantage - Analysis</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f7fa;
-        }
-        header {
-            background-color: #2a3f54;
-            color: white;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-        }
-        .back-btn {
-            color: white;
-            text-decoration: none;
-        }
-        .logout-btn {
-            background-color: #e74c3c;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            text-decoration: none;
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <a href="{{ url_for('dashboard') }}" class="back-btn">← Back to Dashboard</a>
-        <div>
-            <span>Welcome, {{ username }}</span>
-            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-        </div>
-    </header>
+{% extends "base.html" %}
 
-    <div class="container">
-        <h1>Performance Analysis</h1>
-        <p>Track your progress and analyze your performance in cybersecurity training.</p>
-        
-        <div style="margin-top: 30px;">
-            <h2>Your Statistics</h2>
-            <p>Performance analytics coming soon!</p>
+{% block title %}Performance Analysis | CyberVantage{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Performance Analysis</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Analysis</li>
+    </ol>
+
+    <!-- Loading Spinner (shown initially, hidden when data loads) -->
+    <div id="loading-spinner" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Generating your personalized analysis...</p>
+    </div>
+
+    <!-- Main Content (hidden initially, shown when data loads) -->
+    <div id="analysis-content" style="display: none;">
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-primary text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">Overall Accuracy</h5>
+                                <h2 class="mb-0"><span id="overall-accuracy">0</span>%</h2>
+                            </div>
+                            <div class="text-white-50"><i class="fas fa-chart-pie fa-3x"></i></div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <span id="accuracy-trend">Calculating...</span>
+                        <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-warning text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">Phishing Detection Rate</h5>
+                                <h2 class="mb-0"><span id="phishing-detection">0</span>%</h2>
+                            </div>
+                            <div class="text-white-50"><i class="fas fa-fish fa-3x"></i></div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <span id="detection-summary">Calculating...</span>
+                        <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-success text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">False Positive Rate</h5>
+                                <h2 class="mb-0"><span id="false-positive">0</span>%</h2>
+                            </div>
+                            <div class="text-white-50"><i class="fas fa-check-circle fa-3x"></i></div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <span id="false-positive-summary">Calculating...</span>
+                        <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card bg-danger text-white mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">Average Score</h5>
+                                <h2 class="mb-0"><span id="avg-score">0</span>/10</h2>
+                            </div>
+                            <div class="text-white-50"><i class="fas fa-star fa-3x"></i></div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <span id="score-summary">Calculating...</span>
+                        <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <div class="col-xl-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-chart-bar me-1"></i>
+                        Performance by Email Type
+                    </div>
+                    <div class="card-body">
+                        <canvas id="emailTypeChart" width="100%" height="40"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-chart-line me-1"></i>
+                        Progress Over Time
+                    </div>
+                    <div class="card-body">
+                        <canvas id="progressChart" width="100%" height="40"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Analysis and Skills Cards Row -->
+        <div class="row mb-4">
+            <!-- AI Analysis Card -->
+            <div class="col-xl-8">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-robot me-1"></i>
+                            AI Personalized Feedback
+                        </div>
+                        <button id="refresh-analysis" class="btn btn-sm btn-primary">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh Analysis
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="ai-analysis-content">
+                            <div class="placeholder-glow">
+                                <p class="placeholder col-12"></p>
+                                <p class="placeholder col-10"></p>
+                                <p class="placeholder col-8"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Skills Rating Card -->
+            <div class="col-xl-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Your Phishing Detection Skills
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>Suspicious Sender Recognition</span>
+                                <span id="sender-score">0/10</span>
+                            </label>
+                            <div class="progress">
+                                <div id="sender-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>URL/Link Analysis</span>
+                                <span id="url-score">0/10</span>
+                            </label>
+                            <div class="progress">
+                                <div id="url-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>Content/Language Assessment</span>
+                                <span id="content-score">0/10</span>
+                            </label>
+                            <div class="progress">
+                                <div id="content-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>Urgency/Threat Detection</span>
+                                <span id="urgency-score">0/10</span>
+                            </label>
+                            <div class="progress">
+                                <div id="urgency-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>Overall Judgment</span>
+                                <span id="judgment-score">0/10</span>
+                            </label>
+                            <div class="progress">
+                                <div id="judgment-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Responses Table -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                Recent Responses
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="responsesTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Email Subject</th>
+                                <th>Actual Type</th>
+                                <th>Your Response</th>
+                                <th>Accuracy</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="responses-tbody">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- ChartJS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+
+<!-- Custom JS for the Analysis Page -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load the analysis data
+    loadAnalysisData();
+
+    // Set up refresh button
+    document.getElementById('refresh-analysis').addEventListener('click', function() {
+        const aiContent = document.getElementById('ai-analysis-content');
+        aiContent.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Generating new analysis...</p></div>';
+        
+        fetch('/api/refresh_analysis')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    aiContent.innerHTML = data.feedback;
+                } else {
+                    aiContent.innerHTML = '<div class="alert alert-danger">Failed to generate analysis. Please try again later.</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                aiContent.innerHTML = '<div class="alert alert-danger">An error occurred while refreshing the analysis.</div>';
+            });
+    });
+
+    // Function to load analysis data
+    function loadAnalysisData() {
+        fetch('/api/analysis_data')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the UI with the fetched data
+                    updateAnalysisDashboard(data);
+                    
+                    // Hide spinner, show content
+                    document.getElementById('loading-spinner').style.display = 'none';
+                    document.getElementById('analysis-content').style.display = 'block';
+                } else {
+                    showError(data.message || 'Failed to load analysis data');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('An error occurred while loading the analysis data');
+            });
+    }
+
+    // Function to show error
+    function showError(message) {
+        document.getElementById('loading-spinner').innerHTML = `
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading">Error</h4>
+                <p>${message}</p>
+                <hr>
+                <p class="mb-0">Try refreshing the page or contact support if the problem persists.</p>
+            </div>
+        `;
+    }
+
+    // Function to update the dashboard with fetched data
+    function updateAnalysisDashboard(data) {
+        // Update summary statistics
+        document.getElementById('overall-accuracy').textContent = data.metrics.overall_accuracy;
+        document.getElementById('phishing-detection').textContent = data.metrics.phishing_detection_rate;
+        document.getElementById('false-positive').textContent = data.metrics.false_positive_rate;
+        document.getElementById('avg-score').textContent = data.metrics.average_score;
+
+        // Update trend summaries
+        document.getElementById('accuracy-trend').textContent = data.metrics.accuracy_trend;
+        document.getElementById('detection-summary').textContent = data.metrics.detection_summary;
+        document.getElementById('false-positive-summary').textContent = data.metrics.false_positive_summary;
+        document.getElementById('score-summary').textContent = data.metrics.score_summary;
+
+        // Update skill scores
+        updateSkillScores(data.skills);
+
+        // Update AI analysis
+        document.getElementById('ai-analysis-content').innerHTML = data.ai_analysis;
+
+        // Create charts
+        createEmailTypeChart(data.charts.email_type);
+        createProgressChart(data.charts.progress_over_time);
+
+        // Populate responses table
+        populateResponsesTable(data.responses);
+    }
+
+    // Update skill scores and progress bars
+    function updateSkillScores(skills) {
+        // Helper function to set score and progress bar
+        function setSkillScore(id, score) {
+            const scoreValue = Math.round(score * 10) / 10;  // Round to 1 decimal place
+            document.getElementById(`${id}-score`).textContent = `${scoreValue}/10`;
+            
+            const progressBar = document.getElementById(`${id}-progress`);
+            const percentage = (scoreValue / 10) * 100;
+            progressBar.style.width = `${percentage}%`;
+            
+            // Set color based on score
+            if (scoreValue >= 7.5) {
+                progressBar.classList.add('bg-success');
+            } else if (scoreValue >= 5) {
+                progressBar.classList.add('bg-warning');
+            } else {
+                progressBar.classList.add('bg-danger');
+            }
+        }
+
+        // Set each skill score
+        setSkillScore('sender', skills.sender_recognition);
+        setSkillScore('url', skills.url_analysis);
+        setSkillScore('content', skills.content_assessment);
+        setSkillScore('urgency', skills.urgency_detection);
+        setSkillScore('judgment', skills.overall_judgment);
+    }
+
+    // Create the email type chart
+    function createEmailTypeChart(data) {
+        const ctx = document.getElementById('emailTypeChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Legitimate Emails', 'Phishing Emails'],
+                datasets: [
+                    {
+                        label: 'Correct Identification',
+                        backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                        borderColor: 'rgba(40, 167, 69, 1)',
+                        borderWidth: 1,
+                        data: [data.legitimate_correct, data.phishing_correct]
+                    },
+                    {
+                        label: 'Incorrect Identification',
+                        backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        borderWidth: 1,
+                        data: [data.legitimate_incorrect, data.phishing_incorrect]
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Emails'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.raw;
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Create the progress chart
+    function createProgressChart(data) {
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    {
+                        label: 'Accuracy',
+                        data: data.accuracy,
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        borderColor: 'rgba(13, 110, 253, 1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Phishing Detection',
+                        data: data.phishing_detection,
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        borderColor: 'rgba(255, 193, 7, 1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Percentage (%)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                }
+            }
+        });
+    }
+
+    // Populate the responses table
+    function populateResponsesTable(responses) {
+        const tbody = document.getElementById('responses-tbody');
+        tbody.innerHTML = ''; // Clear existing rows
+
+        if (responses.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = '<td colspan="6" class="text-center">No responses found.</td>';
+            tbody.appendChild(row);
+            return;
+        }
+
+        responses.forEach(response => {
+            const row = document.createElement('tr');
+            
+            // Format date
+            const date = new Date(response.date);
+            const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            
+            // Determine accuracy class
+            const accuracyClass = response.is_correct ? 'text-success' : 'text-danger';
+            const accuracyIcon = response.is_correct ? 
+                '<i class="fas fa-check-circle"></i> Correct' : 
+                '<i class="fas fa-times-circle"></i> Incorrect';
+                
+            // Format score with color
+            let scoreHTML = '';
+            if (response.score !== null) {
+                let scoreColorClass = 'text-danger';
+                if (response.score >= 7.5) scoreColorClass = 'text-success';
+                else if (response.score >= 5) scoreColorClass = 'text-warning';
+                
+                scoreHTML = `<span class="${scoreColorClass}">${response.score}/10</span>`;
+            } else {
+                scoreHTML = 'N/A';
+            }
+            
+            row.innerHTML = `
+                <td>${formattedDate}</td>
+                <td>${response.subject}</td>
+                <td>${response.actual_type ? 'Phishing' : 'Legitimate'}</td>
+                <td>${response.user_response ? 'Phishing' : 'Legitimate'}</td>
+                <td class="${accuracyClass}">${accuracyIcon}</td>
+                <td>${scoreHTML}</td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+});
+</script>
+{% endblock %}
