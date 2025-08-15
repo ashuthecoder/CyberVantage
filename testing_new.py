@@ -17,6 +17,8 @@ import random
 import markdown
 import re
 import traceback
+import uuid
+import sqlite3
 
 # Load environment variables
 load_dotenv()
@@ -88,6 +90,36 @@ class SimulationEmail(db.Model):
     is_spam = db.Column(db.Boolean, nullable=False)  # Whether it's a spam email
     is_predefined = db.Column(db.Boolean, nullable=False)  # Whether it's predefined or AI-generated
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    
+    # We'll handle this column manually since it's causing issues
+    # simulation_id = db.Column(db.String(36), nullable=True)  # Track which simulation run this email belongs to
+
+# Update database schema if needed
+def update_database_schema():
+    """Add the simulation_id column to the SimulationEmail table if it doesn't exist"""
+    try:
+        # Connect directly to the SQLite database
+        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Check if the column exists
+        cursor.execute("PRAGMA table_info(simulation_email)")
+        columns = [col[1] for col in cursor.fetchall()]
+        
+        if 'simulation_id' not in columns:
+            print("[DB] Adding simulation_id column to SimulationEmail table")
+            cursor.execute("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT")
+            conn.commit()
+            print("[DB] Column added successfully")
+        else:
+            print("[DB] simulation_id column already exists")
+            
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[DB] Error updating database schema: {str(e)}")
+        return False
 
 # Token required decorator
 def token_required(f):
@@ -190,7 +222,7 @@ predefined_emails = [
     }
 ]
 
-# Template emails for when AI generation fails
+# Enhanced template emails for when AI generation fails - with more variety
 template_emails = [
     {
         "sender": "security@company-portal.net",
@@ -245,6 +277,64 @@ template_emails = [
             </ul>
             <p>Check out your personalized playlist on the Spotify app or <a href="https://spotify.com/recommendations">website</a>.</p>
             <p>The Spotify Team</p>
+        """,
+        "is_spam": False
+    },
+    {
+        "sender": "alert@bank-secure.com",
+        "subject": "Unusual Activity Detected on Your Account",
+        "content": """
+            <p>Dear Valued Customer,</p>
+            <p>We have detected unusual activity on your bank account.</p>
+            <p>Please verify your identity by clicking the link below and entering your account details:</p>
+            <p><a href="https://bank-secure.com/verify">Verify Account</a></p>
+            <p>If you don't recognize this activity, please contact us immediately.</p>
+            <p>Bank Security Team</p>
+        """,
+        "is_spam": True
+    },
+    {
+        "sender": "no-reply@github.com",
+        "subject": "Security Alert: New Sign-in to GitHub",
+        "content": """
+            <p>Hello,</p>
+            <p>We noticed a new sign-in to your GitHub account from a new device:</p>
+            <p><strong>Time</strong>: August 14, 2025, 3:15 PM UTC<br>
+            <strong>Device</strong>: Chrome on Windows<br>
+            <strong>Location</strong>: San Francisco, CA, USA</p>
+            <p>If this was you, you can ignore this email. If you didn't sign in recently, please <a href="https://github.com/settings/security">review your account security</a> and change your password.</p>
+            <p>The GitHub Team</p>
+        """,
+        "is_spam": False
+    },
+    {
+        "sender": "customer-service@amaz0n-support.net",
+        "subject": "Your Amazon Order #7829345 has been Canceled",
+        "content": """
+            <p>Dear Amazon Customer,</p>
+            <p>Unfortunately, your recent Amazon order (#7829345) has been canceled due to a problem with your payment method.</p>
+            <p>To update your payment information and reprocess your order, please click the link below:</p>
+            <p><a href="http://amaz0n-support.net/update-payment">Update Payment Information</a></p>
+            <p>We apologize for any inconvenience.</p>
+            <p>Amazon Customer Service</p>
+        """,
+        "is_spam": True
+    },
+    {
+        "sender": "newsletter@medium.com",
+        "subject": "Top 5 Stories This Week - Medium Digest",
+        "content": """
+            <p>Your Weekly Medium Digest</p>
+            <h3>Top 5 Stories You Might Have Missed:</h3>
+            <ul>
+                <li>How I Built a Successful Tech Startup in 12 Months</li>
+                <li>The Future of AI: Opportunities and Risks</li>
+                <li>10 Productivity Hacks That Actually Work</li>
+                <li>Understanding Web3: A Beginner's Guide</li>
+                <li>Why Remote Work Is Here to Stay</li>
+            </ul>
+            <p>Read these stories and more on <a href="https://medium.com">Medium</a>.</p>
+            <p>You're receiving this email because you're subscribed to Medium's weekly digest.</p>
         """,
         "is_spam": False
     }
@@ -371,10 +461,13 @@ def generate_ai_email(user_name, previous_responses):
 
 def get_template_email():
     """Return a random template email when AI generation fails"""
+    # Generate a unique template for each position
     template = random.choice(template_emails)
+    
+    # Add randomness to ensure uniqueness
     return {
         "sender": template["sender"],
-        "subject": template["subject"],
+        "subject": f"{template['subject']} #{random.randint(1000, 9999)}",
         "date": datetime.datetime.now().strftime("%B %d, %Y"),
         "content": template["content"],
         "is_spam": template["is_spam"]
@@ -512,49 +605,169 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
         return get_fallback_evaluation(is_spam, user_response)
 
 def get_fallback_evaluation(is_spam, user_response):
-    """Generate a basic evaluation when AI isn't available"""
+    """Generate a varied evaluation when AI isn't available"""
     correct = user_response == is_spam
-    base_score = 8 if correct else 3
     
+    # Add more varied scoring
     if correct:
-        feedback = """
-        <h3 style='color: #2a3f54; margin-top: 20px;'>1. Is the user's conclusion correct?</h3>
-        <p>Yes, the user's conclusion was correct.</p>
+        base_score = random.randint(7, 9)  # Random score between 7-9
         
-        <h3 style='color: #2a3f54; margin-top: 20px;'>2. What did the user get right in their analysis?</h3>
-        <p>The user correctly identified whether this was a phishing email or not.</p>
+        # Choose from multiple feedback templates for variety
+        templates = [
+            """
+            <h3 style='color: #2a3f54; margin-top: 20px;'>1. Is the user's conclusion correct?</h3>
+            <p>Yes, the user's conclusion was correct.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>2. What did the user get right in their analysis?</h3>
+            <p>The user correctly identified whether this was a phishing email or not. They showed good judgment.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>3. What did the user miss or get wrong?</h3>
+            <p>While the conclusion was correct, a more detailed analysis would help strengthen phishing detection skills.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>4. Score</h3>
+            <p>On a scale of 1-10, the user's analysis rates a {score}.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>5. Constructive feedback</h3>
+            <p>Good job identifying this email correctly! To improve further, practice identifying specific red flags in phishing emails and security features in legitimate emails.</p>
+            """,
+            
+            """
+            <h3 style='color: #2a3f54; margin-top: 20px;'>1. Is the user's conclusion correct?</h3>
+            <p>Yes, your assessment was accurate.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>2. What did the user get right in their analysis?</h3>
+            <p>You correctly determined the nature of the email and demonstrated good security awareness.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>3. What did the user miss or get wrong?</h3>
+            <p>Your conclusion was correct, but including more specific details about what influenced your decision would strengthen your analysis.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>4. Score</h3>
+            <p>On a scale of 1-10, your analysis rates a {score}.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>5. Constructive feedback</h3>
+            <p>Excellent work! In future analyses, try to point out specific elements like sender address anomalies, suspicious links, and urgency tactics.</p>
+            """
+        ]
         
-        <h3 style='color: #2a3f54; margin-top: 20px;'>3. What did the user miss or get wrong?</h3>
-        <p>While the conclusion was correct, a more detailed analysis would help strengthen phishing detection skills.</p>
-        
-        <h3 style='color: #2a3f54; margin-top: 20px;'>4. Score</h3>
-        <p>On a scale of 1-10, the user's analysis rates an 8.</p>
-        
-        <h3 style='color: #2a3f54; margin-top: 20px;'>5. Constructive feedback</h3>
-        <p>Good job identifying this email correctly! To improve further, practice identifying specific red flags in phishing emails and security features in legitimate emails.</p>
-        """
+        feedback = random.choice(templates).format(score=base_score)
     else:
-        feedback = """
-        <h3 style='color: #2a3f54; margin-top: 20px;'>1. Is the user's conclusion correct?</h3>
-        <p>No, the user's conclusion was incorrect.</p>
+        base_score = random.randint(2, 4)  # Random score between 2-4
         
-        <h3 style='color: #2a3f54; margin-top: 20px;'>2. What did the user get right in their analysis?</h3>
-        <p>The user attempted to analyze the email, which is an important security practice.</p>
+        templates = [
+            """
+            <h3 style='color: #2a3f54; margin-top: 20px;'>1. Is the user's conclusion correct?</h3>
+            <p>No, the user's conclusion was incorrect.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>2. What did the user get right in their analysis?</h3>
+            <p>The user attempted to analyze the email, which is an important security practice.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>3. What did the user miss or get wrong?</h3>
+            <p>The user missed critical indicators that would have led to the correct classification of this email.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>4. Score</h3>
+            <p>On a scale of 1-10, the user's analysis rates a {score}.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>5. Constructive feedback</h3>
+            <p>For better results, carefully examine the sender's address, look for urgency cues in phishing emails, and check for suspicious links. With practice, your detection skills will improve.</p>
+            """,
+            
+            """
+            <h3 style='color: #2a3f54; margin-top: 20px;'>1. Is the user's conclusion correct?</h3>
+            <p>Unfortunately, your assessment was not accurate.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>2. What did the user get right in their analysis?</h3>
+            <p>You engaged with the exercise and considered the email's content, which is a good security habit.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>3. What did the user miss or get wrong?</h3>
+            <p>You missed some key indicators that would have helped correctly identify this email's legitimacy.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>4. Score</h3>
+            <p>On a scale of 1-10, your analysis rates a {score}.</p>
+            
+            <h3 style='color: #2a3f54; margin-top: 20px;'>5. Constructive feedback</h3>
+            <p>Remember to check for inconsistencies in the domain name, generic greetings, poor grammar, and requests for sensitive information. These common indicators can help you make more accurate assessments.</p>
+            """
+        ]
         
-        <h3 style='color: #2a3f54; margin-top: 20px;'>3. What did the user miss or get wrong?</h3>
-        <p>The user missed critical indicators that would have led to the correct classification of this email.</p>
-        
-        <h3 style='color: #2a3f54; margin-top: 20px;'>4. Score</h3>
-        <p>On a scale of 1-10, the user's analysis rates a 3.</p>
-        
-        <h3 style='color: #2a3f54; margin-top: 20px;'>5. Constructive feedback</h3>
-        <p>For better results, carefully examine the sender's address, look for urgency cues in phishing emails, and check for suspicious links. With practice, your detection skills will improve.</p>
-        """
+        feedback = random.choice(templates).format(score=base_score)
     
     return {
         "feedback": feedback,
         "score": base_score
     }
+
+# Helper function for storing and retrieving simulation ID for advanced emails
+def get_simulation_id_for_email(email_id):
+    """Get the simulation ID for a specific email"""
+    try:
+        # Connect directly to the database
+        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Check if simulation_id column exists
+        cursor.execute("PRAGMA table_info(simulation_email)")
+        columns = [col[1] for col in cursor.fetchall()]
+        
+        if 'simulation_id' in columns:
+            cursor.execute("SELECT simulation_id FROM simulation_email WHERE id=?", (email_id,))
+            result = cursor.fetchone()
+            conn.close()
+            return result[0] if result and result[0] else None
+        else:
+            conn.close()
+            return None
+    except Exception as e:
+        print(f"[DB] Error getting simulation_id: {str(e)}")
+        return None
+
+def set_simulation_id_for_email(email_id, simulation_id):
+    """Set the simulation ID for a specific email"""
+    try:
+        # Connect directly to the database
+        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Check if simulation_id column exists
+        cursor.execute("PRAGMA table_info(simulation_email)")
+        columns = [col[1] for col in cursor.fetchall()]
+        
+        if 'simulation_id' in columns:
+            cursor.execute("UPDATE simulation_email SET simulation_id=? WHERE id=?", (simulation_id, email_id))
+            conn.commit()
+            conn.close()
+            return True
+        else:
+            conn.close()
+            return False
+    except Exception as e:
+        print(f"[DB] Error setting simulation_id: {str(e)}")
+        return False
+
+def get_emails_for_simulation(simulation_id):
+    """Get all emails for a specific simulation"""
+    try:
+        # Connect directly to the database
+        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Check if simulation_id column exists
+        cursor.execute("PRAGMA table_info(simulation_email)")
+        columns = [col[1] for col in cursor.fetchall()]
+        
+        if 'simulation_id' in columns:
+            cursor.execute("SELECT id FROM simulation_email WHERE simulation_id=?", (simulation_id,))
+            emails = cursor.fetchall()
+            conn.close()
+            return [email[0] for email in emails]
+        else:
+            conn.close()
+            return []
+    except Exception as e:
+        print(f"[DB] Error getting emails for simulation: {str(e)}")
+        return []
 
 # Routes
 @app.route('/')
@@ -629,6 +842,8 @@ def login():
 @app.route('/dashboard')
 @token_required
 def dashboard(current_user):
+    # Make sure database schema is updated
+    update_database_schema()
     return render_template('dashboard.html', username=current_user.name)
 
 @app.route('/learn')
@@ -639,6 +854,9 @@ def learn(current_user):
 @app.route('/simulate', methods=['GET'])
 @token_required
 def simulate(current_user):
+    # Make sure database schema is updated
+    update_database_schema()
+    
     try:
         print(f"[SIMULATE] Starting with session: phase={session.get('simulation_phase')}, email_id={session.get('current_email_id')}")
         
@@ -646,21 +864,22 @@ def simulate(current_user):
         if 'simulation_phase' not in session:
             session['simulation_phase'] = 1
             session['current_email_id'] = 1
+            session['simulation_id'] = str(uuid.uuid4())
             session.modified = True
-            print("[SIMULATE] Initialized new simulation")
+            print(f"[SIMULATE] Initialized new simulation with ID: {session.get('simulation_id')}")
             
         # Load predefined emails
         if session.get('simulation_phase') == 1:
-            for email in predefined_emails:
-                existing = SimulationEmail.query.get(email['id'])
+            for predefined_email in predefined_emails:
+                existing = SimulationEmail.query.filter_by(id=predefined_email['id']).first()
                 if not existing:
                     new_email = SimulationEmail(
-                        id=email['id'],
-                        sender=email['sender'],
-                        subject=email['subject'],
-                        date=email['date'],
-                        content=email['content'],
-                        is_spam=email['is_spam'],
+                        id=predefined_email['id'],
+                        sender=predefined_email['sender'],
+                        subject=predefined_email['subject'],
+                        date=predefined_email['date'],
+                        content=predefined_email['content'],
+                        is_spam=predefined_email['is_spam'],
                         is_predefined=True
                     )
                     db.session.add(new_email)
@@ -669,8 +888,9 @@ def simulate(current_user):
         # Get current phase and email
         phase = session.get('simulation_phase', 1)
         current_email_id = session.get('current_email_id', 1)
+        simulation_id = session.get('simulation_id')
         
-        print(f"[SIMULATE] Current phase: {phase}, Current email ID: {current_email_id}")
+        print(f"[SIMULATE] Current phase: {phase}, Current email ID: {current_email_id}, Simulation ID: {simulation_id}")
         
         # Check if simulation is complete
         if (phase == 1 and current_email_id > 5) or (phase == 2 and current_email_id > 10):
@@ -678,14 +898,14 @@ def simulate(current_user):
             return render_template('simulate.html', phase='complete', username=current_user.name)
         
         # Get the email for this stage
-        email = SimulationEmail.query.get(current_email_id)
-        print(f"[SIMULATE] Looking for email with ID {current_email_id}: {'Found' if email else 'Not found'}")
+        email = None
         
-        if not email:
-            if phase == 1:
-                # Create predefined email
+        if phase == 1:
+            # Phase 1: Get predefined email
+            email = SimulationEmail.query.filter_by(id=current_email_id).first()
+            if not email:
                 if 0 < current_email_id <= len(predefined_emails):
-                    print(f"[SIMULATE] Creating predefined email {current_email_id}")
+                    # Create predefined email
                     email_data = predefined_emails[current_email_id - 1]
                     email = SimulationEmail(
                         id=current_email_id,
@@ -696,16 +916,29 @@ def simulate(current_user):
                         is_spam=email_data['is_spam'],
                         is_predefined=True
                     )
+                    db.session.add(email)
+                    db.session.commit()
                 else:
-                    print(f"[SIMULATE] Error: Invalid predefined email ID {current_email_id}")
                     # Reset to a valid state
                     session['simulation_phase'] = 1
                     session['current_email_id'] = 1
+                    session['simulation_id'] = str(uuid.uuid4())
                     session.modified = True
                     return redirect(url_for('simulate'))
-            else:
-                # Generate AI email
-                print(f"[SIMULATE] Generating AI email {current_email_id}")
+        else:
+            # Phase 2: Get or create AI-generated email
+            # First check if there's an existing email with matching ID
+            email = SimulationEmail.query.filter_by(id=current_email_id).first()
+            existing_sim_id = None
+            
+            # Try to get the simulation ID for this email
+            if email:
+                existing_sim_id = get_simulation_id_for_email(current_email_id)
+                print(f"[SIMULATE] Found email ID {current_email_id} with simulation_id: {existing_sim_id}")
+            
+            # If email exists but belongs to a different simulation, or doesn't exist at all,
+            # we need to generate a new one
+            if not email or (existing_sim_id != simulation_id and existing_sim_id is not None):
                 # Get performance from phase 1
                 previous_responses = SimulationResponse.query.filter_by(
                     user_id=current_user.id
@@ -729,7 +962,13 @@ def simulate(current_user):
                         is_spam=email_data['is_spam'],
                         is_predefined=False
                     )
-                    print(f"[SIMULATE] Successfully created email {current_email_id}")
+                    db.session.add(email)
+                    db.session.commit()
+                    
+                    # Now set the simulation ID for this email
+                    set_simulation_id_for_email(current_email_id, simulation_id)
+                    print(f"[SIMULATE] Created new email {current_email_id} for simulation {simulation_id}")
+                    
                 except Exception as e:
                     print(f"[SIMULATE] Error generating email: {str(e)}")
                     # Use a fallback email
@@ -737,15 +976,31 @@ def simulate(current_user):
                     email = SimulationEmail(
                         id=current_email_id,
                         sender=template["sender"],
-                        subject=template["subject"],
+                        subject=f"{template['subject']} #{random.randint(1000, 9999)}",
                         date=datetime.datetime.now().strftime("%B %d, %Y"),
                         content=template["content"],
                         is_spam=template["is_spam"],
                         is_predefined=False
                     )
-            
-            db.session.add(email)
-            db.session.commit()
+                    db.session.add(email)
+                    db.session.commit()
+                    
+                    # Set the simulation ID
+                    set_simulation_id_for_email(current_email_id, simulation_id)
+            else:
+                # If we're using an existing email from a previous simulation, update its simulation ID
+                if existing_sim_id is None:
+                    set_simulation_id_for_email(current_email_id, simulation_id)
+        
+        if not email:
+            return render_template(
+                'system_message.html',
+                title="Error",
+                message="Failed to load email. Please try restarting the simulation.",
+                action_text="Restart Simulation",
+                action_url=url_for('restart_simulation'),
+                username=current_user.name
+            )
         
         return render_template(
             'simulate.html', 
@@ -762,14 +1017,15 @@ def simulate(current_user):
         # Emergency reset
         session['simulation_phase'] = 1
         session['current_email_id'] = 1
+        session['simulation_id'] = str(uuid.uuid4())
         session.modified = True
         return render_template(
-            'simulate.html',
-            phase=1,
-            current_email=1,
-            error_message=f"An error occurred and the simulation has been reset.",
-            username=current_user.name,
-            api_key_available=bool(GOOGLE_API_KEY)
+            'system_message.html',
+            title="Error",
+            message=f"An error occurred: {str(e)}. The simulation has been reset.",
+            action_text="Continue",
+            action_url=url_for('simulate'),
+            username=current_user.name
         )
 
 @app.route('/submit_simulation', methods=['POST'])
@@ -818,9 +1074,10 @@ def submit_simulation(current_user):
         
         # If we're in phase 2, show feedback
         if phase == 2:
+            # For phase 2, we'll update the session in the continue_after_feedback route
             return redirect(url_for('simulation_feedback', email_id=email_id))
         
-        # Update session for next email
+        # Update session for next email (Phase 1 only)
         next_email_id = email_id + 1
         
         # Check if we need to move to the next phase
@@ -837,10 +1094,6 @@ def submit_simulation(current_user):
         
         print(f"[SUBMIT] Session after update: phase={session.get('simulation_phase')}, email_id={session.get('current_email_id')}")
         
-        # If phase 2 is complete, redirect to results
-        if phase == 2 and next_email_id > 10:
-            return redirect(url_for('simulation_results'))
-        
         return redirect(url_for('simulate'))
         
     except Exception as e:
@@ -853,11 +1106,11 @@ def submit_simulation(current_user):
 @token_required
 def simulation_feedback(current_user, email_id):
     try:
-        # Get the user's response
+        # Get the user's most recent response for this email
         response = SimulationResponse.query.filter_by(
             user_id=current_user.id,
             email_id=email_id
-        ).first()
+        ).order_by(SimulationResponse.created_at.desc()).first()
         
         if not response:
             print(f"[FEEDBACK] No response found for email {email_id}")
@@ -881,33 +1134,82 @@ def simulation_feedback(current_user, email_id):
         traceback.print_exc()
         return redirect(url_for('dashboard'))
 
+# NEW ROUTE: Continue after feedback
+@app.route('/continue_after_feedback/<int:email_id>')
+@token_required
+def continue_after_feedback(current_user, email_id):
+    """Advance to the next email after viewing feedback"""
+    try:
+        print(f"[CONTINUE] Processing continuation from email {email_id}")
+        
+        # Calculate next email ID
+        next_email_id = email_id + 1
+        
+        # Update session for phase 2
+        session['current_email_id'] = next_email_id
+        session.modified = True
+        
+        print(f"[CONTINUE] Updated session: phase={session.get('simulation_phase')}, email_id={session.get('current_email_id')}")
+        
+        # Check if phase 2 is complete
+        if next_email_id > 10:
+            return redirect(url_for('simulation_results'))
+        
+        return redirect(url_for('simulate'))
+    except Exception as e:
+        print(f"[CONTINUE] Error in continue_after_feedback: {e}")
+        traceback.print_exc()
+        return redirect(url_for('reset_stuck_simulation'))
+
 @app.route('/simulation_results')
 @token_required
 def simulation_results(current_user):
     try:
         # Get all responses for this user
-        responses = SimulationResponse.query.filter_by(user_id=current_user.id).all()
+        all_responses = SimulationResponse.query.filter_by(
+            user_id=current_user.id
+        ).order_by(SimulationResponse.created_at.desc()).all()
         
-        # Calculate statistics
-        phase1_correct = sum(1 for r in responses if r.email_id <= 5 and r.user_response == r.is_spam_actual)
-        phase2_correct = sum(1 for r in responses if r.email_id > 5 and r.user_response == r.is_spam_actual)
+        # Filter to get only the most recent response for each email_id
+        # This ensures we don't double-count responses from multiple simulation attempts
+        email_ids_seen = set()
+        filtered_responses = []
         
-        phase2_scores = [r.score for r in responses if r.email_id > 5 and r.score is not None]
+        for response in all_responses:
+            if response.email_id not in email_ids_seen:
+                email_ids_seen.add(response.email_id)
+                filtered_responses.append(response)
+        
+        # Separate Phase 1 and Phase 2 responses
+        phase1_responses = [r for r in filtered_responses if 1 <= r.email_id <= 5][:5]
+        phase2_responses = [r for r in filtered_responses if 6 <= r.email_id <= 10][:5]
+        
+        # Calculate statistics correctly
+        phase1_correct = sum(1 for r in phase1_responses if r.user_response == r.is_spam_actual)
+        phase2_correct = sum(1 for r in phase2_responses if r.user_response == r.is_spam_actual)
+        
+        phase2_scores = [r.score for r in phase2_responses if r.score is not None]
         avg_score = sum(phase2_scores) / len(phase2_scores) if phase2_scores else 0
+        
+        print(f"[RESULTS] Phase 1: {phase1_correct}/{len(phase1_responses)}, Phase 2: {phase2_correct}/{len(phase2_responses)}")
         
         # Reset simulation for potential future attempts
         session.pop('simulation_phase', None)
         session.pop('current_email_id', None)
+        session.pop('simulation_id', None)  # Clear simulation ID
         session.modified = True
+        
+        # For the results page, only include the responses we're actually counting
+        all_responses = sorted(phase1_responses + phase2_responses, key=lambda x: x.email_id)
         
         return render_template(
             'simulation_results.html',
             phase1_correct=phase1_correct,
-            phase1_total=5,
+            phase1_total=len(phase1_responses),
             phase2_correct=phase2_correct,
-            phase2_total=5,
+            phase2_total=len(phase2_responses),
             avg_score=avg_score,
-            responses=responses,
+            responses=all_responses,
             username=current_user.name
         )
     except Exception as e:
@@ -926,6 +1228,7 @@ def logout():
     session.pop('user_name', None)
     session.pop('simulation_phase', None)
     session.pop('current_email_id', None)
+    session.pop('simulation_id', None)
     return redirect(url_for('login'))
 
 @app.route('/restart_simulation')
@@ -933,10 +1236,22 @@ def logout():
 def restart_simulation(current_user):
     try:
         print("[RESTART] Restarting simulation")
+        
+        # Generate a new simulation ID
+        new_simulation_id = str(uuid.uuid4())
+        
         # Clear session
         session.pop('simulation_phase', None)
         session.pop('current_email_id', None)
+        session.pop('simulation_id', None)
+        
+        # Explicitly set new values
+        session['simulation_phase'] = 1
+        session['current_email_id'] = 1
+        session['simulation_id'] = new_simulation_id
         session.modified = True
+        
+        print(f"[RESTART] Created new simulation ID: {new_simulation_id}")
         
         # Reset rate limit tracking
         if 'RATE_LIMITED' in app.config:
@@ -946,12 +1261,9 @@ def restart_simulation(current_user):
         
         # Delete existing responses
         SimulationResponse.query.filter_by(user_id=current_user.id).delete()
-        
-        # Delete AI-generated emails (IDs > 5)
-        SimulationEmail.query.filter(SimulationEmail.id > 5).delete()
-        
         db.session.commit()
-        print("[RESTART] Simulation data reset complete")
+        
+        print("[RESTART] Simulation reset complete")
         
         return redirect(url_for('simulate'))
     except Exception as e:
@@ -964,14 +1276,21 @@ def restart_simulation(current_user):
 def reset_stuck_simulation(current_user):
     """Emergency route to fix stuck simulations"""
     try:
-        # Get current state
-        old_phase = session.get('simulation_phase')
-        old_email_id = session.get('current_email_id')
+        # Generate a new simulation ID
+        new_simulation_id = str(uuid.uuid4())
         
         # Clear session data
         session.pop('simulation_phase', None)
         session.pop('current_email_id', None)
+        session.pop('simulation_id', None)
+        
+        # Start fresh
+        session['simulation_phase'] = 1
+        session['current_email_id'] = 1
+        session['simulation_id'] = new_simulation_id
         session.modified = True
+        
+        print(f"[RESET] Created new simulation ID: {new_simulation_id}")
         
         # Reset rate limit tracking
         if 'RATE_LIMITED' in app.config:
@@ -979,20 +1298,10 @@ def reset_stuck_simulation(current_user):
         if 'RATE_LIMIT_TIME' in app.config:
             app.config.pop('RATE_LIMIT_TIME')
         
-        # Delete any Phase 2 emails that may be causing issues
-        try:
-            SimulationEmail.query.filter(SimulationEmail.id > 5).delete()
-            db.session.commit()
-            cleanup_status = "Success"
-        except Exception as e:
-            db.session.rollback()
-            cleanup_status = f"Failed: {str(e)}"
+        # Delete previous responses
+        SimulationResponse.query.filter_by(user_id=current_user.id).delete()
+        db.session.commit()
             
-        # Start fresh
-        session['simulation_phase'] = 1
-        session['current_email_id'] = 1
-        session.modified = True
-        
         return render_template(
             'system_message.html',
             title="Simulation Reset",
@@ -1004,6 +1313,70 @@ def reset_stuck_simulation(current_user):
     except Exception as e:
         print(f"[RESET] Exception in reset_stuck_simulation: {e}")
         return redirect(url_for('dashboard'))
+
+@app.route('/debug_simulation')
+@token_required
+def debug_simulation(current_user):
+    """Debug endpoint to see current simulation state"""
+    # Get all emails and responses in the system
+    emails = SimulationEmail.query.all()
+    responses = SimulationResponse.query.filter_by(user_id=current_user.id).all()
+    
+    # Current session state
+    session_info = {
+        "phase": session.get('simulation_phase'),
+        "current_email_id": session.get('current_email_id'),
+        "simulation_id": session.get('simulation_id')
+    }
+    
+    # Format the data
+    email_data = []
+    for email in emails:
+        sim_id = get_simulation_id_for_email(email.id)
+        email_data.append({
+            "id": email.id,
+            "sender": email.sender,
+            "subject": email.subject,
+            "is_spam": email.is_spam,
+            "is_predefined": email.is_predefined,
+            "created_at": str(email.created_at),
+            "simulation_id": sim_id
+        })
+    
+    response_data = []
+    for resp in responses:
+        response_data.append({
+            "id": resp.id,
+            "email_id": resp.email_id,
+            "is_spam_actual": resp.is_spam_actual,
+            "user_response": resp.user_response,
+            "score": resp.score,
+            "created_at": str(resp.created_at)
+        })
+    
+    # Database schema info
+    db_schema = {
+        "has_simulation_id_column": False
+    }
+    
+    try:
+        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info(simulation_email)")
+        columns = [col[1] for col in cursor.fetchall()]
+        db_schema["has_simulation_id_column"] = 'simulation_id' in columns
+        db_schema["all_columns"] = columns
+        conn.close()
+    except Exception as e:
+        db_schema["error"] = str(e)
+    
+    return jsonify({
+        "session": session_info,
+        "emails": email_data,
+        "responses": response_data,
+        "schema": db_schema
+    })
 
 @app.route('/debug')
 def debug_info():
@@ -1032,7 +1405,25 @@ def debug_info():
     
     return jsonify(info)
 
+# New route to add missing column to database
+@app.route('/update_schema')
+@token_required
+def update_schema(current_user):
+    """Add missing column to database"""
+    try:
+        success = update_database_schema()
+        return jsonify({
+            "success": success, 
+            "message": "Database schema updated successfully" if success else "Failed to update database schema"
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Error updating schema: {str(e)}"
+        })
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        update_database_schema()  # Ensure the schema is updated at startup
     app.run(debug=True)

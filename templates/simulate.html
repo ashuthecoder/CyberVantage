@@ -87,6 +87,18 @@
             color: white;
             margin-left: 1rem;
         }
+        .restart-btn {
+            background-color: #e67e22;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 1rem;
+        }
+        .restart-btn:hover {
+            background-color: #d35400;
+        }
         textarea {
             width: 100%;
             padding: 0.5rem;
@@ -95,6 +107,11 @@
         }
         .explanation {
             margin-top: 1.5rem;
+        }
+        .top-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
@@ -108,6 +125,10 @@
     </header>
 
     <div class="container">
+        <div class="top-actions">
+            <a href="{{ url_for('restart_simulation') }}" class="restart-btn">Restart Simulation</a>
+        </div>
+        
         <h1>Email Phishing Simulation</h1>
         
         {% if phase == 1 and current_email <= 5 %}
@@ -144,6 +165,7 @@
                     </div>
                     
                     <button type="submit" class="btn primary">Submit Answer</button>
+                    <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart</a>
                 </form>
                 
                 <div class="progress">
@@ -194,6 +216,7 @@
                     </div>
                     
                     <button type="submit" class="btn primary">Submit Answer</button>
+                    <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart</a>
                 </form>
                 
                 <div class="progress">
@@ -212,6 +235,7 @@
                 
                 <div class="next-steps">
                     <a href="{{ url_for('analysis') }}" class="btn primary">View Your Analysis</a>
+                    <a href="{{ url_for('restart_simulation') }}" class="restart-btn">Restart Simulation</a>
                     <a href="{{ url_for('dashboard') }}" class="btn secondary">Return to Dashboard</a>
                 </div>
             </div>

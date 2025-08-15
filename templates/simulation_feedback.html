@@ -101,6 +101,26 @@
             margin-top: 1rem;
             font-size: 1.1rem;
         }
+        .continue-btn {
+            display: block;
+            width: 250px;
+            margin: 30px auto;
+            background-color: #2a3f54;
+            color: white;
+            text-align: center;
+            padding: 12px 20px;
+            text-decoration: none;
+            font-size: 18px;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+            transition: all 0.3s ease;
+        }
+        .continue-btn:hover {
+            background-color: #1f2f3d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -114,11 +134,6 @@
 
     <div class="container">
         <h1>AI Feedback on Your Analysis</h1>
-        
-        <div class="actions">
-            <a href="{{ url_for('simulate') }}" class="btn primary">Continue Simulation</a>
-            <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart Simulation</a>
-        </div>
         
         <div class="result-summary">
             <h2>Your Answer: {{ "Correct" if response.user_response == response.is_spam_actual else "Incorrect" }}</h2>
@@ -139,8 +154,13 @@
             </div>
         </div>
         
+        <!-- Use the new continue_after_feedback route -->
+        <a href="{{ url_for('continue_after_feedback', email_id=response.email_id) }}" class="continue-btn">
+            Continue to Next Email →
+        </a>
+        
         <div class="actions">
-            <a href="{{ url_for('simulate') }}" class="btn primary">Continue Simulation</a>
+            <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart Simulation</a>
         </div>
     </div>
 
