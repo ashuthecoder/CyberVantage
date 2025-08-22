@@ -3,6 +3,17 @@ import traceback
 import datetime
 import re
 import markdown
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
+
+# Import API logging functions with fallback
+try:
+    from .api_logging import log_api_request, check_rate_limit, get_cached_or_generate, create_cache_key
+except ImportError:
+    # Create dummy functions if import fails
+    def log_api_request(*args, **kwargs): pass
+    def check_rate_limit(): return True
+    def get_cached_or_generate(key, func, *args, **kwargs): return func(*args, **kwargs)
+    def create_cache_key(prefix, content): return f"{prefix}_{hash(content)}"
 
 def generate_ai_email(user_name, previous_responses, GOOGLE_API_KEY=None, genai=None, app=None):
     """Generate an AI email with robust error handling"""
@@ -10,7 +21,14 @@ def generate_ai_email(user_name, previous_responses, GOOGLE_API_KEY=None, genai=
     from .template_emails import get_template_email
 
     if not GOOGLE_API_KEY or not genai:
+        log_api_request("generate_ai_email", 0, False, error="No API key or genai module")
         print("[GENERATE] No API key or genai module - using template email")
+        return get_template_email()
+
+    # Check rate limit before API call
+    if not check_rate_limit():
+        log_api_request("generate_ai_email", 0, False, error="Rate limit reached")
+        print("[GENERATE] Rate limit reached - using template email")
         return get_template_email()
 
     # Strict generation prompt with a fixed schema the parser expects
@@ -38,15 +56,34 @@ Guidelines:
 - All links must be plausible; for phishing, use lookalike domains; for legitimate, use real domains.
 - Do NOT include any fields other than Sender, Subject, Date, Content, Is_spam in that exact order.
 """
+
     try:
-        model = genai.GenerativeModel('gemini-2.5-pro')
-        print("[GENERATE] Sending request to Gemini API")
+        # Configure safety settings to bypass content filtering for educational purposes
+        safety_settings = {
+            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE
+        }
+        
+        model = genai.GenerativeModel('gemini-2.5-pro', safety_settings=safety_settings)
+        print("[GENERATE] Sending request to Gemini API with safety settings")
+        
+        # Log the API request attempt
+        prompt_length = len(prompt)
+        
         response = model.generate_content(prompt)
+        
+        # Log successful API call
+        log_api_request("generate_ai_email", prompt_length, True, 
+                       len(str(response)) if response else 0)
 
         # Extract content from response
         content = extract_content_from_response(response)
         
         if not content:
+            log_api_request("generate_ai_email", prompt_length, False, 
+                           error="Failed to extract content from response")
             print("[GENERATE] Failed to extract content from response")
             return get_template_email()
 
@@ -63,10 +100,14 @@ Guidelines:
             return email_data
             
         except Exception as parse_error:
+            log_api_request("generate_ai_email", prompt_length, False, 
+                           error=f"Error parsing response: {parse_error}")
             print(f"[GENERATE] Error parsing response: {parse_error}")
             traceback.print_exc()
             return get_template_email()
     except Exception as e:
+        # Log failed API call
+        log_api_request("generate_ai_email", len(prompt), False, error=e)
         print(f"[GENERATE] Error in AI email generation: {e}")
         traceback.print_exc()
 
@@ -163,29 +204,116 @@ def handle_rate_limit_error(error_str, app):
             app.config['RATE_LIMIT_TIME'] = datetime.datetime.now().timestamp()
         print(f"[GENERATE] API rate limit detected: {error_str}")
 
-def evaluate_explanation(email_content, is_spam, user_response, user_explanation, GOOGLE_API_KEY=None, genai=None, app=None):
-    """Evaluate the user's explanation of why an email is phishing/legitimate"""
-    print(f"[EVALUATE] Starting evaluation. Is spam: {is_spam}, User said: {user_response}")
-
-    # Check for recent rate limit errors
-    if should_use_fallback(app):
+def execute_evaluation(email_content, is_spam, user_response, user_explanation, GOOGLE_API_KEY, genai, app):
+    """Execute the evaluation with the Gemini API"""
+    # Check rate limit before API call
+    if not check_rate_limit():
+        log_api_request("evaluate_explanation", 0, False, error="Rate limit reached")
+        print("[EVALUATE] Rate limit reached - using fallback evaluation")
         return get_fallback_evaluation(is_spam, user_response)
-
-    if not GOOGLE_API_KEY or not genai:
-        print("[EVALUATE] No API key - using fallback evaluation")
-        return get_fallback_evaluation(is_spam, user_response)
-
+        
     # Rigorous evaluation prompt
     prompt = get_evaluation_prompt(email_content, is_spam, user_response, user_explanation)
     
     try:
-        model = genai.GenerativeModel('gemini-2.5-pro')
-        print("[EVALUATE] Sending evaluation request to Gemini API")
+        # Create a fresh model instance each time
+        safety_settings = {
+            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE
+        }
+        
+        # Force new model creation each time to avoid stale state
+        genai.configure(api_key=GOOGLE_API_KEY)  # Reconfigure to ensure fresh state
+        model = genai.GenerativeModel('gemini-2.5-pro', safety_settings=safety_settings)
+        print("[EVALUATE] Sending evaluation request to Gemini API with safety settings")
+        
+        # Log the API request attempt
+        prompt_length = len(prompt)
+        
+        # Make API call with generation_config to ensure proper response formatting
+        generation_config = {
+            "temperature": 0.2,
+            "top_p": 0.8,
+            "top_k": 40,
+            "max_output_tokens": 2048,
+        }
+        response = model.generate_content(prompt, generation_config=generation_config)
+        
+        # Debug the raw response object before extraction
+        debug_response_object(response, "EVALUATE_RESPONSE")
+        
+        # Log successful API call
+        log_api_request("evaluate_explanation", prompt_length, True, 
+                       len(str(response)) if response else 0)
+
+        # Get response text with enhanced extraction
+        ai_text = extract_ai_text(response)
+        
+        # Debug the extracted text
+        if ai_text:
+            with open('logs/debug_text.log', 'a') as f:
+                f.write(f"\n\n[{datetime.datetime.now()}] === EXTRACTED TEXT ===\n")
+                f.write(ai_text[:1000] + "...(truncated if longer)\n")
+        
+        if not ai_text:
+            log_api_request("evaluate_explanation", prompt_length, False, 
+                           error="Failed to extract AI text from response")
+            return get_fallback_evaluation(is_spam, user_response)
+
+        # Process Markdown and convert to HTML
+        processed_html, score = process_ai_text_to_html(ai_text, user_response, is_spam)
+        
+        return {
+            "feedback": processed_html,
+            "score": score
+        }
+    except Exception as e:
+        # Log failed API call
+        log_api_request("evaluate_explanation", len(prompt), False, error=e)
+        print(f"[EVALUATE] Error in evaluation: {e}")
+        traceback.print_exc()
+        handle_rate_limit_error(str(e), app)
+        return get_fallback_evaluation(is_spam, user_response)
+    
+def execute_evaluation(email_content, is_spam, user_response, user_explanation, GOOGLE_API_KEY, genai, app):
+    """Execute the evaluation with the Gemini API"""
+    # Check rate limit before API call
+    if not check_rate_limit():
+        log_api_request("evaluate_explanation", 0, False, error="Rate limit reached")
+        print("[EVALUATE] Rate limit reached - using fallback evaluation")
+        return get_fallback_evaluation(is_spam, user_response)
+        
+    # Rigorous evaluation prompt
+    prompt = get_evaluation_prompt(email_content, is_spam, user_response, user_explanation)
+    
+    try:
+        # Configure safety settings to bypass content filtering for educational purposes
+        safety_settings = {
+            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE
+        }
+        
+        model = genai.GenerativeModel('gemini-2.5-pro', safety_settings=safety_settings)
+        print("[EVALUATE] Sending evaluation request to Gemini API with safety settings")
+        
+        # Log the API request attempt
+        prompt_length = len(prompt)
+        
         response = model.generate_content(prompt)
+        
+        # Log successful API call
+        log_api_request("evaluate_explanation", prompt_length, True, 
+                       len(str(response)) if response else 0)
 
         # Get response text
         ai_text = extract_ai_text(response)
         if not ai_text:
+            log_api_request("evaluate_explanation", prompt_length, False, 
+                           error="Failed to extract AI text from response")
             return get_fallback_evaluation(is_spam, user_response)
 
         # Debug the raw output
@@ -200,6 +328,8 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
             "score": score
         }
     except Exception as e:
+        # Log failed API call
+        log_api_request("evaluate_explanation", len(prompt), False, error=e)
         print(f"[EVALUATE] Error in evaluation: {e}")
         traceback.print_exc()
         handle_rate_limit_error(str(e), app)
@@ -266,26 +396,135 @@ Rules:
 """
 
 def extract_ai_text(response):
-    """Extract text from AI response with error handling"""
+    """Extract text from AI response with comprehensive error handling"""
+    import json
+    
+    # Write to debug log
+    with open('logs/extraction_debug.log', 'a') as f:
+        f.write(f"\n\n[{datetime.datetime.now()}] === EXTRACTION ATTEMPT ===\n")
+        f.write(f"Response type: {type(response)}\n")
+    
     ai_text = None
+    
+    # Method 1: Direct text property
     try:
         if hasattr(response, 'text'):
             ai_text = response.text
-        elif hasattr(response, 'parts') and response.parts:
+            print("[EXTRACT] Method 1: Got text via .text property")
+            with open('logs/extraction_debug.log', 'a') as f:
+                f.write("Method 1 succeeded: .text property\n")
+            return ai_text
+    except Exception as e:
+        print(f"[EXTRACT] Method 1 failed: {e}")
+        with open('logs/extraction_debug.log', 'a') as f:
+            f.write(f"Method 1 failed: {e}\n")
+    
+    # Method 2: Parts structure
+    try:
+        if hasattr(response, 'parts') and response.parts:
             ai_text = response.parts[0].text
-        elif hasattr(response, 'candidates') and response.candidates:
+            print("[EXTRACT] Method 2: Got text via .parts[0].text")
+            with open('logs/extraction_debug.log', 'a') as f:
+                f.write("Method 2 succeeded: .parts[0].text\n")
+            return ai_text
+    except Exception as e:
+        print(f"[EXTRACT] Method 2 failed: {e}")
+        with open('logs/extraction_debug.log', 'a') as f:
+            f.write(f"Method 2 failed: {e}\n")
+    
+    # Method 3: Candidates structure
+    try:
+        if hasattr(response, 'candidates') and response.candidates:
             candidate = response.candidates[0]
             if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
                 ai_text = candidate.content.parts[0].text
-
-        if not ai_text:
-            ai_text = str(response)
-
-        print(f"[EVALUATE] Successfully got AI text, length: {len(ai_text)}")
-        return ai_text
-    except Exception as text_error:
-        print(f"[EVALUATE] Error extracting text: {text_error}")
-        return None
+                print("[EXTRACT] Method 3: Got text via candidates.content.parts")
+                with open('logs/extraction_debug.log', 'a') as f:
+                    f.write("Method 3 succeeded: candidates.content.parts\n")
+                return ai_text
+    except Exception as e:
+        print(f"[EXTRACT] Method 3 failed: {e}")
+        with open('logs/extraction_debug.log', 'a') as f:
+            f.write(f"Method 3 failed: {e}\n")
+    
+    # Method 4: Content property
+    try:
+        if hasattr(response, 'content'):
+            if hasattr(response.content, 'parts') and response.content.parts:
+                ai_text = response.content.parts[0].text
+                print("[EXTRACT] Method 4: Got text via .content.parts")
+                with open('logs/extraction_debug.log', 'a') as f:
+                    f.write("Method 4 succeeded: .content.parts\n")
+                return ai_text
+            
+            # Try content as string
+            try:
+                ai_text = str(response.content)
+                print("[EXTRACT] Method 4b: Got text via str(content)")
+                with open('logs/extraction_debug.log', 'a') as f:
+                    f.write("Method 4b succeeded: str(content)\n")
+                return ai_text
+            except:
+                pass
+    except Exception as e:
+        print(f"[EXTRACT] Method 4 failed: {e}")
+        with open('logs/extraction_debug.log', 'a') as f:
+            f.write(f"Method 4 failed: {e}\n")
+    
+    # Method 5: Try string representation and JSON parsing
+    try:
+        raw_string = str(response)
+        
+        # Log the raw string for debugging
+        with open('logs/extraction_debug.log', 'a') as f:
+            f.write(f"Raw string: {raw_string[:500]}...(truncated)\n")
+        
+        # Try to find text in JSON-like structure
+        if '{' in raw_string and '}' in raw_string:
+            try:
+                # Find valid JSON substring
+                start = raw_string.find('{')
+                # Find balanced closing brace
+                brace_count = 1
+                end = start + 1
+                while brace_count > 0 and end < len(raw_string):
+                    if raw_string[end] == '{':
+                        brace_count += 1
+                    elif raw_string[end] == '}':
+                        brace_count -= 1
+                    end += 1
+                
+                json_str = raw_string[start:end]
+                data = json.loads(json_str)
+                
+                # Try common fields that might contain text
+                for field in ['text', 'content', 'message', 'output', 'result', 'response']:
+                    if field in data:
+                        ai_text = str(data[field])
+                        print(f"[EXTRACT] Method 5: Got text from JSON field '{field}'")
+                        with open('logs/extraction_debug.log', 'a') as f:
+                            f.write(f"Method 5 succeeded: JSON field '{field}'\n")
+                        return ai_text
+            except:
+                pass
+        
+        # Last resort: just use the string itself
+        if len(raw_string) > 30:  # Arbitrary minimum length
+            ai_text = raw_string
+            print("[EXTRACT] Method 6: Using full string representation")
+            with open('logs/extraction_debug.log', 'a') as f:
+                f.write("Method 6 succeeded: full string representation\n")
+            return ai_text
+    except Exception as e:
+        print(f"[EXTRACT] Method 5-6 failed: {e}")
+        with open('logs/extraction_debug.log', 'a') as f:
+            f.write(f"Method 5-6 failed: {e}\n")
+    
+    # If we got here, all methods failed
+    print("[EXTRACT] All extraction methods failed")
+    with open('logs/extraction_debug.log', 'a') as f:
+        f.write("All extraction methods failed\n")
+    return None
 
 def process_ai_text_to_html(ai_text, user_response, is_spam):
     """Process AI text into formatted HTML and extract score"""
@@ -443,6 +682,44 @@ def extract_score(ai_text, user_response, is_spam):
     
     # Return base score if extraction failed
     return base_score
+
+def debug_response_object(response, label="DEBUG"):
+    """Exhaustively debug a response object's structure and content"""
+    import inspect
+    import json
+    
+    # Create a log file for deep debugging
+    with open('logs/debug_response.log', 'a') as f:
+        f.write(f"\n\n[{datetime.datetime.now()}] === {label} ===\n")
+        
+        # Log the type
+        f.write(f"Response type: {type(response)}\n")
+        
+        # Try to log the raw response
+        f.write(f"String representation: {str(response)[:1000]}...(truncated)\n")
+        
+        # Log all attributes
+        f.write("Available attributes:\n")
+        for attr in dir(response):
+            if not attr.startswith('_'):  # Skip private attributes
+                try:
+                    value = getattr(response, attr)
+                    if not callable(value):  # Skip methods
+                        if isinstance(value, (str, int, float, bool, list, dict)):
+                            f.write(f"  {attr}: {str(value)[:500]}...(truncated if longer)\n")
+                        else:
+                            f.write(f"  {attr}: {type(value)}\n")
+                except Exception as e:
+                    f.write(f"  {attr}: ERROR accessing - {str(e)}\n")
+        
+        # If it has a dictionary-like structure, try to serialize to JSON
+        try:
+            if hasattr(response, '__dict__'):
+                f.write("JSON representation attempt:\n")
+                json_data = json.dumps(response.__dict__, default=str, indent=2)
+                f.write(f"{json_data[:2000]}...(truncated if longer)\n")
+        except:
+            f.write("Could not JSON serialize\n")
 
 def get_fallback_evaluation(is_spam, user_response):
     """Generate a varied evaluation when AI isn't available"""

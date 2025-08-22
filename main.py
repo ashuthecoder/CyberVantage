@@ -25,6 +25,10 @@ from pyFunctions.email_generation import generate_ai_email, evaluate_explanation
 from pyFunctions.template_emails import get_template_email
 from pyFunctions.simulation import generate_unique_simulation_email
 
+# Ensure logs directory exists for API logging
+import os
+os.makedirs('logs', exist_ok=True)
+
 # Load environment variables
 load_dotenv()
 
@@ -372,6 +376,58 @@ def dashboard(current_user):
 @token_required
 def learn(current_user):
     return render_template('learn.html', username=current_user.name)
+
+@app.route('/api_monitor')
+@token_required
+def api_monitor(current_user):
+    """View API usage statistics - accessible to all authenticated users"""
+    from pyFunctions.api_logging import get_api_stats
+    
+    # No user-specific check, all authenticated users can access
+    return jsonify(get_api_stats())
+
+@app.route('/view_api_logs')
+@token_required
+def view_api_logs(current_user):
+    """View Gemini API logs - accessible to all authenticated users"""
+    from pyFunctions.api_logging import LOG_FILE_PATH, parse_log_file
+    
+    # No user-specific check, all authenticated users can access
+    log_analysis = parse_log_file()
+    
+    # Format as HTML
+    log_html = "<h2>Gemini API Request Logs Analysis</h2>"
+    
+    if "error" in log_analysis:
+        return f"<h2>Error</h2><p>{log_analysis['error']}</p>"
+        
+    success_rate = log_analysis["success_rate"]
+    success_color = "green" if success_rate > 90 else "orange" if success_rate > 70 else "red"
+    
+    log_html += f"<p>Total log entries: <strong>{log_analysis['total_entries']}</strong></p>"
+    log_html += f"<p>Success rate: <strong style='color:{success_color}'>{success_rate:.1f}%</strong></p>"
+    
+    log_html += "<h3>Requests by Function</h3>"
+    log_html += "<table border='1' cellpadding='5' style='border-collapse: collapse;'>"
+    log_html += "<tr><th>Function</th><th>Successful</th><th>Failed</th><th>Total</th><th>Success Rate</th></tr>"
+    
+    for func, stats in log_analysis["function_stats"].items():
+        total = stats['success'] + stats['failure']
+        success_rate = (stats['success'] / total) * 100 if total > 0 else 0
+        row_color = "rgba(40, 167, 69, 0.1)" if success_rate > 90 else "rgba(255, 193, 7, 0.1)" if success_rate > 70 else "rgba(220, 53, 69, 0.1)"
+        
+        log_html += f"<tr style='background-color:{row_color}'><td>{func}</td><td>{stats['success']}</td><td>{stats['failure']}</td>"
+        log_html += f"<td>{total}</td><td>{success_rate:.1f}%</td></tr>"
+    
+    log_html += "</table>"
+    
+    if log_analysis["recent_errors"]:
+        log_html += "<h3>Recent Errors</h3>"
+        log_html += "<pre style='background-color: #fff3cd; padding: 15px; border-radius: 5px; max-height: 300px; overflow-y: auto;'>"
+        log_html += "\n".join(log_analysis["recent_errors"])
+        log_html += "</pre>"
+    
+    return log_html
 
 @app.route('/simulate', methods=['GET'])
 @token_required

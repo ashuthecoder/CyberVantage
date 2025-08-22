@@ -1,0 +1,6 @@
+[2025-08-22 12:02:27] evaluate_explanation - SUCCESS - Prompt: 2592 chars, Response: 993 chars
+[2025-08-22 12:02:27] evaluate_explanation - FAILED - Prompt: 2592 chars
+  ERROR: Failed to extract AI text from response
+[2025-08-22 12:11:12] evaluate_explanation - SUCCESS - Prompt: 2592 chars, Response: 993 chars
+[2025-08-22 12:11:12] evaluate_explanation - FAILED - Prompt: 2592 chars
+  ERROR: Failed to extract AI text from response
