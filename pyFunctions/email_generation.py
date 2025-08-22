@@ -44,8 +44,12 @@ os.makedirs('logs', exist_ok=True)
 # AI RETRY HELPERS AND CONFIGURATION
 # =============================================================================
 
-# Model fallback list - try these models in order if primary fails
-DEFAULT_MODEL_FALLBACK_LIST = ["gemini-2.5-pro", "gemini-2.0-flash-exp"]
+# Model configuration from environment variables
+DEFAULT_PRIMARY_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
+DEFAULT_FALLBACK_MODELS = os.getenv("GEMINI_FALLBACK_MODELS", "gemini-2.0-flash,gemini-1.5-pro").split(",")
+
+# Legacy fallback list for backward compatibility (now uses stable models)
+DEFAULT_MODEL_FALLBACK_LIST = ["gemini-2.0-flash", "gemini-1.5-pro"]
 
 def call_gemini_with_retry(model_name, prompt, generation_config, max_attempts=3, 
                           fallback_models=None, initial_delay=0.5):
@@ -108,7 +112,20 @@ def call_gemini_with_retry(model_name, prompt, generation_config, max_attempts=3
                     print(f"[RETRY] Max attempts reached for {model_name_to_try}")
                     
             except Exception as e:
+                error_str = str(e)
                 print(f"[RETRY] Other error on attempt {attempt + 1} with {model_name_to_try}: {e}")
+                
+                # Check for 400 response_mime_type error specifically
+                if "400" in error_str and "response_mime_type" in error_str:
+                    print(f"[RETRY] Detected invalid generation_config error: {e}")
+                    # Log the error to API logs
+                    try:
+                        log_api_request("call_gemini_with_retry", 0, False, 
+                                       error=f"Invalid generation_config: {error_str}", 
+                                       fallback_reason="invalid_generation_config")
+                    except:
+                        pass  # Don't let logging errors break the flow
+                
                 # For non-retryable errors, break out of retry loop for this model
                 break
     
@@ -488,27 +505,24 @@ def execute_evaluation(email_content, is_spam, user_response, user_explanation, 
     try:
         print("[EVALUATE] Sending evaluation request to Gemini API with retry logic")
         
-        # Enhanced generation config with markdown output and single candidate
+        # Generation config for evaluation (removed response_mime_type to avoid 400 errors)
         generation_config = {
             "temperature": 0.2,
             "top_p": 0.8,
             "top_k": 40,
-            "max_output_tokens": 2048,
-            "response_mime_type": "text/markdown",
-            "candidate_count": 1
+            "max_output_tokens": 2048
         }
         
         # Configure API with key
         genai.configure(api_key=GOOGLE_API_KEY)
         
-        # Use retry helper to call Gemini
-        fallback_models = os.getenv("GEMINI_FALLBACK_MODELS", ",".join(DEFAULT_MODEL_FALLBACK_LIST)).split(",")
+        # Use retry helper to call Gemini with environment-configured models
         response, successful_model = call_gemini_with_retry(
-            model_name="gemini-2.5-pro",
+            model_name=DEFAULT_PRIMARY_MODEL,
             prompt=prompt,
             generation_config=generation_config,
             max_attempts=3,
-            fallback_models=fallback_models
+            fallback_models=DEFAULT_FALLBACK_MODELS
         )
         
         if not response:
