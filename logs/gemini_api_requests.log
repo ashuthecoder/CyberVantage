@@ -33,3 +33,12 @@
 [2025-08-22 12:39:10] evaluate_explanation - FAILED - Prompt: 0 chars
   ERROR: Missing API key
   FALLBACK_REASON: missing_api_key
+[2025-08-22 13:11:34] call_gemini_with_retry - FAILED - Prompt: 0 chars
+  ERROR: Invalid generation_config: 400 Bad Request: GenerateContentRequest.generation_config.response_mime_type only allows text/plain, application/json
+  FALLBACK_REASON: invalid_generation_config
+[2025-08-22 13:11:34] call_gemini_with_retry - FAILED - Prompt: 0 chars
+  ERROR: Invalid generation_config: 400 Bad Request: GenerateContentRequest.generation_config.response_mime_type only allows text/plain, application/json
+  FALLBACK_REASON: invalid_generation_config
+[2025-08-22 13:11:34] call_gemini_with_retry - FAILED - Prompt: 0 chars
+  ERROR: Invalid generation_config: 400 Bad Request: GenerateContentRequest.generation_config.response_mime_type only allows text/plain, application/json
+  FALLBACK_REASON: invalid_generation_config
