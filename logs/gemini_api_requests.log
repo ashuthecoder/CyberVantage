@@ -4,3 +4,13 @@
 [2025-08-22 12:11:12] evaluate_explanation - SUCCESS - Prompt: 2592 chars, Response: 993 chars
 [2025-08-22 12:11:12] evaluate_explanation - FAILED - Prompt: 2592 chars
   ERROR: Failed to extract AI text from response
+[2025-08-22 12:26:40] evaluate_explanation - SUCCESS - Prompt: 2590 chars, Response: 993 chars
+[2025-08-22 12:37:16] evaluate_explanation - SUCCESS - Prompt: 2590 chars, Response: 994 chars
+[2025-08-22 12:44:23] evaluate_explanation - SUCCESS - Prompt: 2590 chars, Response: 993 chars
+[2025-08-22 12:45:09] generate_ai_email - FAILED - Prompt: 1186 chars
+  ERROR: 500 An internal error has occurred. Please retry or report in https://developers.generativeai.google/guide/troubleshooting
+[2025-08-22 12:45:32] generate_ai_email - SUCCESS - Prompt: 483 chars, Response: 994 chars
+[2025-08-22 12:45:32] generate_ai_email - FAILED - Prompt: 483 chars
+  ERROR: Invalid operation: The `response.text` quick accessor requires the response to contain a valid `Part`, but none were returned. The candidate's [finish_reason](https://ai.google.dev/api/generate-content#finishreason) is 1.
+[2025-08-22 12:45:57] evaluate_explanation - SUCCESS - Prompt: 2150 chars, Response: 993 chars
+[2025-08-22 13:01:43] evaluate_explanation - SUCCESS - Prompt: 2154 chars, Response: 3309 chars

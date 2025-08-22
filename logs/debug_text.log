@@ -1,0 +1,180 @@
+
+
+[2025-08-22 12:26:40.359107] === EXTRACTED TEXT ===
+response:
+GenerateContentResponse(
+    done=True,
+    iterator=None,
+    result=protos.GenerateContentResponse({
+      "candidates": [
+        {
+          "content": {
+            "role": "model"
+          },
+          "finish_reason": "STOP",
+          "index": 0,
+          "safety_ratings": [
+            {
+              "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_HATE_SPEECH",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_HARASSMENT",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+              "probability": "NEGLIGIBLE"
+            }
+          ]
+        }
+      ],
+      "usage_metadata": {
+        "prompt_token_count": 639,
+        "total_token_count": 716
+      },
+      "model_version": "gemini-2.5-pro"
+    }),
+)...(truncated if longer)
+
+
+[2025-08-22 12:37:16.801492] === EXTRACTED TEXT ===
+response:
+GenerateContentResponse(
+    done=True,
+    iterator=None,
+    result=protos.GenerateContentResponse({
+      "candidates": [
+        {
+          "content": {
+            "role": "model"
+          },
+          "finish_reason": "STOP",
+          "index": 0,
+          "safety_ratings": [
+            {
+              "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_HATE_SPEECH",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_HARASSMENT",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+              "probability": "NEGLIGIBLE"
+            }
+          ]
+        }
+      ],
+      "usage_metadata": {
+        "prompt_token_count": 639,
+        "total_token_count": 1951
+      },
+      "model_version": "gemini-2.5-pro"
+    }),
+)...(truncated if longer)
+
+
+[2025-08-22 12:44:23.627169] === EXTRACTED TEXT ===
+response:
+GenerateContentResponse(
+    done=True,
+    iterator=None,
+    result=protos.GenerateContentResponse({
+      "candidates": [
+        {
+          "content": {
+            "role": "model"
+          },
+          "finish_reason": "STOP",
+          "index": 0,
+          "safety_ratings": [
+            {
+              "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_HATE_SPEECH",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_HARASSMENT",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+              "probability": "NEGLIGIBLE"
+            }
+          ]
+        }
+      ],
+      "usage_metadata": {
+        "prompt_token_count": 638,
+        "total_token_count": 769
+      },
+      "model_version": "gemini-2.5-pro"
+    }),
+)...(truncated if longer)
+
+
+[2025-08-22 12:45:57.277847] === EXTRACTED TEXT ===
+response:
+GenerateContentResponse(
+    done=True,
+    iterator=None,
+    result=protos.GenerateContentResponse({
+      "candidates": [
+        {
+          "content": {
+            "role": "model"
+          },
+          "finish_reason": "STOP",
+          "index": 0,
+          "safety_ratings": [
+            {
+              "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_HATE_SPEECH",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_HARASSMENT",
+              "probability": "NEGLIGIBLE"
+            },
+            {
+              "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+              "probability": "NEGLIGIBLE"
+            }
+          ]
+        }
+      ],
+      "usage_metadata": {
+        "prompt_token_count": 528,
+        "total_token_count": 596
+      },
+      "model_version": "gemini-2.5-pro"
+    }),
+)...(truncated if longer)
+
+
+[2025-08-22 13:01:43.244818] === EXTRACTED TEXT ===
+## 1. Verdict
+Correct. You correctly identified this email as legitimate because it is a standard informational newsletter with no signs of malicious intent.
+
+## 2. What we expected to see
+A strong analysis would have identified the following signals indicating this email is safe:
+
+*   **Plausible URL:** The hyperlink `https://legitimate-news.com` is a standard-looking domain name relevant to the email's content. *Why it matters:* Phishing attacks often use misspelled, irrelevant, or non-standard domains to trick users.
+*   **Low-Stakes Call to Action:** The only request is to "Read more on our website." *Why it matters:* Malicious emails create urgency or pressure you to provide credentials, download files, or send money. This email does none of that.
+*   **No Deceptive Links:** The visible link text ("website") and the underlying URL (`https://legitimate-news.com`) lead to the same logical destination. *Why it matters:* A common phishing tactic is to display a legitimate URL while hi...(truncated if longer)

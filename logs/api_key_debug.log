@@ -1,0 +1,5 @@
+
+[2025-08-22 12:45:05.526547] Email generation call #1
+GOOGLE_API_KEY exists: True
+genai module exists: True
+app.config contains rate limit?: False
