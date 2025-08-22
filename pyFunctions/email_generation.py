@@ -46,7 +46,7 @@ os.makedirs('logs', exist_ok=True)
 
 # Model configuration from environment variables
 DEFAULT_PRIMARY_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
-DEFAULT_FALLBACK_MODELS = os.getenv("GEMINI_FALLBACK_MODELS", "gemini-2.0-flash,gemini-1.5-pro").split(",")
+DEFAULT_FALLBACK_MODELS = [m.strip() for m in os.getenv("GEMINI_FALLBACK_MODELS", "gemini-2.0-flash,gemini-1.5-pro").split(",") if m.strip()]
 
 # Legacy fallback list for backward compatibility (now uses stable models)
 DEFAULT_MODEL_FALLBACK_LIST = ["gemini-2.0-flash", "gemini-1.5-pro"]
@@ -279,7 +279,57 @@ Guidelines:
 - All links must be plausible; for phishing, use lookalike domains; for legitimate, use real domains.
 - Do NOT include any fields other than Sender, Subject, Date, Content, Is_spam in that exact order.
 """
-    return execute_generation(prompt, GOOGLE_API_KEY, genai, app)
+    
+    # Configure API key
+    if GOOGLE_API_KEY:
+        genai.configure(api_key=GOOGLE_API_KEY)
+    
+    # Use generation config without response_mime_type
+    generation_config = {
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "top_k": 40,
+        "max_output_tokens": 1024,
+    }
+    
+    # Use retry mechanism with fallback models
+    response, used_model = call_gemini_with_retry(
+        model_name=DEFAULT_PRIMARY_MODEL,
+        prompt=prompt,
+        generation_config=generation_config,
+        max_attempts=3,
+        fallback_models=DEFAULT_FALLBACK_MODELS,
+        initial_delay=0.5
+    )
+    
+    if response is None:
+        print("[GENERATE] Standard generation failed - no response from any model")
+        return None
+        
+    # Extract content from response
+    content = extract_content_from_response(response)
+    if not content:
+        print("[GENERATE] Standard generation failed - could not extract content")
+        return None
+        
+    # Check if content contains fallback markers
+    if ("Sender: training@securityawareness.com" in content and 
+        "Subject: Security Training Email" in content):
+        print("[GENERATE] Standard generation returned fallback content, treating as failure")
+        return None
+        
+    # Parse email components
+    try:
+        email_data = parse_email_components(content)
+        if email_data:
+            print(f"[GENERATE] Standard generation succeeded with model: {used_model}")
+            return email_data
+        else:
+            print("[GENERATE] Standard generation failed - could not parse email components")
+            return None
+    except Exception as e:
+        print(f"[GENERATE] Standard generation failed - parsing error: {e}")
+        return None
 
 def try_neutral_generation(user_name, previous_responses, GOOGLE_API_KEY, genai, app):
     """Try with a more neutral prompt that might avoid content filters"""
@@ -299,7 +349,57 @@ Make the email either legitimate (Is_spam: false) or suspicious (Is_spam: true).
 If suspicious, include subtle issues like slightly misspelled domains or links that don't match display text.
 If legitimate, use proper formatting and realistic business content.
 """
-    return execute_generation(prompt, GOOGLE_API_KEY, genai, app)
+    
+    # Configure API key
+    if GOOGLE_API_KEY:
+        genai.configure(api_key=GOOGLE_API_KEY)
+    
+    # Use generation config without response_mime_type
+    generation_config = {
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "top_k": 40,
+        "max_output_tokens": 1024,
+    }
+    
+    # Use retry mechanism with fallback models
+    response, used_model = call_gemini_with_retry(
+        model_name=DEFAULT_PRIMARY_MODEL,
+        prompt=prompt,
+        generation_config=generation_config,
+        max_attempts=3,
+        fallback_models=DEFAULT_FALLBACK_MODELS,
+        initial_delay=0.5
+    )
+    
+    if response is None:
+        print("[GENERATE] Neutral generation failed - no response from any model")
+        return None
+        
+    # Extract content from response
+    content = extract_content_from_response(response)
+    if not content:
+        print("[GENERATE] Neutral generation failed - could not extract content")
+        return None
+        
+    # Check if content contains fallback markers
+    if ("Sender: training@securityawareness.com" in content and 
+        "Subject: Security Training Email" in content):
+        print("[GENERATE] Neutral generation returned fallback content, treating as failure")
+        return None
+        
+    # Parse email components
+    try:
+        email_data = parse_email_components(content)
+        if email_data:
+            print(f"[GENERATE] Neutral generation succeeded with model: {used_model}")
+            return email_data
+        else:
+            print("[GENERATE] Neutral generation failed - could not parse email components")
+            return None
+    except Exception as e:
+        print(f"[GENERATE] Neutral generation failed - parsing error: {e}")
+        return None
 
 def try_structured_generation(user_name, previous_responses, GOOGLE_API_KEY, genai, app):
     """Try a structured approach that generates parts separately"""
@@ -312,11 +412,38 @@ Subject: Subject line here
 
 Make it {"business-related" if random.random() > 0.5 else "personal"}.
 """
+    
+    # Configure API key
+    if GOOGLE_API_KEY:
+        genai.configure(api_key=GOOGLE_API_KEY)
+    
+    # Use generation config without response_mime_type
+    generation_config = {
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "top_k": 40,
+        "max_output_tokens": 1024,
+    }
+    
     try:
-        # Generate sender and subject
-        model = create_model(GOOGLE_API_KEY, genai)
-        subject_response = model.generate_content(subject_prompt)
-        subject_text = extract_content_from_response(subject_response)
+        # Generate sender and subject using retry mechanism
+        response, used_model = call_gemini_with_retry(
+            model_name=DEFAULT_PRIMARY_MODEL,
+            prompt=subject_prompt,
+            generation_config=generation_config,
+            max_attempts=3,
+            fallback_models=DEFAULT_FALLBACK_MODELS,
+            initial_delay=0.5
+        )
+        
+        if response is None:
+            print("[GENERATE] Structured generation failed - no response for subject/sender")
+            return None
+            
+        subject_text = extract_content_from_response(response)
+        if not subject_text:
+            print("[GENERATE] Structured generation failed - could not extract subject/sender")
+            return None
         
         # Parse sender and subject
         sender, subject = parse_sender_subject(subject_text)
@@ -327,18 +454,25 @@ Make it {"business-related" if random.random() > 0.5 else "personal"}.
 Write a short email body in HTML format. The email should be {"suspicious with subtle red flags" if is_spam else "legitimate and professional"}.
 Include only the HTML content, nothing else.
 """
-        # Try with exponential backoff for rate limits
-        for attempt in range(3):
-            try:
-                body_response = model.generate_content(body_prompt)
-                body_text = extract_content_from_response(body_response)
-                break
-            except Exception as e:
-                if "429" in str(e) and attempt < 2:
-                    print(f"[GENERATE] Rate limited, waiting {2**attempt} seconds...")
-                    time.sleep(2**attempt)
-                else:
-                    raise
+        
+        # Generate body using retry mechanism
+        body_response, used_model_body = call_gemini_with_retry(
+            model_name=DEFAULT_PRIMARY_MODEL,
+            prompt=body_prompt,
+            generation_config=generation_config,
+            max_attempts=3,
+            fallback_models=DEFAULT_FALLBACK_MODELS,
+            initial_delay=0.5
+        )
+        
+        if body_response is None:
+            print("[GENERATE] Structured generation failed - no response for body")
+            return None
+            
+        body_text = extract_content_from_response(body_response)
+        if not body_text:
+            print("[GENERATE] Structured generation failed - could not extract body")
+            return None
         
         # Clean up body text and format email
         body_text = clean_body_text(body_text)
@@ -347,13 +481,16 @@ Include only the HTML content, nothing else.
         # Randomize sender domain for uniqueness
         sender = randomize_sender_domain(sender)
         
-        return {
+        result = {
             "sender": sender,
             "subject": subject,
             "date": datetime.datetime.now().strftime("%B %d, %Y"),
             "content": email_content,
             "is_spam": is_spam
         }
+        
+        print(f"[GENERATE] Structured generation succeeded with model: {used_model}")
+        return result
         
     except Exception as e:
         print(f"[GENERATE] Error in structured generation: {e}")
@@ -367,12 +504,41 @@ def try_basic_generation(user_name, GOOGLE_API_KEY, genai, app):
     
     prompt = f"Write a short {email_type} email from a company to a customer."
     
+    # Configure API key
+    if GOOGLE_API_KEY:
+        genai.configure(api_key=GOOGLE_API_KEY)
+    
+    # Use generation config without response_mime_type
+    generation_config = {
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "top_k": 40,
+        "max_output_tokens": 1024,
+    }
+    
     try:
-        model = create_model(GOOGLE_API_KEY, genai)
-        response = model.generate_content(prompt)
+        # Use retry mechanism with fallback models
+        response, used_model = call_gemini_with_retry(
+            model_name=DEFAULT_PRIMARY_MODEL,
+            prompt=prompt,
+            generation_config=generation_config,
+            max_attempts=3,
+            fallback_models=DEFAULT_FALLBACK_MODELS,
+            initial_delay=0.5
+        )
+        
+        if response is None:
+            print("[GENERATE] Basic generation failed - no response from any model")
+            return None
         
         # Extract whatever we can get
         content = extract_content_from_response(response)
+        
+        # Check if content contains fallback markers
+        if content and ("Sender: training@securityawareness.com" in content and 
+                       "Subject: Security Training Email" in content):
+            print("[GENERATE] Basic generation returned fallback content, treating as failure")
+            return None
         
         if content:
             # Create our own metadata
@@ -386,13 +552,16 @@ def try_basic_generation(user_name, GOOGLE_API_KEY, genai, app):
             timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             email_content = email_content.replace('</body>', f'<!-- gen_id: {timestamp} --></body>')
             
-            return {
+            result = {
                 "sender": sender,
                 "subject": subject,
                 "date": datetime.datetime.now().strftime("%B %d, %Y"),
                 "content": email_content,
                 "is_spam": is_spam
             }
+            
+            print(f"[GENERATE] Basic generation succeeded with model: {used_model}")
+            return result
     except Exception as e:
         print(f"[GENERATE] Error in basic generation: {e}")
     
@@ -478,6 +647,13 @@ def result_has_valid_content(result):
         return False
     if not result['content'] or len(result['content']) < 20:
         return False
+    
+    # Reject static fallback content
+    if (result.get('sender') == "training@securityawareness.com" or 
+        result.get('subject') == "Security Training Email"):
+        print("[GENERATE] Rejecting static fallback content")
+        return False
+    
     return True
 
 # =============================================================================
@@ -959,6 +1135,7 @@ def extract_content_from_response(response):
     # Check for empty response
     if is_empty_response(response):
         print("[EXTRACT] Detected empty response with only role")
+        print("[EXTRACT] Using static fallback due to empty parts")
         return generate_fallback_content()
         
     # Try various methods to extract content
@@ -980,6 +1157,7 @@ def extract_content_from_response(response):
     
     # If all methods failed, return fallback content
     print("[EXTRACT] All extraction methods failed, using fallback")
+    print("[EXTRACT] Using static fallback due to empty parts")
     return generate_fallback_content()
 
 def extract_ai_text(response):
@@ -1191,7 +1369,7 @@ def create_model(GOOGLE_API_KEY, genai):
         HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE
     }
     
-    return genai.GenerativeModel('gemini-2.5-pro', safety_settings=safety_settings)
+    return genai.GenerativeModel(DEFAULT_PRIMARY_MODEL, safety_settings=safety_settings)
 
 def parse_email_components(content):
     """Parse the components of the generated email"""
