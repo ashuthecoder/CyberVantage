@@ -18,6 +18,21 @@ except ImportError:
 def generate_ai_email(user_name, previous_responses, GOOGLE_API_KEY=None, genai=None, app=None):
     """Generate an AI email with robust error handling"""
     print(f"[GENERATE] Starting email generation for user: {user_name}")
+     # Add debugging information about call count
+    if not hasattr(generate_ai_email, 'call_count'):
+        generate_ai_email.call_count = 0
+    generate_ai_email.call_count += 1
+    
+    print(f"[GENERATE] This is call #{generate_ai_email.call_count} to generate_ai_email")
+    
+    # Log whether we're using a cached API key
+    if app:
+        with open('logs/api_key_debug.log', 'a') as f:
+            f.write(f"\n[{datetime.datetime.now()}] Email generation call #{generate_ai_email.call_count}\n")
+            f.write(f"GOOGLE_API_KEY exists: {GOOGLE_API_KEY is not None}\n")
+            f.write(f"genai module exists: {genai is not None}\n")
+            f.write(f"app.config contains rate limit?: {app.config.get('RATE_LIMITED', False)}\n")
+
     from .template_emails import get_template_email
 
     if not GOOGLE_API_KEY or not genai:
