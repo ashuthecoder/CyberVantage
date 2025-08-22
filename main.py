@@ -49,6 +49,7 @@ csrf = CSRFProtect(app)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
+    app.config['GOOGLE_API_KEY'] = GOOGLE_API_KEY  # Set for diagnostics
     print(f"✓ API key loaded successfully: {GOOGLE_API_KEY[:4]}...{GOOGLE_API_KEY[-4:]}")
 else:
     print("Warning: GOOGLE_API_KEY not found. AI features will be limited.")

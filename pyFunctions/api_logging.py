@@ -15,7 +15,7 @@ request_cache = {}  # For caching responses
 # Ensure log directory exists
 os.makedirs(os.path.dirname(LOG_FILE_PATH), exist_ok=True)
 
-def log_api_request(function_name, prompt_length, success, response_length=0, error=None):
+def log_api_request(function_name, prompt_length, success, response_length=0, error=None, fallback_reason=None, model_used=None):
     """
     Log API request to file for debugging and optimization
     
@@ -25,6 +25,8 @@ def log_api_request(function_name, prompt_length, success, response_length=0, er
         success (bool): Whether the API call succeeded
         response_length (int, optional): Length of the response if successful
         error (Exception, optional): Error object if the call failed
+        fallback_reason (str, optional): Reason for fallback ("rate_limited", "missing_api_key", "api_500", "empty_parts", "safety_block", "exception")
+        model_used (str, optional): Name of the model that successfully responded
     """
     global api_request_log
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -36,7 +38,9 @@ def log_api_request(function_name, prompt_length, success, response_length=0, er
         "prompt_length": prompt_length,
         "success": success,
         "response_length": response_length,
-        "error": str(error) if error else None
+        "error": str(error) if error else None,
+        "fallback_reason": fallback_reason,
+        "model_used": model_used
     })
     
     # Keep in-memory log size manageable
@@ -49,8 +53,14 @@ def log_api_request(function_name, prompt_length, success, response_length=0, er
     
     if success:
         log_entry += f", Response: {response_length} chars"
+        if model_used:
+            log_entry += f", Model: {model_used}"
+    
     if error:
         log_entry += f"\n  ERROR: {error}"
+    
+    if fallback_reason:
+        log_entry += f"\n  FALLBACK_REASON: {fallback_reason}"
     
     # Write to log file
     try:
