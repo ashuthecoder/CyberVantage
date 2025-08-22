@@ -51,6 +51,12 @@ if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
     app.config['GOOGLE_API_KEY'] = GOOGLE_API_KEY  # Set for diagnostics
     print(f"✓ API key loaded successfully: {GOOGLE_API_KEY[:4]}...{GOOGLE_API_KEY[-4:]}")
+    
+    # Log model configuration from environment variables
+    primary_model = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
+    fallback_models = os.getenv("GEMINI_FALLBACK_MODELS", "gemini-2.0-flash,gemini-1.5-pro")
+    print(f"✓ Primary model: {primary_model}")
+    print(f"✓ Fallback models: {fallback_models}")
 else:
     print("Warning: GOOGLE_API_KEY not found. AI features will be limited.")
 
