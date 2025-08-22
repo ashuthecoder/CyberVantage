@@ -15,6 +15,14 @@ import os
 import time
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
+# Import API exceptions for retry logic
+try:
+    from google.api_core.exceptions import InternalServerError
+except ImportError:
+    # Fallback if google.api_core is not available
+    class InternalServerError(Exception):
+        pass
+
 # =============================================================================
 # INITIALIZATION AND IMPORTS
 # =============================================================================
@@ -31,6 +39,101 @@ except ImportError:
 
 # Ensure logs directory exists
 os.makedirs('logs', exist_ok=True)
+
+# =============================================================================
+# AI RETRY HELPERS AND CONFIGURATION
+# =============================================================================
+
+# Model fallback list - try these models in order if primary fails
+DEFAULT_MODEL_FALLBACK_LIST = ["gemini-2.5-pro", "gemini-2.0-flash-exp"]
+
+def call_gemini_with_retry(model_name, prompt, generation_config, max_attempts=3, 
+                          fallback_models=None, initial_delay=0.5):
+    """
+    Call Gemini API with retry logic and exponential backoff.
+    
+    Args:
+        model_name: Primary model to try
+        prompt: The prompt to send
+        generation_config: Generation configuration
+        max_attempts: Maximum retry attempts per model
+        fallback_models: List of fallback models to try
+        initial_delay: Initial delay between retries in seconds
+    
+    Returns:
+        tuple: (response, successful_model_name) or (None, None) if all fail
+    """
+    import google.generativeai as genai
+    
+    models_to_try = [model_name]
+    if fallback_models:
+        models_to_try.extend(fallback_models)
+    
+    for model_name_to_try in models_to_try:
+        print(f"[RETRY] Trying model: {model_name_to_try}")
+        
+        for attempt in range(max_attempts):
+            try:
+                # Create model with safety settings
+                safety_settings = {
+                    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE
+                }
+                
+                model = genai.GenerativeModel(model_name_to_try, safety_settings=safety_settings)
+                
+                print(f"[RETRY] Attempt {attempt + 1}/{max_attempts} with {model_name_to_try}")
+                response = model.generate_content(prompt, generation_config=generation_config)
+                
+                # Check if response has usable text parts
+                if has_usable_text_parts(response):
+                    print(f"[RETRY] Success with {model_name_to_try} on attempt {attempt + 1}")
+                    return response, model_name_to_try
+                else:
+                    print(f"[RETRY] Response from {model_name_to_try} has no usable text parts")
+                    if attempt < max_attempts - 1:
+                        delay = initial_delay * (2 ** attempt)  # Exponential backoff
+                        print(f"[RETRY] Waiting {delay}s before retry...")
+                        time.sleep(delay)
+                    
+            except InternalServerError as e:
+                print(f"[RETRY] InternalServerError on attempt {attempt + 1} with {model_name_to_try}: {e}")
+                if attempt < max_attempts - 1:
+                    delay = initial_delay * (2 ** attempt)  # Exponential backoff
+                    print(f"[RETRY] Waiting {delay}s before retry...")
+                    time.sleep(delay)
+                else:
+                    print(f"[RETRY] Max attempts reached for {model_name_to_try}")
+                    
+            except Exception as e:
+                print(f"[RETRY] Other error on attempt {attempt + 1} with {model_name_to_try}: {e}")
+                # For non-retryable errors, break out of retry loop for this model
+                break
+    
+    print("[RETRY] All models and attempts failed")
+    return None, None
+
+def has_usable_text_parts(response):
+    """Check if response contains usable text parts"""
+    try:
+        # Try the most common access pattern first
+        if hasattr(response, 'text') and response.text and response.text.strip():
+            return True
+            
+        # Check candidates structure
+        if hasattr(response, 'candidates') and response.candidates:
+            for candidate in response.candidates:
+                if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                    for part in candidate.content.parts:
+                        if hasattr(part, 'text') and part.text and part.text.strip():
+                            return True
+        
+        return False
+    except Exception as e:
+        print(f"[RETRY] Error checking text parts: {e}")
+        return False
 
 # =============================================================================
 # EMAIL GENERATION ENTRY POINTS
@@ -81,13 +184,13 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
 
     # Early return conditions
     if should_use_fallback(app):
-        log_api_request("evaluate_explanation", 0, False, error="Using fallback due to rate limit")
-        return get_fallback_evaluation(is_spam, user_response)
+        log_api_request("evaluate_explanation", 0, False, error="Using fallback due to rate limit", fallback_reason="rate_limited")
+        return get_fallback_evaluation(is_spam, user_response, fallback_reason="rate_limited")
 
     if not GOOGLE_API_KEY or not genai:
-        log_api_request("evaluate_explanation", 0, False, error="No API key or genai module")
+        log_api_request("evaluate_explanation", 0, False, error="No API key or genai module", fallback_reason="missing_api_key")
         print("[EVALUATE] No API key - using fallback evaluation")
-        return get_fallback_evaluation(is_spam, user_response)
+        return get_fallback_evaluation(is_spam, user_response, fallback_reason="missing_api_key")
 
     # Use caching if we have a user explanation
     if user_explanation:
@@ -368,59 +471,76 @@ def execute_evaluation(email_content, is_spam, user_response, user_explanation, 
     """Execute the evaluation with the Gemini API"""
     # Check rate limit before API call
     if not check_rate_limit():
-        log_api_request("evaluate_explanation", 0, False, error="Rate limit reached")
+        log_api_request("evaluate_explanation", 0, False, error="Rate limit reached", fallback_reason="rate_limited")
         print("[EVALUATE] Rate limit reached - using fallback evaluation")
-        return get_fallback_evaluation(is_spam, user_response)
+        return get_fallback_evaluation(is_spam, user_response, fallback_reason="rate_limited")
+        
+    # Check for missing API key
+    if not GOOGLE_API_KEY:
+        log_api_request("evaluate_explanation", 0, False, error="Missing API key", fallback_reason="missing_api_key")
+        print("[EVALUATE] Missing API key - using fallback evaluation")
+        return get_fallback_evaluation(is_spam, user_response, fallback_reason="missing_api_key")
         
     # Prepare evaluation prompt
     prompt = get_evaluation_prompt(email_content, is_spam, user_response, user_explanation)
+    prompt_length = len(prompt)
     
     try:
-        # Create model with safety settings turned off
-        model = create_model(GOOGLE_API_KEY, genai)
-        print("[EVALUATE] Sending evaluation request to Gemini API with safety settings")
+        print("[EVALUATE] Sending evaluation request to Gemini API with retry logic")
         
-        # Log the API request attempt
-        prompt_length = len(prompt)
-        
-        # Make API call with generation_config to ensure proper response formatting
+        # Enhanced generation config with markdown output and single candidate
         generation_config = {
             "temperature": 0.2,
             "top_p": 0.8,
             "top_k": 40,
             "max_output_tokens": 2048,
+            "response_mime_type": "text/markdown",
+            "candidate_count": 1
         }
-        response = model.generate_content(prompt, generation_config=generation_config)
+        
+        # Configure API with key
+        genai.configure(api_key=GOOGLE_API_KEY)
+        
+        # Use retry helper to call Gemini
+        fallback_models = os.getenv("GEMINI_FALLBACK_MODELS", ",".join(DEFAULT_MODEL_FALLBACK_LIST)).split(",")
+        response, successful_model = call_gemini_with_retry(
+            model_name="gemini-2.5-pro",
+            prompt=prompt,
+            generation_config=generation_config,
+            max_attempts=3,
+            fallback_models=fallback_models
+        )
+        
+        if not response:
+            log_api_request("evaluate_explanation", prompt_length, False, 
+                           error="All retry attempts failed", fallback_reason="api_500")
+            print("[EVALUATE] All retry attempts failed - using fallback evaluation")
+            return get_fallback_evaluation(is_spam, user_response, fallback_reason="api_500")
         
         # Debug the raw response object before extraction
         debug_response_object(response, "EVALUATE_RESPONSE")
         
-        # Log successful API call
-        log_api_request("evaluate_explanation", prompt_length, True, 
-                       len(str(response)) if response else 0)
-
-        # Check for empty content
-        if is_empty_response(response):
-            print("[EVALUATE] Detected empty content with role only")
-            return get_fallback_evaluation(is_spam, user_response)
-
-        # Get response text with enhanced extraction
+        # Extract text with improved robustness
         ai_text = extract_ai_text(response)
-        
-        # Debug the extracted text
-        if ai_text:
-            with open('logs/debug_text.log', 'a') as f:
-                f.write(f"\n\n[{datetime.datetime.now()}] === EXTRACTED TEXT ===\n")
-                f.write(ai_text[:1000] + "...(truncated if longer)\n")
         
         if not ai_text:
             log_api_request("evaluate_explanation", prompt_length, False, 
-                           error="Failed to extract AI text from response")
-            return get_fallback_evaluation(is_spam, user_response)
+                           error="Failed to extract AI text from response", fallback_reason="empty_parts")
+            print("[EVALUATE] Failed to extract AI text - using fallback evaluation")
+            return get_fallback_evaluation(is_spam, user_response, fallback_reason="empty_parts")
 
-        # Debug the raw output
-        print(f"[EVALUATE] Raw AI response first 100 chars: {ai_text[:100]}")
-        print(f"[EVALUATE] Raw AI response last 100 chars: {ai_text[-100:] if len(ai_text) > 100 else ai_text}")
+        # Only log SUCCESS after successful text extraction
+        log_api_request("evaluate_explanation", prompt_length, True, 
+                       len(ai_text), model_used=successful_model)
+
+        # Debug the extracted text
+        with open('logs/debug_text.log', 'a') as f:
+            f.write(f"\n\n[{datetime.datetime.now()}] === EXTRACTED TEXT ===\n")
+            f.write(f"Model used: {successful_model}\n")
+            f.write(ai_text[:1000] + "...(truncated if longer)\n")
+        
+        print(f"[EVALUATE] Successfully extracted {len(ai_text)} chars using {successful_model}")
+        print(f"[EVALUATE] AI response first 100 chars: {ai_text[:100]}")
 
         # Process Markdown and convert to HTML
         processed_html, score = process_ai_text_to_html(ai_text, user_response, is_spam)
@@ -429,13 +549,21 @@ def execute_evaluation(email_content, is_spam, user_response, user_explanation, 
             "feedback": processed_html,
             "score": score
         }
+        
     except Exception as e:
-        # Log failed API call
-        log_api_request("evaluate_explanation", len(prompt), False, error=e)
+        # Determine fallback reason based on exception type
+        fallback_reason = "exception"
+        if "safety" in str(e).lower() or "block" in str(e).lower():
+            fallback_reason = "safety_block"
+        elif "500" in str(e) or "internal" in str(e).lower():
+            fallback_reason = "api_500"
+        
+        # Log failed API call with fallback reason
+        log_api_request("evaluate_explanation", prompt_length, False, error=str(e), fallback_reason=fallback_reason)
         print(f"[EVALUATE] Error in evaluation: {e}")
         traceback.print_exc()
         handle_rate_limit_error(str(e), app)
-        return get_fallback_evaluation(is_spam, user_response)
+        return get_fallback_evaluation(is_spam, user_response, fallback_reason=fallback_reason)
 
 def get_evaluation_prompt(email_content, is_spam, user_response, user_explanation):
     """Generate the evaluation prompt"""
@@ -643,9 +771,22 @@ def extract_score(ai_text, user_response, is_spam):
     # Return base score if extraction failed
     return base_score
 
-def get_fallback_evaluation(is_spam, user_response):
+def get_fallback_evaluation(is_spam, user_response, fallback_reason=None):
     """Generate a varied evaluation when AI isn't available"""
     correct = user_response == is_spam
+    
+    # Add banner to indicate AI is temporarily unavailable
+    banner = """
+    <div style='background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 12px; margin-bottom: 20px; color: #6c757d; font-size: 14px;'>
+        ⚠️ AI temporarily unavailable — showing basic feedback.
+    </div>
+    """
+    
+    # Add hidden comment for debugging (if fallback_reason provided)
+    hidden_comment = ""
+    if fallback_reason:
+        timestamp = datetime.datetime.now().isoformat()
+        hidden_comment = f"<!-- FALLBACK: {fallback_reason} at {timestamp} -->\n"
 
     if correct:
         base_score = random.randint(7, 9)
@@ -770,8 +911,11 @@ def get_fallback_evaluation(is_spam, user_response):
         ]
         feedback = random.choice(templates).format(score=base_score)
 
+    # Prepend hidden comment and banner to feedback
+    final_feedback = hidden_comment + banner + feedback
+
     return {
-        "feedback": feedback,
+        "feedback": final_feedback,
         "score": base_score
     }
 
@@ -831,38 +975,71 @@ def extract_ai_text(response):
         f.write(f"\n\n[{datetime.datetime.now()}] === EXTRACTION ATTEMPT ===\n")
         f.write(f"Response type: {type(response)}\n")
     
-    # Check for empty response
-    if is_empty_response(response):
-        print("[EXTRACT] Detected empty content with role only")
-        return generate_fallback_evaluation()
+    text_parts = []
     
-    # Try different extraction methods
-    extraction_methods = [
-        (extract_via_text_property, "Method 1: .text property"),
-        (extract_via_parts, "Method 2: .parts[0].text"),
-        (extract_via_candidates, "Method 3: candidates.content.parts"),
-        (extract_via_content_field, "Method 4: .content.parts"),
-        (extract_via_string_representation, "Method 5-6: string parsing")
-    ]
-    
-    for method, description in extraction_methods:
-        try:
-            ai_text = method(response)
-            if ai_text:
-                print(f"[EXTRACT] {description} succeeded")
-                with open('logs/extraction_debug.log', 'a') as f:
-                    f.write(f"{description} succeeded\n")
-                return ai_text
-        except Exception as e:
-            print(f"[EXTRACT] {description} failed: {e}")
+    try:
+        # Method 1: Try the simple .text property first
+        if hasattr(response, 'text') and response.text:
+            text = response.text.strip()
+            if text:
+                print("[EXTRACT] Method 1: .text property succeeded")
+                return text
+        
+        # Method 2: Iterate over candidates and parts to concatenate all text
+        if hasattr(response, 'candidates') and response.candidates:
+            for i, candidate in enumerate(response.candidates):
+                if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                    for j, part in enumerate(candidate.content.parts):
+                        if hasattr(part, 'text') and part.text:
+                            part_text = part.text.strip()
+                            if part_text:
+                                text_parts.append(part_text)
+                                print(f"[EXTRACT] Found text in candidate {i}, part {j}: {len(part_text)} chars")
+        
+        # Method 3: Try direct parts access
+        if not text_parts and hasattr(response, 'parts') and response.parts:
+            for j, part in enumerate(response.parts):
+                if hasattr(part, 'text') and part.text:
+                    part_text = part.text.strip()
+                    if part_text:
+                        text_parts.append(part_text)
+                        print(f"[EXTRACT] Found text in part {j}: {len(part_text)} chars")
+        
+        # Method 4: Try content field
+        if not text_parts and hasattr(response, 'content'):
+            if hasattr(response.content, 'parts') and response.content.parts:
+                for j, part in enumerate(response.content.parts):
+                    if hasattr(part, 'text') and part.text:
+                        part_text = part.text.strip()
+                        if part_text:
+                            text_parts.append(part_text)
+                            print(f"[EXTRACT] Found text in content part {j}: {len(part_text)} chars")
+        
+        # Concatenate all found text parts
+        if text_parts:
+            combined_text = '\n'.join(text_parts)
+            print(f"[EXTRACT] Successfully extracted {len(combined_text)} chars from {len(text_parts)} parts")
             with open('logs/extraction_debug.log', 'a') as f:
-                f.write(f"{description} failed: {e}\n")
-    
-    # If all methods failed
-    print("[EXTRACT] All extraction methods failed")
-    with open('logs/extraction_debug.log', 'a') as f:
-        f.write("All extraction methods failed\n")
-    return None
+                f.write(f"Success: extracted {len(combined_text)} chars from {len(text_parts)} parts\n")
+            return combined_text
+        
+        # If no text found, check if response is blocked/empty
+        if is_empty_response(response):
+            print("[EXTRACT] Response contains only role with no content")
+            with open('logs/extraction_debug.log', 'a') as f:
+                f.write("Empty response detected (role only)\n")
+        else:
+            print("[EXTRACT] No text parts found in response")
+            with open('logs/extraction_debug.log', 'a') as f:
+                f.write("No text parts found\n")
+        
+        return None
+        
+    except Exception as e:
+        print(f"[EXTRACT] Error during extraction: {e}")
+        with open('logs/extraction_debug.log', 'a') as f:
+            f.write(f"Extraction error: {e}\n")
+        return None
 
 def extract_via_text_property(response):
     """Extract content using the text property"""
