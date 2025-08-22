@@ -14,3 +14,22 @@
   ERROR: Invalid operation: The `response.text` quick accessor requires the response to contain a valid `Part`, but none were returned. The candidate's [finish_reason](https://ai.google.dev/api/generate-content#finishreason) is 1.
 [2025-08-22 12:45:57] evaluate_explanation - SUCCESS - Prompt: 2150 chars, Response: 993 chars
 [2025-08-22 13:01:43] evaluate_explanation - SUCCESS - Prompt: 2154 chars, Response: 3309 chars
+[2025-08-22 12:38:23] evaluate_explanation - SUCCESS - Prompt: 2500 chars, Response: 1200 chars, Model: gemini-2.5-pro
+[2025-08-22 12:38:23] evaluate_explanation - FAILED - Prompt: 2500 chars
+  ERROR: 500 Internal Server Error
+  FALLBACK_REASON: api_500
+[2025-08-22 12:38:23] evaluate_explanation - FAILED - Prompt: 2500 chars
+  ERROR: Failed to extract AI text
+  FALLBACK_REASON: empty_parts
+[2025-08-22 12:38:23] evaluate_explanation - FAILED - Prompt: 0 chars
+  ERROR: Rate limit reached
+  FALLBACK_REASON: rate_limited
+[2025-08-22 12:38:23] evaluate_explanation - FAILED - Prompt: 0 chars
+  ERROR: Missing API key
+  FALLBACK_REASON: missing_api_key
+[2025-08-22 12:38:23] evaluate_explanation - FAILED - Prompt: 2500 chars
+  ERROR: Safety filter blocked
+  FALLBACK_REASON: safety_block
+[2025-08-22 12:39:10] evaluate_explanation - FAILED - Prompt: 0 chars
+  ERROR: Missing API key
+  FALLBACK_REASON: missing_api_key
