@@ -50,3 +50,5 @@
   ERROR: No API key or genai module
 [2025-08-26 03:48:53] evaluate_phishing_creation - FAILED - Prompt: 0 chars
   ERROR: No API key, genai module, or empty submission
+[2025-08-26 14:15:54] assign_phishing_creation - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
