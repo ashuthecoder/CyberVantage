@@ -24,6 +24,7 @@ import sqlite3
 from pyFunctions.email_generation import generate_ai_email, evaluate_explanation, get_fallback_evaluation
 from pyFunctions.template_emails import get_template_email
 from pyFunctions.simulation import generate_unique_simulation_email
+from pyFunctions.phishing_assignment import assign_phishing_creation, evaluate_phishing_creation
 
 # Ensure logs directory exists for API logging
 import os
@@ -1046,6 +1047,72 @@ def update_schema(current_user):
             "success": False,
             "message": f"Error updating schema: {str(e)}"
         })
+
+# Phishing Assignment Routes
+@app.route('/phishing_assignment')
+@token_required
+def get_phishing_assignment(current_user):
+    """Display the phishing email creation assignment"""
+    try:
+        # Get assignment from the phishing assignment module
+        assignment_data = assign_phishing_creation(GOOGLE_API_KEY, genai, app)
+        
+        return render_template(
+            'phishing_assignment.html',
+            username=current_user.name,
+            instructions=assignment_data.get('instructions', ''),
+            rubric=assignment_data.get('rubric', [])
+        )
+    except Exception as e:
+        print(f"[PHISHING_ASSIGNMENT] Error loading assignment: {e}")
+        traceback.print_exc()
+        return render_template(
+            'system_message.html',
+            title="Error",
+            message="Unable to load the phishing assignment. Please try again later.",
+            action_text="Return to Dashboard",
+            action_url=url_for('dashboard'),
+            username=current_user.name
+        )
+
+@app.route('/evaluate_user_phishing', methods=['POST'])
+@token_required
+def evaluate_user_phishing(current_user):
+    """Evaluate the user's phishing email creation"""
+    try:
+        phishing_email = request.form.get('phishing_email', '').strip()
+        
+        if not phishing_email:
+            return render_template(
+                'system_message.html',
+                title="Error",
+                message="Please provide a phishing email for evaluation.",
+                action_text="Try Again",
+                action_url=url_for('get_phishing_assignment'),
+                username=current_user.name
+            )
+        
+        # Evaluate the phishing email
+        evaluation_result = evaluate_phishing_creation(phishing_email, GOOGLE_API_KEY, genai, app)
+        
+        return render_template(
+            'phishing_evaluation.html',
+            username=current_user.name,
+            feedback=evaluation_result.get('feedback', 'No feedback available'),
+            score=evaluation_result.get('score', 0),
+            effectiveness=evaluation_result.get('effectiveness_rating', 'Unknown')
+        )
+    except Exception as e:
+        print(f"[PHISHING_EVALUATION] Error evaluating submission: {e}")
+        traceback.print_exc()
+        return render_template(
+            'system_message.html',
+            title="Error", 
+            message="Unable to evaluate your phishing email. Please try again later.",
+            action_text="Try Again",
+            action_url=url_for('get_phishing_assignment'),
+            username=current_user.name
+        )
 
 if __name__ == '__main__':
     with app.app_context():
