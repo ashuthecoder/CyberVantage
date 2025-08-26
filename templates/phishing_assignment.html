@@ -36,6 +36,7 @@
             </div>
             
             <form action="{{ url_for('evaluate_user_phishing') }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div style="margin-top: 20px;">
                     <label for="phishing-email" style="display: block; margin-bottom: 8px; font-weight: bold;">Your Phishing Email:</label>
                     <textarea id="phishing-email" name="phishing_email" rows="12" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: Arial, sans-serif;" placeholder="Write your phishing email here..." required></textarea>

@@ -42,3 +42,11 @@
 [2025-08-22 13:11:34] call_gemini_with_retry - FAILED - Prompt: 0 chars
   ERROR: Invalid generation_config: 400 Bad Request: GenerateContentRequest.generation_config.response_mime_type only allows text/plain, application/json
   FALLBACK_REASON: invalid_generation_config
+[2025-08-26 03:47:17] assign_phishing_creation - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-08-26 03:47:59] assign_phishing_creation - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-08-26 03:48:41] assign_phishing_creation - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-08-26 03:48:53] evaluate_phishing_creation - FAILED - Prompt: 0 chars
+  ERROR: No API key, genai module, or empty submission
