@@ -3,7 +3,7 @@
 
 {% block content %}
 <div style="background-color: #2a3f54; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <a href="{{ url_for('dashboard') }}" style="color: white; text-decoration: none;">← Back to Dashboard</a>
+    <a href="{{ url_for('simulate') }}" style="color: white; text-decoration: none;">← Back to Simulation</a>
     <div>
         <span>Welcome, {{ username }}</span>
         <a href="{{ url_for('logout') }}" style="background-color: #e74c3c; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; margin-left: 10px;">Logout</a>
@@ -49,7 +49,7 @@
     </div>
     
     <div style="text-align: center; margin: 30px 0;">
-        <a href="{{ url_for('dashboard') }}" style="padding: 12px 25px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Return to Dashboard</a>
+        <a href="{{ url_for('simulate') }}" style="padding: 12px 25px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Return to Simulation</a>
         <a href="{{ url_for('get_phishing_assignment') }}" style="padding: 12px 25px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin-left: 15px;">Try Again</a>
     </div>
     

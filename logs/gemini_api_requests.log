@@ -52,3 +52,10 @@
   ERROR: No API key, genai module, or empty submission
 [2025-08-26 14:15:54] assign_phishing_creation - FAILED - Prompt: 0 chars
   ERROR: No API key or genai module
+[2025-09-14 12:15:53] assign_phishing_creation - SUCCESS - Prompt: 878 chars, Response: 4503 chars
+[2025-09-14 12:21:31] evaluate_explanation - SUCCESS - Prompt: 1924 chars, Response: 1969 chars, Model: gemini-2.5-pro
+[2025-09-14 12:22:47] evaluate_explanation - SUCCESS - Prompt: 2264 chars, Response: 2014 chars, Model: gemini-2.5-pro
+[2025-09-14 12:35:00] evaluate_explanation - SUCCESS - Prompt: 1887 chars, Response: 1432 chars, Model: gemini-2.5-pro
+[2025-09-14 12:36:38] evaluate_explanation - SUCCESS - Prompt: 2167 chars, Response: 1889 chars, Model: gemini-2.5-pro
+[2025-09-14 12:37:21] evaluate_explanation - SUCCESS - Prompt: 2385 chars, Response: 1424 chars, Model: gemini-2.5-pro
+[2025-09-14 12:57:17] assign_phishing_creation - SUCCESS - Prompt: 878 chars, Response: 4350 chars

@@ -744,6 +744,47 @@ def continue_after_feedback(current_user, email_id):
         traceback.print_exc()
         return redirect(url_for('reset_stuck_simulation'))
 
+@app.route('/skip_email')
+@token_required
+def skip_email(current_user):
+    """Skip the current email during testing"""
+    try:
+        phase = session.get('simulation_phase', 1)
+        
+        if phase == 1:
+            # For Phase 1, just advance to the next email
+            current_email_id = session.get('current_email_id', 1)
+            next_email_id = current_email_id + 1
+            
+            # If we're at the end of Phase 1, move to Phase 2
+            if next_email_id > 5:
+                session['simulation_phase'] = 2
+                print(f"[SKIP] Advancing from Phase 1 to Phase 2")
+            else:
+                session['current_email_id'] = next_email_id
+                print(f"[SKIP] Advancing to email {next_email_id} in Phase 1")
+                
+            session.modified = True
+            
+        elif phase == 2:
+            # For Phase 2, increment the completion counter and clear active email
+            session['phase2_emails_completed'] = session.get('phase2_emails_completed', 0) + 1
+            session.pop('active_phase2_email_id', None)
+            session.modified = True
+            
+            print(f"[SKIP] Phase 2 email skipped. Completed: {session.get('phase2_emails_completed')}")
+            
+            # If 5 done, go to results
+            if session.get('phase2_emails_completed', 0) >= 5:
+                print(f"[SKIP] Phase 2 complete after skip: {session.get('phase2_emails_completed')} emails completed")
+                return redirect(url_for('simulation_results'))
+        
+        return redirect(url_for('simulate'))
+    except Exception as e:
+        print(f"[SKIP] Error in skip_email: {e}")
+        traceback.print_exc()
+        return redirect(url_for('reset_stuck_simulation'))
+
 @app.route('/simulation_results')
 @token_required
 def simulation_results(current_user):

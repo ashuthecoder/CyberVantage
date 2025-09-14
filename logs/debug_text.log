@@ -178,3 +178,77 @@ A strong analysis would have identified the following signals indicating this em
 *   **Plausible URL:** The hyperlink `https://legitimate-news.com` is a standard-looking domain name relevant to the email's content. *Why it matters:* Phishing attacks often use misspelled, irrelevant, or non-standard domains to trick users.
 *   **Low-Stakes Call to Action:** The only request is to "Read more on our website." *Why it matters:* Malicious emails create urgency or pressure you to provide credentials, download files, or send money. This email does none of that.
 *   **No Deceptive Links:** The visible link text ("website") and the underlying URL (`https://legitimate-news.com`) lead to the same logical destination. *Why it matters:* A common phishing tactic is to display a legitimate URL while hi...(truncated if longer)
+
+
+[2025-09-14 12:21:31.059416] === EXTRACTED TEXT ===
+Model used: gemini-2.5-pro
+## 1. Verdict
+Correct. You correctly identified this as a non-phishing email, but your analysis provided no evidence to support this conclusion.
+
+## 2. What we expected to see
+A strong analysis of this email would have identified and evaluated the following key signals:
+
+*   **Sender Domain:** The domain `cloudstorage-alerts.com` is specific and plausible for a cloud storage service. It is not a generic public domain (like gmail.com) or a misspelled version of a known brand. This is a primary indicator of legitimacy.
+*   **Subject Line:** The subject `Action Required: Cloud Drive Quota Approaching Limit` creates urgency, which is a common phishing tactic. However, it is also a standard format for legitimate automated alerts. A good analysis would note the urgency but weigh it against other factors.
+*   **Lack of Obvious Errors:** The visible text in the sender and subject lines contains no spelling or grammatical mistakes, which are common red flags in low-effort phishing campaigns.
+* ...(truncated if longer)
+
+
+[2025-09-14 12:22:47.215220] === EXTRACTED TEXT ===
+Model used: gemini-2.5-pro
+## 1. Verdict
+**Incorrect.** This email is a phishing attempt because it uses a deceptive link (`dropboxs.com`) to impersonate the legitimate service.
+
+## 2. What we expected to see
+A strong analysis would have identified these key signals:
+
+*   **Deceptive Domain:** The hyperlink points to `dropboxs.com`, which is a typosquatting domain impersonating the official `dropbox.com`. This is the most definitive evidence of a phishing attack.
+*   **Threat of Data Loss:** The email threatens that files are "at risk of being permanently deleted." Legitimate services rarely, if ever, threaten permanent deletion for exceeding a storage quota, especially with such a short deadline. They typically suspend uploads.
+*   **High-Pressure Urgency:** The "24 hours to upgrade" deadline is a classic social engineering tactic designed to create panic and prevent you from thinking critically before you click.
+
+## 3. What you did well
+Your submission did not include an analysis. Therefore, no positive points...(truncated if longer)
+
+
+[2025-09-14 12:35:00.771699] === EXTRACTED TEXT ===
+Model used: gemini-2.5-pro
+## 1. Verdict
+Your verdict is **Incorrect**. This email is a phishing attempt, signaled by the suspicious sender domain and the generic, urgent subject line.
+
+## 2. What we expected to see
+A strong analysis of this email should have identified the following red flags:
+
+*   **Suspicious Sender Domain:** The domain `megacorp-global.net` is designed to look plausible but is not a standard corporate domain. This is a classic "cousin domain" or "look-alike" tactic used by attackers.
+*   **Vague, Urgent Subject Line:** The subject `Action Required:` creates a sense of urgency to pressure you into acting without thinking. Legitimate alerts are typically more specific about the required action.
+*   **Generic Content:** The body text, `Training email content.`, is placeholder text. It lacks any personalization (like your name or username) or specific details, which is highly unprofessional and uncharacteristic of a real IT security alert.
+
+## 3. What you did well
+*   You submitted a response to...(truncated if longer)
+
+
+[2025-09-14 12:36:38.019477] === EXTRACTED TEXT ===
+Model used: gemini-2.5-pro
+## 1. Verdict
+Incorrect. This is a phishing email because the primary link directs to a deceptive, misspelled domain (`dbroubox.net`) and not the official Dropbox website.
+
+## 2. What we expected to see
+A strong analysis would have identified these critical signals:
+
+*   **Deceptive Domain:** The hyperlink points to `dbroubox.net`. This is a classic "typosquatting" attack, designed to look like the legitimate `dropbox.com` at a glance. This is the most definitive indicator of phishing.
+*   **Mismatch of Expectation vs. Reality:** The email text and signature claim to be from "The Dropbox Team," but the link goes to a completely different and untrustworthy domain.
+*   **Psychological Manipulation:** The filename `Project Phoenix - Budget 2026.xlsx` is designed to create a sense of urgency, importance, and curiosity, pressuring you to click before thinking.
+*   **Credential Priming:** The line "You may need to log in to your Dropbox account" explicitly sets the expectation that you will ...(truncated if longer)
+
+
+[2025-09-14 12:37:21.531687] === EXTRACTED TEXT ===
+Model used: gemini-2.5-pro
+## 1. Verdict
+**Incorrect.** This is a legitimate notification email, primarily because the link directs to an authentic Dropbox domain.
+
+## 2. What we expected to see
+A strong analysis of this email would have identified the following key signals of legitimacy:
+
+*   **URL Domain Verification:** The most critical step is inspecting the hyperlink. The URL `https://www.dropbox.net/...` uses a legitimate, though less common, domain owned by Dropbox. Phishing attacks almost always use look-alike or completely unrelated domains.
+*   **Lack of High-Pressure Urgency:** The email requests feedback "by the end of the week." This is a standard business deadline, not the immediate, threatening language ("Your account will be suspended in 24 hours!") used to provoke panic and bypass critical thinking.
+*   **Professional Language:** The email is free of the spelling and grammatical errors that are common red flags in less sophisticated phishing attempts.
+*   **No Direct Credential Request:** The em...(truncated if longer)
