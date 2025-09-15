@@ -59,3 +59,15 @@
 [2025-09-14 12:36:38] evaluate_explanation - SUCCESS - Prompt: 2167 chars, Response: 1889 chars, Model: gemini-2.5-pro
 [2025-09-14 12:37:21] evaluate_explanation - SUCCESS - Prompt: 2385 chars, Response: 1424 chars, Model: gemini-2.5-pro
 [2025-09-14 12:57:17] assign_phishing_creation - SUCCESS - Prompt: 878 chars, Response: 4350 chars
+[2025-09-15 21:40:40] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-15 21:40:42] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-15 21:40:43] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-15 21:40:44] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-15 21:40:45] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-15 21:40:54] assign_phishing_creation - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
