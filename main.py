@@ -437,6 +437,25 @@ def view_api_logs(current_user):
     
     return log_html
 
+
+@app.route('/extend_session', methods=['POST'])
+@token_required
+def extend_session(current_user):
+    # Renew the JWT token with a fresh expiry
+    token = jwt.encode(
+        {
+            "user_id": current_user.id,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        },
+        app.config['JWT_SECRET_KEY'],
+        algorithm="HS256"
+    )
+    
+    # Update the session token
+    session['token'] = token
+    
+    return jsonify({"success": True, "message": "Session extended"}), 200
+
 @app.route('/simulate', methods=['GET'])
 @token_required
 def simulate(current_user):
@@ -897,6 +916,12 @@ def logout():
     session.pop('simulation_id', None)
     session.pop('phase2_emails_completed', None)
     session.pop('active_phase2_email_id', None)
+    
+    # Check if timeout parameter is present
+    timeout = request.args.get('timeout', False)
+    if timeout:
+        flash("Your session has expired due to inactivity. Please login again.")
+    
     return redirect(url_for('login'))
 
 @app.route('/restart_simulation')
