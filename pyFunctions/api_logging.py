@@ -6,16 +6,16 @@ import json
 # Global variables for tracking
 api_request_log = []
 MAX_LOG_SIZE = 100  # Keep last 100 requests in memory
-LOG_FILE_PATH = 'logs/gemini_api_requests.log'  # Path to save log file
+LOG_FILE_PATH = 'logs/api_requests.log'  # Path to save log file
 API_REQUESTS_PER_MINUTE = 0
 LAST_REQUEST_RESET = datetime.datetime.now()
-MAX_REQUESTS_PER_MINUTE = 10  # Adjust based on your Gemini API limits
+MAX_REQUESTS_PER_MINUTE = 10  # Adjust based on API limits
 request_cache = {}  # For caching responses
 
 # Ensure log directory exists
 os.makedirs(os.path.dirname(LOG_FILE_PATH), exist_ok=True)
 
-def log_api_request(function_name, prompt_length, success, response_length=0, error=None, fallback_reason=None, model_used=None):
+def log_api_request(function_name, prompt_length, success, response_length=0, error=None, fallback_reason=None, model_used=None, api_source=None, **kwargs):
     """
     Log API request to file for debugging and optimization
     
@@ -27,6 +27,8 @@ def log_api_request(function_name, prompt_length, success, response_length=0, er
         error (Exception, optional): Error object if the call failed
         fallback_reason (str, optional): Reason for fallback ("rate_limited", "missing_api_key", "api_500", "empty_parts", "safety_block", "exception")
         model_used (str, optional): Name of the model that successfully responded
+        api_source (str, optional): Source of the API request ("GEMINI", "AZURE", etc.)
+        **kwargs: Additional keyword arguments for extended logging (e.g., system_prompt)
     """
     global api_request_log
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -40,7 +42,8 @@ def log_api_request(function_name, prompt_length, success, response_length=0, er
         "response_length": response_length,
         "error": str(error) if error else None,
         "fallback_reason": fallback_reason,
-        "model_used": model_used
+        "model_used": model_used,
+        "api_source": api_source
     })
     
     # Keep in-memory log size manageable
@@ -49,7 +52,8 @@ def log_api_request(function_name, prompt_length, success, response_length=0, er
     
     # Format log entry for file
     status = "SUCCESS" if success else "FAILED"
-    log_entry = f"[{timestamp}] {function_name} - {status} - Prompt: {prompt_length} chars"
+    source_tag = f"[{api_source}] " if api_source else ""
+    log_entry = f"[{timestamp}] {source_tag}{function_name} - {status} - Prompt: {prompt_length} chars"
     
     if success:
         log_entry += f", Response: {response_length} chars"
@@ -105,7 +109,8 @@ def check_rate_limit():
     if API_REQUESTS_PER_MINUTE >= MAX_REQUESTS_PER_MINUTE:
         # Log this rate limiting event
         log_api_request("check_rate_limit", 0, False, 
-                        error=f"Rate limit reached: {API_REQUESTS_PER_MINUTE} requests this minute")
+                        error=f"Rate limit reached: {API_REQUESTS_PER_MINUTE} requests this minute",
+                        api_source="SYSTEM")
         return False
     
     # Increment counter and allow request
@@ -134,7 +139,7 @@ def get_cached_or_generate(cache_key, generator_func, *args, **kwargs):
         
         # Cache for 10 minutes
         if cache_time and (current_time - cache_time).total_seconds() < 600:
-            log_api_request("cache_hit", len(cache_key), True)
+            log_api_request("cache_hit", len(cache_key), True, api_source="CACHE")
             return entry.get("result")
     
     # Generate new result
@@ -200,6 +205,12 @@ def get_api_stats():
     for r in api_request_log:
         function_counts[r["function"]] = function_counts.get(r["function"], 0) + 1
     
+    # Get stats by API source
+    source_counts = {}
+    for r in api_request_log:
+        source = r.get("api_source", "UNKNOWN")
+        source_counts[source] = source_counts.get(source, 0) + 1
+    
     # Get error stats
     error_count = sum(1 for r in api_request_log if not r["success"])
     error_messages = [r["error"] for r in api_request_log if r["error"]]
@@ -215,6 +226,7 @@ def get_api_stats():
         "requests_last_5min": requests_last_5min,
         "requests_last_hour": requests_last_hour,
         "by_function": function_counts,
+        "by_source": source_counts,
         "error_count": error_count,
         "rate_limit_errors": rate_limit_errors,
         "recent_errors": error_messages[-5:] if error_messages else [],
@@ -222,6 +234,7 @@ def get_api_stats():
             {
                 "time": r["timestamp"].strftime("%H:%M:%S"),
                 "function": r["function"],
+                "api_source": r.get("api_source", "UNKNOWN"),
                 "prompt_length": r["prompt_length"],
                 "success": r["success"],
                 "error": r["error"]
@@ -246,8 +259,9 @@ def parse_log_file():
         # Parse logs
         log_entries = log_content.strip().split('\n')
         
-        # Analyze by function
+        # Analyze by function and API source
         function_stats = {}
+        source_stats = {}
         error_count = 0
         success_count = 0
         
@@ -256,7 +270,7 @@ def parse_log_file():
                 continue
                 
             try:
-                # Extract function name and status
+                # Extract function name, source, and status
                 parts = entry.split(' - ')
                 if len(parts) < 3:
                     continue
@@ -265,10 +279,19 @@ def parse_log_file():
                 function_part = parts[1]
                 status_part = parts[2]
                 
+                # Check if there's a source tag like [AZURE] or [GEMINI]
+                source = "UNKNOWN"
+                if '[' in function_part and ']' in function_part:
+                    source_start = function_part.find('[')
+                    source_end = function_part.find(']')
+                    if source_start < source_end:
+                        source = function_part[source_start+1:source_end]
+                        function_part = function_part[source_end+1:].strip()
+                
                 function_name = function_part.strip()
                 is_success = 'SUCCESS' in status_part
                 
-                # Update stats
+                # Update function stats
                 if function_name not in function_stats:
                     function_stats[function_name] = {'success': 0, 'failure': 0}
                 
@@ -278,6 +301,15 @@ def parse_log_file():
                 else:
                     function_stats[function_name]['failure'] += 1
                     error_count += 1
+                
+                # Update source stats
+                if source not in source_stats:
+                    source_stats[source] = {'success': 0, 'failure': 0}
+                
+                if is_success:
+                    source_stats[source]['success'] += 1
+                else:
+                    source_stats[source]['failure'] += 1
             except:
                 continue
         
@@ -300,7 +332,117 @@ def parse_log_file():
             "error_count": error_count,
             "success_rate": (success_count/(success_count + error_count)*100) if (success_count + error_count) > 0 else 0,
             "function_stats": function_stats,
+            "source_stats": source_stats,
             "recent_errors": recent_errors
         }
     except Exception as e:
         return {"error": f"Error parsing log file: {str(e)}"}
+
+def get_api_source_stats(source=None, time_window_hours=24):
+    """
+    Get detailed statistics for a specific API source or compare all sources
+    
+    Args:
+        source (str, optional): Filter stats for a specific API source (e.g., "AZURE", "GEMINI")
+        time_window_hours (int): Hours to look back for stats
+        
+    Returns:
+        dict: Detailed statistics on API usage by source
+    """
+    cutoff_time = datetime.datetime.now() - datetime.timedelta(hours=time_window_hours)
+    recent_requests = [r for r in api_request_log if r["timestamp"] > cutoff_time]
+    
+    # Filter by source if specified
+    if source:
+        recent_requests = [r for r in recent_requests if r.get("api_source") == source]
+    
+    if not recent_requests:
+        return {
+            "time_window_hours": time_window_hours,
+            "source": source,
+            "message": f"No API requests {'for ' + source if source else ''} in the last {time_window_hours} hours"
+        }
+    
+    # Calculate basic stats
+    total_requests = len(recent_requests)
+    successful_requests = len([r for r in recent_requests if r["success"]])
+    success_rate = round(successful_requests / total_requests * 100, 2)
+    
+    # Get function stats
+    function_stats = {}
+    for r in recent_requests:
+        function_name = r["function"]
+        if function_name not in function_stats:
+            function_stats[function_name] = {"total": 0, "success": 0, "failed": 0}
+        
+        function_stats[function_name]["total"] += 1
+        if r["success"]:
+            function_stats[function_name]["success"] += 1
+        else:
+            function_stats[function_name]["failed"] += 1
+    
+    # Add success rates to function stats
+    for func in function_stats:
+        total = function_stats[func]["total"]
+        success = function_stats[func]["success"]
+        function_stats[func]["success_rate"] = round(success / total * 100, 2)
+    
+    # Get error distribution
+    error_types = {}
+    for r in recent_requests:
+        if not r["success"] and r["error"]:
+            error_str = str(r["error"])
+            error_type = "Unknown error"
+            
+            # Categorize common errors
+            if "429" in error_str or "quota" in error_str.lower() or "rate" in error_str.lower():
+                error_type = "Rate limit exceeded"
+            elif "timeout" in error_str.lower() or "deadline" in error_str.lower():
+                error_type = "Timeout"
+            elif "auth" in error_str.lower() or "key" in error_str.lower() or "credential" in error_str.lower():
+                error_type = "Authentication error"
+            elif "deployment" in error_str.lower() or "model" in error_str.lower():
+                error_type = "Model/deployment error"
+            
+            error_types[error_type] = error_types.get(error_type, 0) + 1
+    
+    # Calculate average prompt and response sizes
+    avg_prompt_length = sum(r["prompt_length"] for r in recent_requests) / total_requests
+    success_reqs_with_length = [r for r in recent_requests if r["success"] and r["response_length"] > 0]
+    avg_response_length = sum(r["response_length"] for r in success_reqs_with_length) / len(success_reqs_with_length) if success_reqs_with_length else 0
+    
+    # Get recent usage trends (by hour)
+    hourly_stats = {}
+    for r in recent_requests:
+        hour_key = r["timestamp"].strftime("%Y-%m-%d %H:00")
+        if hour_key not in hourly_stats:
+            hourly_stats[hour_key] = {"total": 0, "success": 0}
+        
+        hourly_stats[hour_key]["total"] += 1
+        if r["success"]:
+            hourly_stats[hour_key]["success"] += 1
+    
+    # Sort hourly stats by time
+    sorted_hourly_stats = {k: hourly_stats[k] for k in sorted(hourly_stats.keys())}
+    
+    return {
+        "time_window_hours": time_window_hours,
+        "source": source if source else "All Sources",
+        "total_requests": total_requests,
+        "successful_requests": successful_requests,
+        "failed_requests": total_requests - successful_requests,
+        "success_rate": success_rate,
+        "avg_prompt_length": round(avg_prompt_length, 2),
+        "avg_response_length": round(avg_response_length, 2),
+        "by_function": function_stats,
+        "error_types": error_types,
+        "hourly_trends": sorted_hourly_stats,
+        "recent_requests": [
+            {
+                "time": r["timestamp"].strftime("%Y-%m-%d %H:%M:%S"),
+                "function": r["function"],
+                "success": r["success"],
+                "error": r["error"] if not r["success"] else None
+            } for r in sorted(recent_requests, key=lambda x: x["timestamp"], reverse=True)[:10]
+        ]
+    }

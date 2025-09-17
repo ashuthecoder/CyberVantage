@@ -394,7 +394,8 @@ def azure_openai_completion(
             function_name="azure_openai_completion",
             prompt_length=len(user_prompt) if user_prompt else 0,
             success=True,
-            model_used=deployment_to_use
+            model_used=deployment_to_use,
+            api_source="AZURE"
         )
                         
         # Make the API call with retry

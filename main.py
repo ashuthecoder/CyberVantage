@@ -418,6 +418,18 @@ def api_monitor(current_user):
     # No user-specific check, all authenticated users can access
     return jsonify(get_api_stats())
 
+@app.route('/api_source_stats')
+@token_required
+def api_source_stats(current_user):
+    """View detailed API statistics by source - accessible to all authenticated users"""
+    from pyFunctions.api_logging import get_api_source_stats
+    
+    # Get query parameters
+    source = request.args.get('source')  # Optional filter by API source (AZURE, GEMINI)
+    hours = request.args.get('hours', 24, type=int)  # Time window in hours
+    
+    return jsonify(get_api_source_stats(source=source, time_window_hours=hours))
+
 @app.route('/view_api_logs')
 @token_required
 def view_api_logs(current_user):

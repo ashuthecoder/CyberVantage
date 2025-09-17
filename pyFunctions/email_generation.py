@@ -200,13 +200,13 @@ def generate_ai_email(user_name, previous_responses, GOOGLE_API_KEY=None, genai=
     
     # Early returns for missing prerequisites
     if not GOOGLE_API_KEY or not genai:
-        log_api_request("generate_ai_email", 0, False, error="No API key or genai module")
+        log_api_request("generate_ai_email", 0, False, error="No API key or genai module", api_source="GEMINI")
         print("[GENERATE] No API key or genai module - using template email")
         return get_template_email()
 
     # Check rate limit before API call
     if not check_rate_limit():
-        log_api_request("generate_ai_email", 0, False, error="Rate limit reached")
+        log_api_request("generate_ai_email", 0, False, error="Rate limit reached", api_source="GEMINI")
         print("[GENERATE] Rate limit reached - using template email")
         return get_template_email()
 
@@ -226,7 +226,7 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
 
     # Early return conditions
     if should_use_fallback(app):
-        log_api_request("evaluate_explanation", 0, False, error="Using fallback due to rate limit", fallback_reason="rate_limited")
+        log_api_request("evaluate_explanation", 0, False, error="Using fallback due to rate limit", fallback_reason="rate_limited", api_source="GEMINI")
         return get_fallback_evaluation(is_spam, user_response, fallback_reason="rate_limited")
 
     # Try Azure OpenAI first if available
@@ -241,7 +241,7 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
             print("[EVALUATE] Azure OpenAI evaluation failed, falling back to Gemini")
 
     if not GOOGLE_API_KEY or not genai:
-        log_api_request("evaluate_explanation", 0, False, error="No API key or genai module", fallback_reason="missing_api_key")
+        log_api_request("evaluate_explanation", 0, False, error="No API key or genai module", fallback_reason="missing_api_key", api_source="GEMINI")
         print("[EVALUATE] No API key - using fallback evaluation")
         return get_fallback_evaluation(is_spam, user_response, fallback_reason="missing_api_key")
 
@@ -318,7 +318,7 @@ Guidelines:
     
     # Log API request
     log_api_request("azure_standard_generation", user_prompt, True, 
-                   system_prompt=system_prompt)
+                   system_prompt=system_prompt, api_source="AZURE")
     
     # Call Azure OpenAI
     text, status = azure_openai_completion(
@@ -362,7 +362,7 @@ Is_spam: <true|false>
     
     # Log API request
     log_api_request("azure_neutral_generation", user_prompt, True, 
-                   system_prompt=system_prompt)
+                   system_prompt=system_prompt, api_source="AZURE")
     
     # Call Azure OpenAI
     text, status = azure_openai_completion(
@@ -407,7 +407,7 @@ IMPORTANT: Your output should be ONLY the JSON object, nothing else.
     
     # Log API request
     log_api_request("azure_structured_generation", user_prompt, True, 
-                   system_prompt=system_prompt)
+                   system_prompt=system_prompt, api_source="AZURE")
     
     # Call Azure OpenAI
     text, status = azure_openai_completion(
@@ -455,7 +455,7 @@ Is_spam: [true/false]
     
     # Log API request
     log_api_request("azure_basic_generation", user_prompt, True, 
-                   system_prompt=system_prompt)
+                   system_prompt=system_prompt, api_source="AZURE")
     
     # Call Azure OpenAI
     text, status = azure_openai_completion(
@@ -523,7 +523,7 @@ def _execute_azure_evaluation(email_content, is_spam, user_response, user_explan
     """Internal function to execute Azure OpenAI evaluation"""
     # Log API request
     log_api_request("azure_evaluation", user_prompt, True, 
-                   system_prompt=system_prompt)
+                   system_prompt=system_prompt, api_source="AZURE")
     
     # Call Azure OpenAI
     text, status = azure_openai_completion(
@@ -925,7 +925,8 @@ def execute_generation(prompt, GOOGLE_API_KEY, genai, app):
         
         # Log successful API call
         log_api_request("generate_ai_email", prompt_length, True, 
-                       len(str(response)) if response else 0)
+                       len(str(response)) if response else 0,
+                       api_source="GEMINI")
 
         # Check for empty content in response
         if is_empty_response(response):
@@ -1054,7 +1055,8 @@ def execute_evaluation(email_content, is_spam, user_response, user_explanation, 
 
         # Only log SUCCESS after successful text extraction
         log_api_request("evaluate_explanation", prompt_length, True, 
-                       len(ai_text), model_used=successful_model)
+                       len(ai_text), model_used=successful_model,
+                       api_source="GEMINI" if "gemini" in (successful_model or "").lower() else "AZURE")
 
         # Debug the extracted text
         with open('logs/debug_text.log', 'a') as f:
