@@ -15,6 +15,7 @@ template_emails = [
         """,
         "is_spam": True
     },
+
     {
         "sender": "newsletter@legitimate-news.com",
         "subject": "Weekly Technology Update",
