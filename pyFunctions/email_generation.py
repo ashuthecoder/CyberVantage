@@ -37,6 +37,20 @@ except ImportError:
     def get_cached_or_generate(key, func, *args, **kwargs): return func(*args, **kwargs)
     def create_cache_key(prefix, content): return f"{prefix}_{hash(content)}"
 
+# Import Azure OpenAI helper functions with fallback
+try:
+    from .azure_openai_helper import (
+        azure_openai_completion, test_azure_openai_connection, 
+        extract_text_from_response, call_azure_openai_with_retry
+    )
+    AZURE_HELPERS_AVAILABLE = True
+except ImportError:
+    AZURE_HELPERS_AVAILABLE = False
+    def azure_openai_completion(*args, **kwargs): return None, "IMPORT_ERROR"
+    def test_azure_openai_connection(*args, **kwargs): return {"status": "IMPORT_ERROR"}
+    def extract_text_from_response(*args, **kwargs): return None
+    def call_azure_openai_with_retry(*args, **kwargs): return None, "IMPORT_ERROR"
+
 # Ensure logs directory exists
 os.makedirs('logs', exist_ok=True)
 
@@ -173,6 +187,17 @@ def generate_ai_email(user_name, previous_responses, GOOGLE_API_KEY=None, genai=
     # Import here to avoid circular imports
     from .template_emails import get_template_email
 
+    # Try Azure OpenAI first if available
+    if app and app.config.get('AZURE_OPENAI_KEY') and app.config.get('AZURE_OPENAI_ENDPOINT') and AZURE_HELPERS_AVAILABLE:
+        print("[GENERATE] Attempting to use Azure OpenAI")
+        result = multi_approach_generation_azure(user_name, previous_responses, app)
+        
+        if result_has_valid_content(result):
+            print("[GENERATE] Azure OpenAI generation succeeded")
+            return result
+        else:
+            print("[GENERATE] Azure OpenAI generation failed, falling back to Gemini")
+    
     # Early returns for missing prerequisites
     if not GOOGLE_API_KEY or not genai:
         log_api_request("generate_ai_email", 0, False, error="No API key or genai module")
@@ -204,6 +229,17 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
         log_api_request("evaluate_explanation", 0, False, error="Using fallback due to rate limit", fallback_reason="rate_limited")
         return get_fallback_evaluation(is_spam, user_response, fallback_reason="rate_limited")
 
+    # Try Azure OpenAI first if available
+    if app and app.config.get('AZURE_OPENAI_KEY') and app.config.get('AZURE_OPENAI_ENDPOINT') and AZURE_HELPERS_AVAILABLE:
+        print("[EVALUATE] Attempting to use Azure OpenAI")
+        result = execute_evaluation_azure(email_content, is_spam, user_response, user_explanation, app)
+        
+        if result and 'feedback' in result and result['feedback']:
+            print("[EVALUATE] Azure OpenAI evaluation succeeded")
+            return result
+        else:
+            print("[EVALUATE] Azure OpenAI evaluation failed, falling back to Gemini")
+
     if not GOOGLE_API_KEY or not genai:
         log_api_request("evaluate_explanation", 0, False, error="No API key or genai module", fallback_reason="missing_api_key")
         print("[EVALUATE] No API key - using fallback evaluation")
@@ -222,6 +258,303 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
         # If no explanation, execute directly
         return execute_evaluation(email_content, is_spam, user_response, user_explanation, 
                                 GOOGLE_API_KEY, genai, app)
+
+# =============================================================================
+# AZURE OPENAI IMPLEMENTATION
+# =============================================================================
+
+def multi_approach_generation_azure(user_name, previous_responses, app):
+    """Try multiple generation approaches with Azure OpenAI with fallbacks"""
+    # For detailed logging
+    log_request_with_timestamp("Starting multi-approach Azure generation")
+    
+    # Try each approach in sequence, returning the first one that works
+    approaches = [
+        ("standard", lambda: try_standard_generation_azure(user_name, previous_responses, app)),
+        ("neutral", lambda: try_neutral_generation_azure(user_name, previous_responses, app)),
+        ("structured", lambda: try_structured_generation_azure(user_name, previous_responses, app)),
+        ("basic", lambda: try_basic_generation_azure(user_name, app))
+    ]
+    
+    for name, approach_func in approaches:
+        try:
+            print(f"[GENERATE] Trying Azure {name} generation approach")
+            result = approach_func()
+            if result_has_valid_content(result):
+                print(f"[GENERATE] Azure {name.capitalize()} generation succeeded")
+                return result
+            print(f"[GENERATE] Azure {name.capitalize()} generation returned invalid content")
+        except Exception as e:
+            print(f"[GENERATE] Azure {name.capitalize()} generation failed with error: {e}")
+    
+    return None
+
+def try_standard_generation_azure(user_name, previous_responses, app):
+    """Try standard generation approach with Azure OpenAI"""
+    system_prompt = """You are a cybersecurity training email generator. Create ONE realistic email for a phishing simulation tailored to the user's performance."""
+    
+    user_prompt = f"""
+User name: {user_name}
+Performance summary: {previous_responses}
+
+Output strictly in EXACTLY the following format (no extra commentary, no code fences):
+
+Sender: <single email address>
+Subject: <concise subject>
+Date: {datetime.datetime.now().strftime("%B %d, %Y")}
+Content:
+<html><body>
+<!-- Provide the email body as HTML paragraphs and links; no external CSS -->
+</body></html>
+Is_spam: <true|false>
+
+Guidelines:
+- If phishing (Is_spam: true): include subtle but identifiable red flags (lookalike domains, mismatched link text vs href, urgency, credential/payment requests).
+- If legitimate (Is_spam: false): realistic tone with legitimate cues; avoid phishing indicators (no lookalike domains, no urgent threats, no requests for credentials).
+- Vary topics; do not reuse predefined examples; avoid the words "phishing" or "simulation".
+- All links must be plausible; for phishing, use lookalike domains; for legitimate, use real domains.
+- Do NOT include any fields other than Sender, Subject, Date, Content, Is_spam in that exact order.
+"""
+    
+    # Log API request
+    log_api_request("azure_standard_generation", user_prompt, True, 
+                   system_prompt=system_prompt)
+    
+    # Call Azure OpenAI
+    text, status = azure_openai_completion(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        max_tokens=1024,
+        temperature=0.7,
+        app=app
+    )
+    
+    if not text or status != "SUCCESS":
+        print(f"[GENERATE] Azure standard generation failed with status: {status}")
+        return None
+    
+    # Process and format result
+    return process_email_text(text)
+
+def try_neutral_generation_azure(user_name, previous_responses, app):
+    """Try neutral generation approach with Azure OpenAI"""
+    system_prompt = """You are an email template creator for training scenarios. Your task is to create realistic sample emails."""
+    
+    user_prompt = f"""
+Create a sample email that could be used for training purposes. It can be either legitimate or phishing.
+
+Email details:
+- Recipient: {user_name}
+- Should be realistic and appropriate for a training scenario
+- If you decide to make it a phishing email, include subtle red flags
+- If you decide to make it legitimate, ensure it has typical legitimate email characteristics
+
+Output format:
+Sender: <email address>
+Subject: <concise subject>
+Date: {datetime.datetime.now().strftime("%B %d, %Y")}
+Content:
+<html><body>
+<!-- Provide the email body as HTML paragraphs and links -->
+</body></html>
+Is_spam: <true|false>
+"""
+    
+    # Log API request
+    log_api_request("azure_neutral_generation", user_prompt, True, 
+                   system_prompt=system_prompt)
+    
+    # Call Azure OpenAI
+    text, status = azure_openai_completion(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        max_tokens=1024,
+        temperature=0.7,
+        app=app
+    )
+    
+    if not text or status != "SUCCESS":
+        print(f"[GENERATE] Azure neutral generation failed with status: {status}")
+        return None
+    
+    # Process and format result
+    return process_email_text(text)
+
+def try_structured_generation_azure(user_name, previous_responses, app):
+    """Try structured generation approach with Azure OpenAI"""
+    system_prompt = """You are a data structure generator that creates JSON objects representing emails for a training system."""
+    
+    user_prompt = f"""
+Generate a JSON structure representing an email. This can be either legitimate or phishing.
+
+Requirements:
+- Recipient name: {user_name}
+- Include sender, subject, date, content (HTML), and is_spam fields
+- If phishing, include subtle red flags
+- If legitimate, ensure it appears authentic
+
+Example structure:
+{{
+  "sender": "example@company.com",
+  "subject": "Your Account Information",
+  "date": "{datetime.datetime.now().strftime("%B %d, %Y")}",
+  "content": "<html><body><p>Email content goes here</p></body></html>",
+  "is_spam": true or false
+}}
+
+IMPORTANT: Your output should be ONLY the JSON object, nothing else.
+"""
+    
+    # Log API request
+    log_api_request("azure_structured_generation", user_prompt, True, 
+                   system_prompt=system_prompt)
+    
+    # Call Azure OpenAI
+    text, status = azure_openai_completion(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        max_tokens=1024,
+        temperature=0.7,
+        app=app
+    )
+    
+    if not text or status != "SUCCESS":
+        print(f"[GENERATE] Azure structured generation failed with status: {status}")
+        return None
+    
+    # Process JSON result
+    try:
+        email_json = json.loads(text)
+        
+        # Convert to standard format
+        email_text = f"""Sender: {email_json.get('sender', 'unknown@example.com')}
+Subject: {email_json.get('subject', 'No Subject')}
+Date: {email_json.get('date', datetime.datetime.now().strftime("%B %d, %Y"))}
+Content: {email_json.get('content', '<html><body><p>No content available</p></body></html>')}
+Is_spam: {str(email_json.get('is_spam', False)).lower()}"""
+        
+        return process_email_text(email_text)
+    except Exception as e:
+        print(f"[GENERATE] Error processing JSON from Azure structured generation: {e}")
+        return None
+
+def try_basic_generation_azure(user_name, app):
+    """Try basic generation approach with Azure OpenAI"""
+    system_prompt = """You will create a simple email for training purposes."""
+    
+    user_prompt = f"""
+Create a simple email for {user_name}. Decide if it should be phishing or legitimate.
+
+Format your response exactly as:
+Sender: [email]
+Subject: [subject]
+Date: {datetime.datetime.now().strftime("%B %d, %Y")}
+Content: [HTML content]
+Is_spam: [true/false]
+"""
+    
+    # Log API request
+    log_api_request("azure_basic_generation", user_prompt, True, 
+                   system_prompt=system_prompt)
+    
+    # Call Azure OpenAI
+    text, status = azure_openai_completion(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        max_tokens=512,
+        temperature=0.7,
+        app=app
+    )
+    
+    if not text or status != "SUCCESS":
+        print(f"[GENERATE] Azure basic generation failed with status: {status}")
+        return None
+    
+    # Process and format result
+    return process_email_text(text)
+
+def execute_evaluation_azure(email_content, is_spam, user_response, user_explanation, app):
+    """Execute evaluation using Azure OpenAI"""
+    correctness = "correctly" if user_response == is_spam else "incorrectly"
+    action = "identified it as phishing" if user_response else "identified it as legitimate"
+    correct_label = "phishing" if is_spam else "legitimate"
+    
+    system_prompt = """You are an expert cybersecurity educator evaluating a student's ability to identify phishing emails."""
+    
+    user_prompt = f"""
+Evaluate this user's explanation for why they identified an email as phishing or legitimate.
+
+Email content:
+{email_content}
+
+Facts:
+- This email is actually {correct_label}.
+- The user {correctness} {action}.
+- Their explanation: "{user_explanation}"
+
+Provide detailed feedback about:
+1. The accuracy of their threat assessment
+2. The quality of their explanation
+3. What security indicators they correctly identified
+4. What they missed or incorrectly identified
+5. How they could improve their analysis
+
+Also assign a score from 0-100 based on their understanding and explanation.
+
+Format your response as HTML with appropriate headings and paragraphs.
+"""
+    
+    # Use caching if we have a user explanation
+    if user_explanation:
+        cache_key = create_cache_key("azure_eval", f"{is_spam}_{user_response}_{user_explanation[:500]}")
+        
+        def perform_azure_evaluation():
+            return _execute_azure_evaluation(email_content, is_spam, user_response, user_explanation, 
+                                          system_prompt, user_prompt, app)
+        
+        return get_cached_or_generate(cache_key, perform_azure_evaluation)
+    else:
+        # If no explanation, execute directly
+        return _execute_azure_evaluation(email_content, is_spam, user_response, user_explanation,
+                                      system_prompt, user_prompt, app)
+
+def _execute_azure_evaluation(email_content, is_spam, user_response, user_explanation, 
+                           system_prompt, user_prompt, app):
+    """Internal function to execute Azure OpenAI evaluation"""
+    # Log API request
+    log_api_request("azure_evaluation", user_prompt, True, 
+                   system_prompt=system_prompt)
+    
+    # Call Azure OpenAI
+    text, status = azure_openai_completion(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        max_tokens=1024,
+        temperature=0.7,
+        app=app
+    )
+    
+    if not text or status != "SUCCESS":
+        print(f"[EVALUATE] Azure evaluation failed with status: {status}")
+        return get_fallback_evaluation(is_spam, user_response, fallback_reason="azure_api_error")
+    
+    # Extract score using regex patterns
+    score = 70  # Default score
+    score_pattern = r"score[:\s]+(\d+)"
+    score_matches = re.findall(score_pattern, text.lower())
+    if score_matches:
+        try:
+            score = int(score_matches[0])
+            # Ensure score is within bounds
+            score = max(0, min(score, 100))
+        except ValueError:
+            pass
+    
+    return {
+        'feedback': text,
+        'score': score,
+        'correct_identification': user_response == is_spam
+    }
 
 # =============================================================================
 # EMAIL GENERATION IMPLEMENTATION
@@ -1355,6 +1688,157 @@ def is_empty_response(response):
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
+
+def result_has_valid_content(result):
+    """Check if a generation result has valid content"""
+    if not result:
+        return False
+        
+    required_fields = ['sender', 'subject', 'content', 'is_spam']
+    return all(field in result for field in required_fields) and result['content']
+
+def process_email_text(text):
+    """Process raw email text into structured format"""
+    if not text:
+        return None
+        
+    # Initialize empty result
+    result = {
+        'sender': '',
+        'subject': '',
+        'date': datetime.datetime.now().strftime("%B %d, %Y"),
+        'content': '',
+        'is_spam': False
+    }
+    
+    # Extract fields using regex
+    sender_match = re.search(r'Sender:\s*(.*?)(?:\n|$)', text)
+    subject_match = re.search(r'Subject:\s*(.*?)(?:\n|$)', text)
+    date_match = re.search(r'Date:\s*(.*?)(?:\n|$)', text)
+    content_match = re.search(r'Content:\s*(.*?)(?=Is_spam:|$)', text, re.DOTALL)
+    is_spam_match = re.search(r'Is_spam:\s*(.*?)(?:\n|$)', text)
+    
+    # Update result if matches found
+    if sender_match:
+        result['sender'] = sender_match.group(1).strip()
+        
+    if subject_match:
+        result['subject'] = subject_match.group(1).strip()
+        
+    if date_match:
+        result['date'] = date_match.group(1).strip()
+        
+    if content_match:
+        content = content_match.group(1).strip()
+        # Check if content contains HTML tags
+        if not re.search(r'<html|<body|<p>|<div', content):
+            # Convert to HTML if it's plain text
+            content = f"<html><body><p>{content.replace(chr(10), '</p><p>')}</p></body></html>"
+        result['content'] = content
+        
+    if is_spam_match:
+        spam_value = is_spam_match.group(1).strip().lower()
+        result['is_spam'] = spam_value == 'true'
+    
+    # Validate minimum requirements
+    if not result['sender'] or not result['subject'] or not result['content']:
+        print("[GENERATE] Processed email missing required fields")
+        return None
+        
+    return result
+
+def log_api_key_info(app, call_count):
+    """Log API key information for diagnostic purposes"""
+    try:
+        print(f"[GENERATE] Call #{call_count} API key check")
+        
+        gemini_key = None
+        azure_key = None
+        azure_endpoint = None
+        
+        if app:
+            gemini_key = app.config.get('GOOGLE_API_KEY')
+            azure_key = app.config.get('AZURE_OPENAI_KEY')
+            azure_endpoint = app.config.get('AZURE_OPENAI_ENDPOINT')
+        
+        gemini_status = "Available" if gemini_key else "Not configured"
+        azure_status = "Available" if azure_key and azure_endpoint else "Not configured"
+        
+        print(f"[GENERATE] Gemini API key status: {gemini_status}")
+        print(f"[GENERATE] Azure OpenAI API key status: {azure_status}")
+        
+        # Log status to debug file
+        with open('logs/api_key_debug.log', 'a') as f:
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"{timestamp} - Call #{call_count}: Gemini: {gemini_status}, Azure: {azure_status}\n")
+            
+    except Exception as e:
+        print(f"[GENERATE] Error logging API key info: {e}")
+
+def should_use_fallback(app):
+    """Check if should use fallback evaluation (for rate limiting)"""
+    # If rate limit check fails, use fallback
+    if not check_rate_limit():
+        print("[EVALUATE] Rate limit reached, using fallback")
+        return True
+        
+    return False
+
+def get_fallback_evaluation(is_spam, user_response, fallback_reason="unknown"):
+    """Get fallback evaluation when API is unavailable"""
+    correctness = "correctly" if user_response == is_spam else "incorrectly"
+    email_type = "phishing" if is_spam else "legitimate"
+    user_judgment = "phishing" if user_response else "legitimate"
+    
+    # Generate basic feedback based on correctness
+    if user_response == is_spam:
+        if is_spam:
+            feedback = f"""
+            <h3>Good work!</h3>
+            <p>You correctly identified this as a phishing email. Being able to spot suspicious elements is an important security skill.</p>
+            <p>Continue practicing to further improve your threat detection abilities.</p>
+            """
+            score = 85
+        else:
+            feedback = f"""
+            <h3>Good assessment!</h3>
+            <p>You correctly identified this as a legitimate email. Being able to recognize genuine communications is just as important as spotting threats.</p>
+            <p>Continue practicing to maintain your ability to differentiate between legitimate and suspicious messages.</p>
+            """
+            score = 85
+    else:
+        if is_spam:
+            feedback = f"""
+            <h3>Room for improvement</h3>
+            <p>This was actually a phishing email that you identified as legitimate. Missing phishing attempts can potentially expose systems to security risks.</p>
+            <p>Look carefully for suspicious elements like unexpected requests, urgency, spelling errors, and mismatched or suspicious URLs.</p>
+            """
+            score = 40
+        else:
+            feedback = f"""
+            <h3>Further practice needed</h3>
+            <p>This was actually a legitimate email that you flagged as phishing. While caution is good, false positives can disrupt normal communications.</p>
+            <p>Try to balance security awareness with recognizing expected, normal business communications.</p>
+            """
+            score = 60
+    
+    # Add fallback reason notice
+    feedback += f"<p><small>Note: This is an automated assessment due to {fallback_reason}.</small></p>"
+    
+    return {
+        'feedback': feedback,
+        'score': score,
+        'correct_identification': user_response == is_spam
+    }
+
+def log_request_with_timestamp(message):
+    """Log a request with timestamp to the request timeline log"""
+    try:
+        with open('logs/request_timeline.log', 'a') as f:
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            f.write(f"{timestamp} - {message}\n")
+    except Exception as e:
+        print(f"Error logging to timeline: {e}")
 
 def create_model(GOOGLE_API_KEY, genai):
     """Create a model with safety settings turned off"""

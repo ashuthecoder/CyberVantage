@@ -89,3 +89,4 @@
   ERROR: No API key or genai module
 [2025-09-17 21:42:29] assign_phishing_creation - FAILED - Prompt: 0 chars
   ERROR: No API key or genai module
+[2025-09-17 19:32:58] test - SUCCESS - Prompt: 100 chars, Response: 0 chars

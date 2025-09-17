@@ -35,5 +35,4 @@ alembic
 # --- Misc Utilities ---
 python-dotenv
 tqdm
-
 openai
