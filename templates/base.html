@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CyberVantage{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         * {
             margin: 0;
@@ -137,23 +138,43 @@
             color: #666;
         }
 
+        /* Message alerts */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .nav-links {
+                display: none;
                 flex-direction: column;
                 position: absolute;
                 top: 60px;
                 right: 0;
                 background-color: #2a3f54;
                 width: 100%;
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease;
                 z-index: 999;
             }
             
             .nav-links.active {
-                max-height: 300px;
+                display: flex;
             }
             
             .hamburger {
@@ -176,7 +197,7 @@
 <body>
     <header>
         <nav>
-            <a href="{{ url_for('welcome') }}" class="logo">CyberVantage</a>
+            <a href="{{ url_for('dashboard') if session.get('token') else url_for('welcome') }}" class="logo">CyberVantage</a>
             
             <div class="nav-links">
                 {% if session.get('token') %}

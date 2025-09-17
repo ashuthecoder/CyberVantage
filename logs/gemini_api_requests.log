@@ -71,3 +71,21 @@
   ERROR: No API key or genai module
 [2025-09-15 21:40:54] assign_phishing_creation - FAILED - Prompt: 0 chars
   ERROR: No API key or genai module
+[2025-09-17 21:40:26] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-17 21:40:31] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-17 21:40:32] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-17 21:42:19] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-17 21:42:21] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-17 21:42:21] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-17 21:42:22] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-17 21:42:23] generate_ai_email - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
+[2025-09-17 21:42:29] assign_phishing_creation - FAILED - Prompt: 0 chars
+  ERROR: No API key or genai module
