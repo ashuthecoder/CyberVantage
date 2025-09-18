@@ -23,7 +23,7 @@ import sqlite3
 # Import functions from pyFunctions modules
 from pyFunctions.email_generation import generate_ai_email, evaluate_explanation, get_fallback_evaluation
 from pyFunctions.template_emails import get_template_email
-from pyFunctions.simulation import generate_unique_simulation_email
+from pyFunctions.simulation import generate_simulation_analysis
 from pyFunctions.phishing_assignment import assign_phishing_creation, evaluate_phishing_creation
 
 # Ensure logs directory exists for API logging

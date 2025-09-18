@@ -2,7 +2,7 @@
 # It exposes specific functions for import
 from .email_generation import generate_ai_email, evaluate_explanation
 from .template_emails import get_template_email
-from .simulation import generate_unique_simulation_email
+from .simulation import generate_simulation_analysis
 
 __all__ = [
     'generate_ai_email', 

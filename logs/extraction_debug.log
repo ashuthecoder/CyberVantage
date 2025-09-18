@@ -131,3 +131,7 @@ Response type: <class 'google.generativeai.types.generation_types.GenerateConten
 
 [2025-09-14 12:37:21.530056] === EXTRACTION ATTEMPT ===
 Response type: <class 'google.generativeai.types.generation_types.GenerateContentResponse'>
+
+
+[2025-09-18 15:33:52.335654] === EXTRACTION ATTEMPT ===
+Response type: <class 'google.generativeai.types.generation_types.GenerateContentResponse'>
