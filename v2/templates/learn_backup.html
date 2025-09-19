@@ -1,0 +1,764 @@
+{% extends "base.html" %}
+{% block title %}Learn - CyberVantage{% endblock %}
+
+{% block extra_styles %}
+.learning-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.module-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.module-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.module-header {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.module-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.module-content {
+    padding: 1.5rem;
+}
+
+.difficulty-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-top: 1rem;
+}
+
+.difficulty-beginner { background-color: #d4edda; color: #155724; }
+.difficulty-intermediate { background-color: #fff3cd; color: #856404; }
+.difficulty-advanced { background-color: #f8d7da; color: #721c24; }
+
+.topics-list {
+    margin: 1rem 0;
+    padding: 0;
+    list-style: none;
+}
+
+.topics-list li {
+    padding: 0.25rem 0;
+    color: #6c757d;
+}
+
+.topics-list li:before {
+    content: "✓ ";
+    color: #28a745;
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.module-detail {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+    display: none;
+}
+
+.module-detail-header {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: white;
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.module-detail-content {
+    padding: 2rem;
+}
+
+.content-area {
+    background: #f8f9fa;
+    border-left: 4px solid #3498db;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 0 4px 4px 0;
+}
+
+.progress-section {
+    background: #e9ecef;
+    padding: 1rem;
+    border-radius: 4px;
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.btn-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.back-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.back-btn:hover {
+    background: #5a6268;
+    color: white;
+    text-decoration: none;
+}
+{% endblock %}
+
+{% block content %}
+<div class="learning-container">
+    <h1>📚 Learning Modules</h1>
+    <p>Build your cybersecurity knowledge with our comprehensive learning modules powered by AI.</p>
+
+    <div id="modules-overview">
+        <div id="modules-loading" class="loading">
+            <p>Loading learning modules...</p>
+            <i class="fas fa-spinner fa-spin"></i>
+        </div>
+        <div id="modules-grid" class="modules-grid" style="display: none;"></div>
+    </div>
+
+    <div id="module-detail" class="module-detail">
+        <div class="module-detail-header">
+            <div>
+                <h2 id="detail-title"></h2>
+                <p id="detail-description"></p>
+            </div>
+            <button class="back-btn" onclick="showModules()">← Back to Modules</button>
+        </div>
+        
+        <div class="module-detail-content">
+            <div id="content-loading" class="loading" style="display: none;">
+                <p>Generating personalized content...</p>
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            
+            <div id="module-content-area" style="display: none;">
+                <div class="content-area">
+                    <h3>Learning Content</h3>
+                    <div id="ai-generated-content"></div>
+                </div>
+                
+                <div class="progress-section">
+                    <h4>Track Your Progress</h4>
+                    <p>Mark this module as completed when you finish reading:</p>
+                    <div class="btn-group">
+                        <button id="mark-complete-btn" class="btn primary">Mark as Complete</button>
+                        <button id="test-knowledge-btn" class="btn secondary">Test Knowledge</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let modules = [];
+    let currentModule = null;
+    
+    // Load learning modules
+    function loadModules() {
+        fetch('/api/learning/modules')
+        .then(response => response.json())
+        .then(data => {
+            if (data.modules) {
+                modules = data.modules;
+                displayModules();
+            } else {
+                document.getElementById('modules-loading').innerHTML = '<p>Failed to load modules. Please try again.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading modules:', error);
+            document.getElementById('modules-loading').innerHTML = '<p>Error loading modules. Please check your connection.</p>';
+        });
+    }
+    
+    function displayModules() {
+        const grid = document.getElementById('modules-grid');
+        
+        grid.innerHTML = modules.map(module => `
+            <div class="module-card" onclick="loadModule('${module.id}')">
+                <div class="module-header">
+                    <div>
+                        <div class="module-icon">${getModuleIcon(module.id)}</div>
+                        <h3 style="margin: 0; font-size: 1.1rem;">${module.title}</h3>
+                    </div>
+                    <div style="text-align: right; font-size: 0.9rem;">
+                        ${module.duration}
+                    </div>
+                </div>
+                <div class="module-content">
+                    <p>${module.description}</p>
+                    <ul class="topics-list">
+                        ${module.topics.map(topic => `<li>${topic}</li>`).join('')}
+                    </ul>
+                    <span class="difficulty-badge difficulty-${module.difficulty}">${module.difficulty}</span>
+                </div>
+            </div>
+        `).join('');
+        
+        document.getElementById('modules-loading').style.display = 'none';
+        grid.style.display = 'grid';
+    }
+    
+    function getModuleIcon(moduleId) {
+        const icons = {
+            'cybersecurity_basics': '🔒',
+            'phishing_awareness': '🎣',
+            'malware_analysis': '🦠',
+            'network_security': '🌐',
+            'incident_response': '🚨'
+        };
+        return icons[moduleId] || '📖';
+    }
+    
+    function loadModule(moduleId) {
+        currentModule = modules.find(m => m.id === moduleId);
+        if (!currentModule) return;
+        
+        // Show module detail view
+        document.getElementById('modules-overview').style.display = 'none';
+        document.getElementById('module-detail').style.display = 'block';
+        
+        // Update header
+        document.getElementById('detail-title').textContent = currentModule.title;
+        document.getElementById('detail-description').textContent = currentModule.description;
+        
+        // Show loading and load content
+        document.getElementById('content-loading').style.display = 'block';
+        document.getElementById('module-content-area').style.display = 'none';
+        
+        // Fetch AI-generated content
+        fetch(`/api/learning/content/${moduleId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.content) {
+                displayModuleContent(data.content);
+            } else {
+                document.getElementById('content-loading').innerHTML = '<p>Failed to load content. Please try again.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading module content:', error);
+            document.getElementById('content-loading').innerHTML = '<p>Error loading content. Please try again.</p>';
+        });
+    }
+    
+    function displayModuleContent(contentData) {
+        document.getElementById('ai-generated-content').innerHTML = `
+            <div style="line-height: 1.6; color: #333;">
+                ${contentData.content.replace(/\n/g, '<br><br>')}
+            </div>
+            <div style="margin-top: 1.5rem; padding: 1rem; background: #fff; border-radius: 4px;">
+                <p><small><strong>Generated:</strong> ${new Date(contentData.generated_at).toLocaleString()}</small></p>
+                ${contentData.interactive_elements ? `
+                    <p><small><strong>Interactive elements available:</strong> 
+                    ${contentData.interactive_elements.map(el => `${el.type} (${el.questions || el.count})`).join(', ')}</small></p>
+                ` : ''}
+            </div>
+        `;
+        
+        document.getElementById('content-loading').style.display = 'none';
+        document.getElementById('module-content-area').style.display = 'block';
+    }
+    
+    // Mark module as complete
+    document.getElementById('mark-complete-btn').addEventListener('click', function() {
+        if (!currentModule) return;
+        
+        fetch('/api/learning/progress', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                module_id: currentModule.id,
+                progress: {
+                    completed: true,
+                    score: 100,
+                    time_spent: 30 // minutes - placeholder
+                }
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert('Module marked as complete! ✅');
+                document.getElementById('mark-complete-btn').textContent = 'Completed ✓';
+                document.getElementById('mark-complete-btn').disabled = true;
+            }
+        })
+        .catch(error => {
+            console.error('Error updating progress:', error);
+            alert('Failed to update progress. Please try again.');
+        });
+    });
+    
+    // Test knowledge button
+    document.getElementById('test-knowledge-btn').addEventListener('click', function() {
+        alert('Quiz functionality coming soon! For now, visit the Simulation section to test your skills.');
+    });
+    
+    // Global function to show modules
+    window.showModules = function() {
+        document.getElementById('module-detail').style.display = 'none';
+        document.getElementById('modules-overview').style.display = 'block';
+        currentModule = null;
+    };
+    
+    // Load modules on page load
+    loadModules();
+});
+</script>
+{% endblock %}
+
+.progress-fill {
+    height: 100%;
+    background-color: #2ecc71;
+    border-radius: 5px;
+    width: 0%;
+    transition: width 0.5s;
+}
+
+.module-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+}
+
+.module-btn {
+    background-color: #3498db;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.module-btn:hover {
+    background-color: #2980b9;
+}
+
+.module-btn:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+/* Quiz styling */
+.quiz-question {
+    margin-bottom: 1.5rem;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.quiz-option {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.quiz-option:hover {
+    background-color: #f9f9f9;
+}
+
+.quiz-option.selected {
+    border-color: #3498db;
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+.quiz-option.correct {
+    border-color: #2ecc71;
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+.quiz-option.incorrect {
+    border-color: #e74c3c;
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+.quiz-feedback {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 5px;
+    display: none;
+}
+
+.feedback-correct {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+}
+
+.feedback-incorrect {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+.slide {
+    display: none;
+}
+
+.slide.active {
+    display: block;
+}
+
+.slide-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.slide-btn {
+    background-color: #3498db;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.slide-btn:hover {
+    background-color: #2980b9;
+}
+
+.slide-btn:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.slide-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.slide-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #bdc3c7;
+    cursor: pointer;
+}
+
+.slide-indicator.active {
+    background-color: #3498db;
+}
+
+@media (max-width: 768px) {
+    .module-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<h1 style="text-align: center;">Learn About Cyber Safety</h1>
+<p style="text-align: center; color: #7f8c8d; margin-bottom: 2rem;">Master the skills to identify and avoid spam emails</p>
+
+<div class="learning-content">
+    <!-- Module 1 -->
+    <div class="module-card">
+        <div class="module-header">
+            <div>Module 1: Introduction to Phishing</div>
+            <div>Progress: <span id="module1-progress">0%</span></div>
+        </div>
+        <div class="module-content">
+            <div class="progress-bar">
+                <div class="progress-fill" id="module1-progress-bar" style="width: 0%"></div>
+            </div>
+            
+            <div class="slides-container">
+                <div class="slide active" id="slide1">
+                    <h3>What is Phishing?</h3>
+                    <p>Phishing is a cybercrime in which targets are contacted by email, telephone or text message by someone posing as a legitimate institution to lure individuals into providing sensitive data.</p>
+                    <img src="{{ url_for('static', filename='images/phishing_example.jpg') }}" alt="Phishing Example" style="max-width: 100%; margin-top: 1rem;">
+                </div>
+                
+                <div class="slide" id="slide2">
+                    <h3>Common Phishing Techniques</h3>
+                    <ul>
+                        <li>Creating a sense of urgency or fear</li>
+                        <li>Requesting sensitive information</li>
+                        <li>Suspicious attachments or links</li>
+                        <li>Poor spelling and grammar</li>
+                        <li>Mismatched or fake URLs</li>
+                    </ul>
+                </div>
+                
+                <div class="slide" id="slide3">
+                    <h3>How to Identify Phishing</h3>
+                    <p>Look for these warning signs:</p>
+                    <ul>
+                        <li>Sender's email address doesn't match the company name</li>
+                        <li>Generic greetings instead of your name</li>
+                        <li>Requests for personal information</li>
+                        <li>Urgency or threats</li>
+                        <li>Too good to be true offers</li>
+                    </ul>
+                </div>
+                
+                <div class="slide-controls">
+                    <button id="prev-slide" class="slide-btn" disabled>Previous</button>
+                    <button id="next-slide" class="slide-btn">Next</button>
+                </div>
+                
+                <div class="slide-indicators">
+                    <div class="slide-indicator active" data-slide="1"></div>
+                    <div class="slide-indicator" data-slide="2"></div>
+                    <div class="slide-indicator" data-slide="3"></div>
+                </div>
+            </div>
+            
+            <div class="quiz-container">
+                <h3>Quiz: Test Your Knowledge</h3>
+                <div class="quiz-question">
+                    <p>1. What is the primary goal of a phishing attack?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">To disable your computer</div>
+                        <div class="quiz-option" data-correct="false">To install software on your computer</div>
+                        <div class="quiz-option" data-correct="true">To steal sensitive information like passwords</div>
+                        <div class="quiz-option" data-correct="false">To make your computer run slower</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+                
+                <div class="quiz-question">
+                    <p>2. Which of these is a common warning sign of a phishing email?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">Email comes from someone you know</div>
+                        <div class="quiz-option" data-correct="true">Urgent action required to prevent negative consequences</div>
+                        <div class="quiz-option" data-correct="false">Email has proper grammar and spelling</div>
+                        <div class="quiz-option" data-correct="false">Email addresses you by your correct name</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+                
+                <button id="submit-quiz" class="module-btn">Submit Answers</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Module 2 -->
+    <div class="module-card">
+        <div class="module-header">
+            <div>Module 2: Types of Phishing Attacks</div>
+            <div>Status: <span class="module-status">Locked</span></div>
+        </div>
+        <div class="module-content">
+            <p>Complete Module 1 to unlock this content.</p>
+        </div>
+    </div>
+    
+    <!-- Module 3 -->
+    <div class="module-card">
+        <div class="module-header">
+            <div>Module 3: Protecting Yourself Online</div>
+            <div>Status: <span class="module-status">Locked</span></div>
+        </div>
+        <div class="module-content">
+            <p>Complete Module 2 to unlock this content.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Slide functionality
+        let currentSlide = 1;
+        const totalSlides = 3;
+        
+        function updateSlide() {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show current slide
+            document.getElementById(`slide${currentSlide}`).classList.add('active');
+            
+            // Update indicators
+            document.querySelectorAll('.slide-indicator').forEach(indicator => {
+                indicator.classList.remove('active');
+            });
+            document.querySelector(`.slide-indicator[data-slide="${currentSlide}"]`).classList.add('active');
+            
+            // Update buttons
+            document.getElementById('prev-slide').disabled = currentSlide === 1;
+            document.getElementById('next-slide').disabled = currentSlide === totalSlides;
+            
+            // Update progress
+            updateProgress();
+        }
+        
+        document.getElementById('next-slide').addEventListener('click', function() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlide();
+            }
+        });
+        
+        document.getElementById('prev-slide').addEventListener('click', function() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlide();
+            }
+        });
+        
+        // Allow clicking indicators to navigate
+        document.querySelectorAll('.slide-indicator').forEach(indicator => {
+            indicator.addEventListener('click', function() {
+                currentSlide = parseInt(this.getAttribute('data-slide'));
+                updateSlide();
+            });
+        });
+        
+        // Quiz functionality
+        const quizOptions = document.querySelectorAll('.quiz-option');
+        
+        quizOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Unselect siblings
+                const siblings = this.parentElement.querySelectorAll('.quiz-option');
+                siblings.forEach(sib => {
+                    sib.classList.remove('selected');
+                });
+                
+                // Select this option
+                this.classList.add('selected');
+            });
+        });
+        
+        document.getElementById('submit-quiz').addEventListener('click', function() {
+            let correct = 0;
+            const questions = document.querySelectorAll('.quiz-question');
+            
+            questions.forEach(question => {
+                const selected = question.querySelector('.quiz-option.selected');
+                const feedback = question.querySelector('.quiz-feedback');
+                
+                if (!selected) {
+                    feedback.textContent = 'Please select an answer.';
+                    feedback.className = 'quiz-feedback feedback-incorrect';
+                    feedback.style.display = 'block';
+                    return;
+                }
+                
+                const options = question.querySelectorAll('.quiz-option');
+                options.forEach(opt => {
+                    opt.classList.remove('correct', 'incorrect');
+                });
+                
+                if (selected.getAttribute('data-correct') === 'true') {
+                    selected.classList.add('correct');
+                    feedback.textContent = 'Correct!';
+                    feedback.className = 'quiz-feedback feedback-correct';
+                    correct++;
+                } else {
+                    selected.classList.add('incorrect');
+                    
+                    // Also highlight the correct answer
+                    question.querySelector('.quiz-option[data-correct="true"]').classList.add('correct');
+                    
+                    feedback.textContent = 'Incorrect. Please try again.';
+                    feedback.className = 'quiz-feedback feedback-incorrect';
+                }
+                
+                feedback.style.display = 'block';
+            });
+            
+            // Update progress if all correct
+            if (correct === questions.length) {
+                localStorage.setItem('module1-quiz-completed', 'true');
+                updateProgress();
+                
+                // Unlock Module 2
+                const moduleStatuses = document.querySelectorAll('.module-status');
+                if (moduleStatuses.length > 0) {
+                    moduleStatuses[0].textContent = 'Unlocked';
+                    moduleStatuses[0].style.color = '#2ecc71';
+                }
+            }
+        });
+        
+        // Progress tracking
+        function updateProgress() {
+            let progress = 0;
+            
+            // Slides viewed (33% per slide)
+            progress += Math.min(currentSlide, totalSlides) * (33 / totalSlides);
+            
+            // Quiz completed (67%)
+            if (localStorage.getItem('module1-quiz-completed') === 'true') {
+                progress += 67;
+            }
+            
+            // Cap at 100%
+            progress = Math.min(progress, 100);
+            progress = Math.round(progress);
+            
+            document.getElementById('module1-progress').textContent = `${progress}%`;
+            document.getElementById('module1-progress-bar').style.width = `${progress}%`;
+            
+            return progress;
+        }
+        
+        // Initialize
+        updateProgress();
+    });
+</script>
+{% endblock %}
