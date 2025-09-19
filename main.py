@@ -28,10 +28,6 @@ app.register_blueprint(threat_bp)
 def welcome():
     return render_template("welcome.html")
 
-@app.route('/test')
-def test():
-    return "Routing test works!"
-
 @app.route('/dashboard')
 @token_required
 def dashboard(current_user):
