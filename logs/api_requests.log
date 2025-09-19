@@ -1,0 +1,7 @@
+[2025-09-17 21:32:08] [AZURE] test_azure_function - SUCCESS - Prompt: 100 chars, Response: 50 chars, Model: gpt-4
+[2025-09-17 21:32:08] [GEMINI] test_gemini_function - SUCCESS - Prompt: 120 chars, Response: 60 chars, Model: gemini-pro
+[2025-09-17 21:32:08] [AZURE] test_error_function - FAILED - Prompt: 80 chars
+  ERROR: Test error
+[2025-09-17 21:32:08] [SYSTEM] test_system_function - SUCCESS - Prompt: 0 chars, Response: 10 chars
+[2025-09-17 22:08:41] [AZURE] azure_evaluation - SUCCESS - Prompt: 1185 chars, Response: 0 chars
+[2025-09-17 22:08:41] [AZURE] azure_openai_completion - SUCCESS - Prompt: 1185 chars, Response: 0 chars, Model: gpt-4.1-nano

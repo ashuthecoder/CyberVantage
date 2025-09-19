@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Register - CyberVantage{% endblock %}
+
+{% block content %}
+<div class="register-container" style="max-width: 500px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <h2 style="margin-bottom: 20px; text-align: center;">📝 Create Your CyberVantage Account</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div style="background-color: {% if category == 'error' %}#f8d7da{% else %}#d4edda{% endif %}; 
+                           color: {% if category == 'error' %}#721c24{% else %}#155724{% endif %}; 
+                           padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <form method="POST" action="{{ url_for('register') }}" autocomplete="off" novalidate>
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+            <label for="name">Full Name:</label>
+            <input type="text" id="name" name="name" required maxlength="50"
+                pattern="^[A-Za-z\s]+$" placeholder="John Doe">
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required
+                pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                autocomplete="username" placeholder="Enter your email">
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <div class="password-container">
+                <input type="password" id="password" name="password" required minlength="8"
+                    autocomplete="new-password"
+                    placeholder="Min. 8 characters with letters & numbers">
+                <span class="password-toggle" onclick="togglePassword('password')">
+                    <i class="fas fa-eye" id="password-eye"></i>
+                </span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="confirm_password">Confirm Password:</label>
+            <div class="password-container">
+                <input type="password" id="confirm_password" name="confirm_password" required
+                    autocomplete="new-password" placeholder="Re-enter your password">
+                <span class="password-toggle" onclick="togglePassword('confirm_password')">
+                    <i class="fas fa-eye" id="confirm-eye"></i>
+                </span>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button type="submit" style="width: 100%;">Register</button>
+        </div>
+    </form>
+    
+    <div style="text-align: center; margin-top: 20px;">
+        <p>Already have an account? <a href="{{ url_for('login') }}" style="color: #3498db;">Login here</a></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function togglePassword(fieldId) {
+        const passwordField = document.getElementById(fieldId);
+        const eyeIcon = document.getElementById(fieldId === 'password' ? 'password-eye' : 'confirm-eye');
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
+    }
+
+    // Password validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert("Passwords don't match!");
+        }
+    });
+</script>
+{% endblock %}

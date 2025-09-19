@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Phishing Email Creation Assignment | CyberVantage{% endblock %}
+
+{% block content %}
+<div style="background-color: #2a3f54; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <a href="{{ url_for('simulate') }}" style="color: white; text-decoration: none;">← Back to Simulation</a>
+    <div>
+        <span>Welcome, {{ username }}</span>
+        <a href="{{ url_for('logout') }}" style="background-color: #e74c3c; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; margin-left: 10px;">Logout</a>
+    </div>
+</div>
+
+<div style="max-width: 1200px; margin: 2rem auto; padding: 0 2rem;">
+    <h1>Final Challenge: Create a Phishing Email</h1>
+    <p>Now it's time to apply everything you've learned about phishing detection by creating your own phishing email.</p>
+    
+    <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 2rem; overflow: hidden;">
+        <div style="background-color: #2a3f54; color: white; padding: 1rem 1.5rem; font-size: 1.2rem; font-weight: bold;">
+            Assignment Instructions
+        </div>
+        <div style="padding: 1.5rem;">
+            {{ instructions|safe }}
+            
+            <div style="margin-top: 20px;">
+                <h4 style="color: #2a3f54;">Evaluation Criteria:</h4>
+                <ul>
+                    {% for criterion in rubric %}
+                    <li style="margin-bottom: 8px;">{{ criterion }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin: 1rem 0;">
+                <h4 style="margin-top: 0;">⚠️ Educational Purpose Only</h4>
+                <p>This exercise is for educational purposes only. The skills learned here should be used responsibly to enhance your ability to identify and avoid phishing attacks, not to create them.</p>
+            </div>
+            
+            <form action="{{ url_for('evaluate_user_phishing') }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div style="margin-top: 20px;">
+                    <label for="phishing-email" style="display: block; margin-bottom: 8px; font-weight: bold;">Your Phishing Email:</label>
+                    <textarea id="phishing-email" name="phishing_email" rows="12" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: Arial, sans-serif;" placeholder="Write your phishing email here..." required></textarea>
+                </div>
+                <button type="submit" style="margin-top: 20px; padding: 10px 20px; background-color: #4CAF50; border: none; color: white; border-radius: 5px; cursor: pointer; font-size: 16px;">Submit for Evaluation</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
