@@ -31,3 +31,40 @@ button {
 button:hover {
     background-color: #45a049;
 }
+
+/* API Display Styles */
+.api-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+}
+
+.api-info h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.4rem;
+}
+
+.api-info ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.api-info ul li {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.api-info ul li:last-child {
+    border-bottom: none;
+}
+
+.api-info ul li strong {
+    color: #2980b9;
+    font-family: monospace;
+    padding: 2px 6px;
+    background: #f0f4f8;
+    border-radius: 4px;
+}

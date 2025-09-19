@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CyberVantage API</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 24px; background: #f6f8fb; color: #222; }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    h1 { color: #2c3e50; margin-bottom: 8px; }
+    p.sub { color: #555; margin-bottom: 24px; }
+    .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); padding: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 12px; }
+    .tile { border: 1px solid #e6e9ef; border-radius: 8px; padding: 16px; background: #fafbfe; }
+    .tile h3 { margin: 0 0 8px; font-size: 1.05rem; color: #34495e; }
+    code { background: #f0f3f8; padding: 2px 6px; border-radius: 4px; }
+    footer { margin-top: 28px; color: #777; font-size: 0.9rem; text-align: center; }
+    a { color: #1f7aec; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Welcome to CyberVantage</h1>
+    <p class="sub">Cybersecurity Training and Simulation Platform (API)</p>
+
+    <div class="card">
+      <h2>Available API Endpoints</h2>
+      <div class="grid">
+        <div class="tile">
+          <h3>Authentication</h3>
+          <p><code>GET/POST</code> <a href="/api/auth">/api/auth</a></p>
+          <ul>
+            <li>POST /api/auth/register</li>
+            <li>POST /api/auth/login</li>
+            <li>GET /api/auth/me</li>
+          </ul>
+        </div>
+        <div class="tile">
+          <h3>Learning</h3>
+          <p><code>GET</code> <a href="/api/learning">/api/learning</a></p>
+          <ul>
+            <li>GET /api/learning/modules</li>
+            <li>GET /api/learning/content/&lt;module_id&gt;</li>
+            <li>POST /api/learning/progress</li>
+          </ul>
+        </div>
+        <div class="tile">
+          <h3>Simulation</h3>
+          <p><code>GET/POST</code> <a href="/api/simulation">/api/simulation</a></p>
+          <ul>
+            <li>GET /api/simulation/scenarios</li>
+            <li>POST /api/simulation/start/&lt;scenario_id&gt;</li>
+            <li>POST /api/simulation/submit/&lt;simulation_id&gt;</li>
+          </ul>
+        </div>
+        <div class="tile">
+          <h3>Analysis</h3>
+          <p><code>GET/POST</code> <a href="/api/analysis">/api/analysis</a></p>
+          <ul>
+            <li>GET /api/analysis/performance</li>
+            <li>GET /api/analysis/recommendations</li>
+            <li>POST /api/analysis/certificate</li>
+          </ul>
+        </div>
+        <div class="tile">
+          <h3>Threats</h3>
+          <p><code>GET/POST</code> <a href="/api/threats">/api/threats</a></p>
+          <ul>
+            <li>POST /api/threats/url</li>
+            <li>POST /api/threats/file</li>
+            <li>GET /api/threats/intel</li>
+          </ul>
+        </div>
+      </div>
+      <p style="margin-top:16px; color:#666;">Note: This v2 app exposes API endpoints. For the full web UI, run the main application.</p>
+    </div>
+
+    <footer>
+      &copy; 2025 CyberVantage. All rights reserved.
+    </footer>
+  </div>
+</body>
+</html>
