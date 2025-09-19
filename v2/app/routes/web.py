@@ -23,10 +23,31 @@ def login():
     form = LoginForm()
     
     if form.validate_on_submit():
-        # In a real app, we would validate credentials here
-        # For now, just set a session token and redirect to dashboard
-        session['token'] = 'dummy_token'
-        return redirect(url_for('web.dashboard'))
+        from app.models.user import User, db
+        from app.utils.auth import create_token
+        
+        # Find user by email
+        user = User.query.filter_by(email=form.email.data).first()
+        
+        if user and user.check_password(form.password.data):
+            # Create JWT token
+            token = create_token(user.id)
+            if token:
+                session['token'] = token
+                session['user_id'] = user.id
+                session['user_name'] = user.username
+                
+                # Update last login
+                from datetime import datetime
+                user.last_login = datetime.utcnow()
+                db.session.commit()
+                
+                flash('Login successful!', 'success')
+                return redirect(url_for('web.dashboard'))
+            else:
+                flash('Login failed. Please try again.', 'error')
+        else:
+            flash('Invalid email or password.', 'error')
     
     return render_template('login.html', form=form)
 
@@ -38,9 +59,34 @@ def register():
     form = RegisterForm()
     
     if form.validate_on_submit():
-        # In a real app, we would create the user here
-        flash('Registration successful! Please log in.')
-        return redirect(url_for('web.login'))
+        from app.models.user import User, db
+        
+        # Check if user already exists
+        existing_user = User.query.filter(
+            (User.email == form.email.data) | (User.username == form.name.data)
+        ).first()
+        
+        if existing_user:
+            if existing_user.email == form.email.data:
+                flash('Email already registered. Please use a different email.', 'error')
+            else:
+                flash('Username already taken. Please choose a different name.', 'error')
+        else:
+            try:
+                # Create new user
+                user = User(
+                    username=form.name.data,
+                    email=form.email.data,
+                    password=form.password.data
+                )
+                db.session.add(user)
+                db.session.commit()
+                
+                flash('Registration successful! Please log in.', 'success')
+                return redirect(url_for('web.login'))
+            except Exception as e:
+                db.session.rollback()
+                flash('Registration failed. Please try again.', 'error')
     
     return render_template('register.html', form=form)
 

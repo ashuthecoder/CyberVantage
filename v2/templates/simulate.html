@@ -2,288 +2,278 @@
 {% block title %}Simulation - CyberVantage{% endblock %}
 
 {% block extra_styles %}
-.email-container {
+.scenario-container {
     background: white;
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 1rem;
-    margin: 2rem 0;
+    padding: 2rem;
+    margin: 1rem 0;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.email-header {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-}
-
-.progress {
+.scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
     margin-top: 2rem;
 }
 
-.progress-bar {
-    background: #eee;
-    height: 10px;
-    border-radius: 5px;
-    margin-top: 0.5rem;
-}
-
-.progress-fill {
-    background: #3498db;
-    height: 100%;
-    border-radius: 5px;
-}
-
-.options {
-    margin: 1rem 0;
-}
-
-.options label {
-    margin-right: 2rem;
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-}
-
-.options input[type="radio"] {
-    width: auto;
-    margin-right: 8px;
-}
-
-.btn {
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    cursor: pointer;
-    display: inline-block;
-    border: none;
-    margin-top: 1rem;
-}
-
-.primary {
-    background-color: #2a3f54;
-    color: white;
-}
-
-.secondary {
-    background-color: #7f8c8d;
-    color: white;
-    margin-left: 1rem;
-}
-
-.warning {
-    background-color: #ff9800;
-    color: white;
-}
-
-.restart-btn {
-    background-color: #e67e22;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: bold;
-    margin-left: 1rem;
-}
-
-.restart-btn:hover {
-    background-color: #d35400;
-}
-
-textarea {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    min-height: 120px;
-}
-
-.explanation {
-    margin-top: 1.5rem;
-}
-
-.top-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 1rem;
-}
-
-.muted {
-    color: #666;
-}
-
-.simulation-phase {
+.scenario-card {
     background: white;
-    padding: 2rem;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.simulation-complete {
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
     text-align: center;
 }
 
-.next-steps {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
+.scenario-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.scenario-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.difficulty-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-top: 1rem;
+}
+
+.difficulty-beginner { background-color: #d4edda; color: #155724; }
+.difficulty-intermediate { background-color: #fff3cd; color: #856404; }
+.difficulty-advanced { background-color: #f8d7da; color: #721c24; }
+
+.simulation-content {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
     margin-top: 2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
 }
 {% endblock %}
 
 {% block content %}
-<div class="top-actions">
-    <a href="{{ url_for('restart_simulation') }}" class="restart-btn">Restart Simulation</a>
+<h1>🛡️ Cybersecurity Simulations</h1>
+<p>Practice your cybersecurity skills with realistic scenarios powered by AI.</p>
+
+<div id="scenarios-list">
+    <div class="loading">
+        <p>Loading available scenarios...</p>
+        <div style="margin-top: 1rem;">
+            <i class="fas fa-spinner fa-spin"></i>
+        </div>
+    </div>
 </div>
 
-<h1>Email Phishing Simulation</h1>
-
-{# Phase 1: predefined emails 1..5 #}
-{% if phase == 1 and 1 <= current_email <= 5 %}
-    <div class="simulation-phase">
-        <h2>Phase 1: Test Your Instincts</h2>
-        <p>Look at the email below and determine if it's legitimate or a phishing attempt.</p>
-
-        <div class="email-container">
-            <div class="email-header">
-                <p><strong>From:</strong> {{ email.sender }}</p>
-                <p><strong>Subject:</strong> {{ email.subject }}</p>
-                <p><strong>Date:</strong> {{ email.date }}</p>
-            </div>
-            <div class="email-body">
-                {{ email.content|safe }}
-            </div>
+<div id="simulation-area" style="display: none;">
+    <div class="simulation-content">
+        <h2 id="simulation-title"></h2>
+        <div id="simulation-content-area">
+            <p>Loading simulation scenario...</p>
         </div>
-
-        <form method="POST" action="{{ url_for('submit_simulation') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="email_id" value="{{ email.id }}">
-            <input type="hidden" name="phase" value="1">
-
-            <div class="question">
-                <p>Is this a phishing/spam email?</p>
-                <div class="options">
-                    <label><input type="radio" name="is_spam" value="true" required> Yes</label>
-                    <label><input type="radio" name="is_spam" value="false"> No</label>
-                </div>
-            </div>
-
-            <button type="submit" class="btn primary">Submit Answer</button>
-            <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart</a>
-            <a href="{{ url_for('skip_email') }}" class="btn warning">Skip Email</a>
-        </form>
-
-        <div class="progress">
-            <p>Email {{ current_email }} of 5</p>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: {{ (current_email / 5) * 100 }}%"></div>
-            </div>
+        
+        <div style="margin-top: 2rem;">
+            <textarea id="user-response" rows="6" style="width: 100%; padding: 1rem; border: 1px solid #ddd; border-radius: 4px;" 
+                      placeholder="Describe how you would respond to this scenario..."></textarea>
+        </div>
+        
+        <div style="margin-top: 1rem; text-align: center;">
+            <button id="submit-response" class="btn primary">Submit Response</button>
+            <button id="back-to-scenarios" class="btn secondary" style="margin-left: 1rem;">Back to Scenarios</button>
         </div>
     </div>
+</div>
 
-{# Phase 2: advanced analysis #}
-{% elif phase == 2 %}
-    {% set p2_completed = session.get('phase2_emails_completed', 0) %}
-    {% set p2_index = p2_completed + 1 %}
-    <div class="simulation-phase">
-        <h2>Phase 2: Advanced Analysis</h2>
-        <p>Now let's test your reasoning skills. Analyze the email, determine if it's legitimate or phishing, and explain your reasoning.</p>
-
-        {% if not email %}
-            <div class="email-container" style="text-align: center;">
-                <p class="muted">No email is available to display right now. Please try again or restart the simulation.</p>
-                <div style="margin-top: 1rem;">
-                    <a href="{{ url_for('simulate') }}" class="btn secondary">Reload</a>
-                    <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart</a>
-                    <a href="{{ url_for('skip_email') }}" class="btn warning">Skip Email</a>
-                </div>
-            </div>
-        {% else %}
-            <h3>Advanced Email #{{ p2_index }}</h3>
-
-            <div class="email-container">
-                <div class="email-header">
-                    <p><strong>From:</strong> {{ email.sender }}</p>
-                    <p><strong>Subject:</strong> {{ email.subject }}</p>
-                    <p><strong>Date:</strong> {{ email.date }}</p>
-                </div>
-                <div class="email-body">
-                    {{ email.content|safe }}
-                </div>
-            </div>
-
-            <form method="POST" action="{{ url_for('submit_simulation') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="email_id" value="{{ email.id }}">
-                <input type="hidden" name="phase" value="2">
-
-                <div class="question">
-                    <p>Is this a phishing/spam email?</p>
-                    <div class="options">
-                        <label><input type="radio" name="is_spam" value="true" required> Yes</label>
-                        <label><input type="radio" name="is_spam" value="false"> No</label>
-                    </div>
-                </div>
-
-                <div class="explanation">
-                    <p>Please explain your reasoning:</p>
-                    <textarea name="explanation" rows="4" required
-                        placeholder="What indicators informed your decision? Sender domain, links, urgency, grammar, mismatched URLs, etc."></textarea>
-                </div>
-
-                <button type="submit" class="btn primary">Submit Answer</button>
-                <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart</a>
-                <a href="{{ url_for('skip_email') }}" class="btn warning">Skip Email</a>
-            </form>
-
-            <div class="progress">
-                <p>Advanced Email {{ p2_index }} of 5</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: {{ (p2_completed / 5) * 100 }}%"></div>
-                </div>
-                <p class="muted">Completed: {{ p2_completed }} / 5</p>
-            </div>
-        {% endif %}
-    </div>
-
-{% elif phase == 'complete' %}
-    <div class="simulation-complete">
-        <h2>Simulation Complete!</h2>
-        <p>You've completed both phases of the phishing email simulation.</p>
-        <p>Your responses have been recorded and will be analyzed to provide you with a detailed report.</p>
-
-        <div class="next-steps">
-            <a href="{{ url_for('analysis') }}" class="btn primary">View Your Analysis</a>
-            <a href="{{ url_for('get_phishing_assignment') }}" class="btn primary">Proceed to Final Assignment</a>
-            <a href="{{ url_for('restart_simulation') }}" class="restart-btn">Restart Simulation</a>
-            <a href="{{ url_for('dashboard') }}" class="btn secondary">Return to Dashboard</a>
+<div id="evaluation-area" style="display: none;">
+    <div class="simulation-content">
+        <h2>📊 Evaluation Results</h2>
+        <div id="evaluation-content"></div>
+        
+        <div style="margin-top: 2rem; text-align: center;">
+            <button id="try-another" class="btn primary">Try Another Scenario</button>
+            <a href="{{ url_for('web.analysis') }}" class="btn secondary" style="margin-left: 1rem;">View Analysis</a>
         </div>
     </div>
-
-{% else %}
-    <div class="simulation-phase" style="text-align: center;">
-        <p class="muted">No simulation content to display. Please try restarting the simulation.</p>
-        <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart</a>
-    </div>
-{% endif %}
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // If there's an error loading the email, add a reload button
-        if (document.querySelector('.email-body') && document.querySelector('.email-body').innerHTML.trim() === '') {
-            document.querySelector('.email-body').innerHTML = 
-                '<div style="text-align: center; padding: 20px;">' +
-                '<p>Error loading email content. Please try again.</p>' +
-                '<button onclick="location.reload()" class="btn secondary">Reload Email</button>' +
-                '</div>';
+document.addEventListener('DOMContentLoaded', function() {
+    const scenariosContainer = document.getElementById('scenarios-list');
+    const simulationArea = document.getElementById('simulation-area');
+    const evaluationArea = document.getElementById('evaluation-area');
+    
+    let currentSimulation = null;
+    
+    // Load scenarios
+    function loadScenarios() {
+        fetch('/api/simulation/scenarios', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.scenarios) {
+                displayScenarios(data.scenarios);
+            } else {
+                scenariosContainer.innerHTML = '<p>Failed to load scenarios. Please try again.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading scenarios:', error);
+            scenariosContainer.innerHTML = '<p>Error loading scenarios. Please check your connection and try again.</p>';
+        });
+    }
+    
+    function displayScenarios(scenarios) {
+        scenariosContainer.innerHTML = `
+            <h2>Choose a Simulation Scenario</h2>
+            <div class="scenario-grid">
+                ${scenarios.map(scenario => `
+                    <div class="scenario-card" onclick="startScenario('${scenario.id}', '${scenario.title}')">
+                        <div class="scenario-icon">${getScenarioIcon(scenario.id)}</div>
+                        <h3>${scenario.title}</h3>
+                        <p>${scenario.description}</p>
+                        <p><strong>Time:</strong> ${scenario.estimated_time}</p>
+                        <span class="difficulty-badge difficulty-${scenario.difficulty}">${scenario.difficulty}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    function getScenarioIcon(scenarioId) {
+        const icons = {
+            'phishing_email': '📧',
+            'malware_analysis': '🔍',
+            'network_intrusion': '🌐',
+            'social_engineering': '👥'
+        };
+        return icons[scenarioId] || '🛡️';
+    }
+    
+    window.startScenario = function(scenarioId, title) {
+        document.getElementById('simulation-title').textContent = title;
+        document.getElementById('simulation-content-area').innerHTML = '<p>Generating scenario...</p>';
+        
+        scenariosContainer.style.display = 'none';
+        simulationArea.style.display = 'block';
+        
+        // Start simulation
+        fetch(`/api/simulation/start/${scenarioId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.simulation) {
+                currentSimulation = data.simulation;
+                document.getElementById('simulation-content-area').innerHTML = 
+                    `<div style="background: #f8f9fa; padding: 1.5rem; border-radius: 4px; margin: 1rem 0;">
+                        <h3>Scenario:</h3>
+                        <p>${data.simulation.content}</p>
+                    </div>`;
+            } else {
+                document.getElementById('simulation-content-area').innerHTML = 
+                    '<p style="color: red;">Failed to generate scenario. Please try again.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error starting simulation:', error);
+            document.getElementById('simulation-content-area').innerHTML = 
+                '<p style="color: red;">Error starting simulation. Please try again.</p>';
+        });
+    };
+    
+    document.getElementById('submit-response').addEventListener('click', function() {
+        const userResponse = document.getElementById('user-response').value.trim();
+        if (!userResponse) {
+            alert('Please provide your response to the scenario.');
+            return;
         }
+        
+        if (!currentSimulation) {
+            alert('No active simulation found.');
+            return;
+        }
+        
+        // Submit response for evaluation
+        fetch(`/api/simulation/submit/${currentSimulation.simulation_id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_actions: userResponse,
+                scenario: currentSimulation.scenario_id
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.evaluation) {
+                showEvaluation(data.evaluation);
+            } else {
+                alert('Failed to evaluate response. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting response:', error);
+            alert('Error submitting response. Please try again.');
+        });
     });
+    
+    function showEvaluation(evaluation) {
+        simulationArea.style.display = 'none';
+        evaluationArea.style.display = 'block';
+        
+        document.getElementById('evaluation-content').innerHTML = `
+            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 4px; margin-bottom: 1rem;">
+                <h3>AI Analysis:</h3>
+                <p>${evaluation.analysis}</p>
+            </div>
+            <div style="background: #e9ecef; padding: 1rem; border-radius: 4px;">
+                <p><strong>Score:</strong> ${evaluation.score}/100</p>
+                <p><strong>Submitted:</strong> ${new Date(evaluation.submitted_at).toLocaleString()}</p>
+            </div>
+        `;
+    }
+    
+    document.getElementById('back-to-scenarios').addEventListener('click', function() {
+        simulationArea.style.display = 'none';
+        scenariosContainer.style.display = 'block';
+        document.getElementById('user-response').value = '';
+        currentSimulation = null;
+    });
+    
+    document.getElementById('try-another').addEventListener('click', function() {
+        evaluationArea.style.display = 'none';
+        scenariosContainer.style.display = 'block';
+        document.getElementById('user-response').value = '';
+        currentSimulation = null;
+    });
+    
+    // Load scenarios on page load
+    loadScenarios();
+});
 </script>
 {% endblock %}

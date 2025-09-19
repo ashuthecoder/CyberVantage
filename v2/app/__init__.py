@@ -19,6 +19,10 @@ def create_app(config_class=None):
         from config import Config
         app.config.from_object(Config)
     
+    # Initialize database
+    from app.models.user import db
+    db.init_app(app)
+    
     # Initialize CSRF protection
     csrf = CSRFProtect(app)
     
