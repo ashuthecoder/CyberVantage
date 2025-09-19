@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+
+{% block title %}Deep Search Analysis - CyberVantage{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-3">Advanced Threat Analysis</h1>
+            <p class="lead">
+                Our Deep Search feature provides comprehensive threat analysis beyond basic scanning capabilities.
+            </p>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Multi-Hop Link Analysis</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h5>What are multi-hop links?</h5>
+                    <p>
+                        Multi-hop links are redirect chains that take users through multiple URLs before landing on the final destination.
+                        Attackers use these redirect chains to:
+                    </p>
+                    <ul>
+                        <li>Evade detection by security tools</li>
+                        <li>Hide the actual malicious URL behind legitimate-looking domains</li>
+                        <li>Create complex obfuscation techniques to avoid scanners</li>
+                        <li>Track user clicks through multiple analytics platforms</li>
+                        <li>Dynamically serve different content based on user attributes</li>
+                    </ul>
+                    <p>
+                        Our Deep Search technology follows every redirect in the chain, scanning each hop for potential threats,
+                        and provides comprehensive visibility into the entire redirect path.
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5>Example Chain</h5>
+                            <ol>
+                                <li>User clicks link in email</li>
+                                <li>Redirects to tracking domain</li>
+                                <li>Redirects to legitimately hosted page</li>
+                                <li>JavaScript redirects to phishing site</li>
+                                <li>Final malicious destination</li>
+                            </ol>
+                            <p class="text-danger">Basic scanners only check the first URL!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Advanced Analysis Features</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <h5><i class="fas fa-code"></i> JavaScript Deobfuscation</h5>
+                            <p>Analyzes and unpacks obfuscated JavaScript to reveal hidden redirects and malicious code.</p>
+                        </li>
+                        <li class="list-group-item">
+                            <h5><i class="fas fa-bug"></i> Behavior-Based Detection</h5>
+                            <p>Simulates browser behavior to detect malicious actions that only trigger under specific conditions.</p>
+                        </li>
+                        <li class="list-group-item">
+                            <h5><i class="fas fa-network-wired"></i> Network Traffic Analysis</h5>
+                            <p>Monitors all network connections made during page loading to detect covert communication channels.</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Use Deep Search When</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Standard URL scanning returns clean results but you still suspect a threat
+                    </div>
+                    <ul>
+                        <li>Investigating suspicious emails with shortened URLs</li>
+                        <li>Analyzing links in social media messages</li>
+                        <li>Examining URLs with multiple redirects</li>
+                        <li>Checking sites with heavy JavaScript usage</li>
+                        <li>Inspecting URLs that behave differently on various devices</li>
+                    </ul>
+                    <form id="deepScanForm" class="mt-4">
+                        <div class="mb-3">
+                            <label for="deepScanInput" class="form-label">Enter URL for deep analysis:</label>
+                            <input type="text" class="form-control" id="deepScanInput" required placeholder="https://example.com">
+                        </div>
+                        <button type="submit" class="btn btn-success" id="deepScanBtn">
+                            <i class="fas fa-microscope"></i> Start Deep Analysis
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="deepScanResultsContainer" style="display: none;">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">Deep Scan Results</h4>
+            </div>
+            <div class="card-body" id="deepScanResults">
+                <!-- Results will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_styles %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    .list-group-item h5 {
+        color: #2a3f54;
+    }
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deepScanForm = document.getElementById('deepScanForm');
+        const deepScanResultsContainer = document.getElementById('deepScanResultsContainer');
+        const deepScanResults = document.getElementById('deepScanResults');
+        
+        deepScanForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const scanInput = document.getElementById('deepScanInput').value.trim();
+            
+            // Show loading indicator
+            deepScanResultsContainer.style.display = 'block';
+            deepScanResults.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Performing deep analysis of ${scanInput}...</p>
+                    <p class="text-muted">This may take up to 60 seconds for complete analysis</p>
+                </div>
+            `;
+            
+            // Make API request to backend for deep scanning
+            fetch('/api/deep_scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: scanInput
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    deepScanResults.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h5>Error</h5>
+                            <p>${data.error}</p>
+                        </div>
+                    `;
+                } else {
+                    // Display deep scan results
+                    displayDeepScanResults(data);
+                }
+            })
+            .catch(error => {
+                deepScanResults.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5>Error</h5>
+                        <p>Failed to perform deep scan: ${error.message || 'Unknown error'}</p>
+                    </div>
+                `;
+            });
+        });
+        
+        function displayDeepScanResults(data) {
+            // This is a placeholder for displaying deep scan results
+            // In a real implementation, this would show detailed analysis of the multi-hop chain
+            deepScanResults.innerHTML = `
+                <div class="alert alert-${data.malicious ? 'danger' : 'success'}">
+                    <h5>${data.malicious ? '⚠️ Threats Detected' : '✅ No Threats Detected'}</h5>
+                    <p>${data.summary}</p>
+                </div>
+                
+                <h5>Redirect Chain Analysis</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>URL</th>
+                                <th>Status</th>
+                                <th>Redirect Type</th>
+                                <th>Verdict</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.redirects.map((redirect, index) => `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${redirect.url}</td>
+                                    <td>${redirect.status_code}</td>
+                                    <td>${redirect.redirect_type}</td>
+                                    <td>
+                                        <span class="badge bg-${redirect.is_malicious ? 'danger' : 'success'}">
+                                            ${redirect.is_malicious ? 'Suspicious' : 'Clean'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h5 class="mt-4">JavaScript Analysis</h5>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p>${data.javascript_analysis.summary}</p>
+                        ${data.javascript_analysis.findings.length > 0 ? `
+                            <h6>Findings:</h6>
+                            <ul>
+                                ${data.javascript_analysis.findings.map(finding => `
+                                    <li class="text-${finding.severity === 'high' ? 'danger' : finding.severity === 'medium' ? 'warning' : 'info'}">
+                                        ${finding.description}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        ` : '<p>No suspicious JavaScript found.</p>'}
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="/check_threats" class="btn btn-secondary">Back to Threat Intelligence</a>
+                    <button class="btn btn-primary" id="downloadDetailedReport">Download Full Report</button>
+                </div>
+            `;
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

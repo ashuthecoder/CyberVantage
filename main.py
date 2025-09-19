@@ -19,6 +19,8 @@ import re
 import traceback
 import uuid
 import sqlite3
+    import hashlib
+from pyFunctions.threat_intelligence import ThreatIntelligence, threat_intelligence
 
 # Import functions from pyFunctions modules
 from pyFunctions.email_generation import generate_ai_email, evaluate_explanation, get_fallback_evaluation
@@ -1035,10 +1037,13 @@ def reset_stuck_simulation(current_user):
         print(f"[RESET] Exception in reset_stuck_simulation: {e}")
         return redirect(url_for('dashboard'))
 
+# Update the check_threats route to pass the VirusTotal API key
 @app.route('/check_threats')
 @token_required
 def check_threats(current_user):
-    return render_template('check_threats.html', username=current_user.name)
+    # Get the VirusTotal API key from environment variables
+    virustotal_api_key = os.getenv("VIRUSTOTAL_API_KEY")
+    return render_template('check_threats.html', username=current_user.name, virustotal_api_key=virustotal_api_key)
 
 @app.route('/debug_simulation')
 @token_required
@@ -1216,9 +1221,114 @@ def evaluate_user_phishing(current_user):
             username=current_user.name
         )
 
+# Add these routes after the existing routes
+@app.route('/api/threat_scan', methods=['POST'])
+@token_required
+def api_threat_scan(current_user):
+    """API endpoint to scan a resource using VirusTotal"""
+    try:
+        data = request.json
+        target = data.get('target', '').strip()
+        scan_type = data.get('type', 'url')
+        
+        if not target:
+            return jsonify({"error": "No target provided"}), 400
+        
+        # Check if VirusTotal API key is configured
+        vt_api_key = os.getenv("VIRUSTOTAL_API_KEY")
+        if not vt_api_key:
+            return jsonify({
+                "error": "VirusTotal API key not configured. Please add it to your .env file."
+            }), 500
+        
+        # Initialize ThreatIntelligence with API key
+        ti = ThreatIntelligence(vt_api_key)
+        
+        # Perform scan based on type
+        if scan_type == 'url':
+            result = ti.scan_url(target)
+        elif scan_type == 'ip':
+            result = ti.scan_ip(target)
+        elif scan_type == 'file':
+            result = ti.scan_file_hash(target)
+        else:
+            return jsonify({"error": f"Unsupported scan type: {scan_type}"}), 400
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"[THREAT_SCAN] Error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": f"Scan failed: {str(e)}"}), 500
+
+@app.route('/api/deep_scan', methods=['POST'])
+@token_required
+def api_deep_scan(current_user):
+    """API endpoint for deep scanning URLs with multi-hop analysis"""
+    try:
+        data = request.json
+        url = data.get('url', '').strip()
+        
+        if not url:
+            return jsonify({"error": "No URL provided"}), 400
+        
+        # Check if VirusTotal API key is configured
+        vt_api_key = os.getenv("VIRUSTOTAL_API_KEY")
+        if not vt_api_key:
+            return jsonify({
+                "error": "VirusTotal API key not configured. Please add it to your .env file."
+            }), 500
+        
+        # Initialize ThreatIntelligence with API key
+        ti = ThreatIntelligence(vt_api_key)
+        
+        # Perform deep scan
+        result = ti.deep_scan_url(url)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"[DEEP_SCAN] Error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": f"Deep scan failed: {str(e)}"}), 500
+
+@app.route('/api/threat_history', methods=['GET'])
+@token_required
+def api_threat_history(current_user):
+    """API endpoint to get threat scan history"""
+    try:
+        # Check if VirusTotal API key is configured
+        vt_api_key = os.getenv("VIRUSTOTAL_API_KEY")
+        if not vt_api_key:
+            return jsonify([]), 200  # Return empty history if no API key
+        
+        # Get history from the ThreatIntelligence instance
+        ti = ThreatIntelligence(vt_api_key)
+        history = ti.get_history()
+        
+        return jsonify(history)
+        
+    except Exception as e:
+        print(f"[THREAT_HISTORY] Error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": f"Failed to fetch history: {str(e)}"}), 500
+
+@app.route('/deep_search')
+@token_required
+def deep_search(current_user):
+    """Deep search explanation and advanced scanning interface"""
+    return render_template('deep_search.html', username=current_user.name)
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         update_database_schema()  # Ensure the schema is updated at startup
     # Disable the reloader to avoid double-execution side-effects in dev
     app.run(debug=True, use_reloader=False)
+    
+    
+    
+    
+    
+
+
