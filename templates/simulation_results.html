@@ -158,7 +158,7 @@
 
     <div class="container">
         <div class="top-actions">
-            <a href="{{ url_for('restart_simulation') }}" class="restart-btn">Restart Simulation</a>
+            <a href="{{ url_for('simulation.restart_simulation') }}" class="restart-btn">Restart Simulation</a>
         </div>
         
         <h1>Your Phishing Simulation Results</h1>
@@ -215,7 +215,7 @@
                             {% else %}
                                 <p class="muted">Analysis Score: N/A</p>
                             {% endif %}
-                            <a href="{{ url_for('simulation_feedback', email_id=response.email_id) }}" class="btn small">View Feedback</a>
+                            <a href="{{ url_for('simulation.simulation_feedback', email_id=response.email_id) }}" class="btn small">View Feedback</a>
                         </div>
                     {% endfor %}
                 </div>
