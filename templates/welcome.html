@@ -8,8 +8,8 @@
 
     <div style="display: flex; gap: 20px; justify-content: center; margin-top: 30px;">
         {% if not session.get('token') %}
-            <a href="{{ url_for('login') }}"><button>🔐 Login</button></a>
-            <a href="{{ url_for('register') }}"><button>📝 Register</button></a>
+            <a href="{{ url_for('auth.login') }}"><button>🔐 Login</button></a>
+            <a href="{{ url_for('auth.register') }}"><button>📝 Register</button></a>
         {% else %}
             <a href="{{ url_for('dashboard') }}"><button>🔐 Go to Dashboard</button></a>
         {% endif %}

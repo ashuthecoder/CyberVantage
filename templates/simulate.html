@@ -198,7 +198,7 @@ textarea {
             <div class="email-container" style="text-align: center;">
                 <p class="muted">No email is available to display right now. Please try again or restart the simulation.</p>
                 <div style="margin-top: 1rem;">
-                    <a href="{{ url_for('simulate') }}" class="btn secondary">Reload</a>
+                    <a href="{{ url_for('simulation.simulate') }}" class="btn secondary">Reload</a>
                     <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart</a>
                     <a href="{{ url_for('skip_email') }}" class="btn warning">Skip Email</a>
                 </div>
@@ -258,9 +258,9 @@ textarea {
         <p>Your responses have been recorded and will be analyzed to provide you with a detailed report.</p>
 
         <div class="next-steps">
-            <a href="{{ url_for('analysis') }}" class="btn primary">View Your Analysis</a>
-            <a href="{{ url_for('get_phishing_assignment') }}" class="btn primary">Proceed to Final Assignment</a>
-            <a href="{{ url_for('restart_simulation') }}" class="restart-btn">Restart Simulation</a>
+            <a href="{{ url_for('analysis.analysis') }}" class="btn primary">View Your Analysis</a>
+            <a href="{{ url_for('threat.phishing_assignment') }}" class="btn primary">Proceed to Final Assignment</a>
+            <a href="{{ url_for('simulation.restart_simulation') }}" class="restart-btn">Restart Simulation</a>
             <a href="{{ url_for('dashboard') }}" class="btn secondary">Return to Dashboard</a>
         </div>
     </div>

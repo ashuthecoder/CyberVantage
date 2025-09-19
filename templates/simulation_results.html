@@ -152,7 +152,7 @@
         <a href="{{ url_for('dashboard') }}" class="back-btn">← Back to Dashboard</a>
         <div>
             <span>Welcome, {{ username }}</span>
-            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+            <a href="{{ url_for('auth.logout') }}" class="logout-btn">Logout</a>
         </div>
     </header>
 
@@ -187,9 +187,9 @@
         </div>
 
         <div class="actions">
-            <a href="{{ url_for('analysis') }}" class="btn primary">Go to Analysis</a>
-            <a href="{{ url_for('get_phishing_assignment') }}" class="btn primary">Final Assignment</a>
-            <a href="{{ url_for('restart_simulation') }}" class="restart-btn">Restart Simulation</a>
+            <a href="{{ url_for('analysis.analysis') }}" class="btn primary">Go to Analysis</a>
+            <a href="{{ url_for('threat.phishing_assignment') }}" class="btn primary">Final Assignment</a>
+            <a href="{{ url_for('simulation.restart_simulation') }}" class="restart-btn">Restart Simulation</a>
             <a href="{{ url_for('dashboard') }}" class="btn tertiary">Back to Dashboard</a>
         </div>
         
@@ -225,8 +225,8 @@
         </div>
         
         <div class="actions">
-            <a href="{{ url_for('analysis') }}" class="btn primary">Go to Full Analysis</a>
-            <a href="{{ url_for('restart_simulation') }}" class="restart-btn">Restart Simulation</a>
+            <a href="{{ url_for('analysis.analysis') }}" class="btn primary">Go to Full Analysis</a>
+            <a href="{{ url_for('simulation.restart_simulation') }}" class="restart-btn">Restart Simulation</a>
             <a href="{{ url_for('dashboard') }}" class="btn secondary">Back to Dashboard</a>
         </div>
     </div>
