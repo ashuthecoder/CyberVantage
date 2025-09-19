@@ -60,23 +60,37 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
+        from flask import session, redirect, url_for
         
-        # Get token from Authorization header
+        # Check for token in session (for web routes)
+        if session.get('token'):
+            # If token is in session, we'll consider the user authenticated for web routes
+            return f(*args, **kwargs)
+        
+        # Get token from Authorization header (for API routes)
         if 'Authorization' in request.headers:
             auth_header = request.headers['Authorization']
             if auth_header.startswith('Bearer '):
                 token = auth_header.split('Bearer ')[1]
         
         if not token:
-            return jsonify({'message': 'Token is missing'}), 401
+            # For web routes, redirect to login
+            if request.path.startswith('/api/'):
+                return jsonify({'message': 'Token is missing'}), 401
+            else:
+                return redirect(url_for('web.login'))
         
         # Validate token
         payload = validate_token(token)
         if not payload:
-            return jsonify({'message': 'Invalid or expired token'}), 401
+            # For web routes, redirect to login
+            if request.path.startswith('/api/'):
+                return jsonify({'message': 'Invalid or expired token'}), 401
+            else:
+                return redirect(url_for('web.login'))
         
-        # Add user_id to request context
-        request.user_id = payload['sub']
+        # Store user_id in request.environ since we can't directly assign to request
+        request.environ['user_id'] = payload['sub']
         
         return f(*args, **kwargs)
     

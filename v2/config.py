@@ -12,6 +12,12 @@ class Config:
     # Secret key for signing cookies and tokens
     SECRET_KEY = os.getenv('SECRET_KEY', 'default-dev-key')
     
+    # CSRF Protection
+    WTF_CSRF_SECRET_KEY = os.getenv('WTF_CSRF_SECRET_KEY', 'default-csrf-key')
+    WTF_CSRF_ENABLED = True
+    WTF_CSRF_CHECK_DEFAULT = True
+    WTF_CSRF_SSL_STRICT = False  # For development, can be True in production
+    
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///cybervantage.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False

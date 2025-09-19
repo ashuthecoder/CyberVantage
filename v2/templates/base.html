@@ -197,28 +197,28 @@
 <body>
     <header>
         <nav>
-            <a href="{{ url_for('dashboard') if session.get('token') else url_for('welcome') }}" class="logo">CyberVantage</a>
+            <a href="{{ url_for('web.dashboard') if session.get('token') else url_for('web.welcome') }}" class="logo">CyberVantage</a>
             
             <div class="nav-links">
                 {% if session.get('token') %}
                     <!-- Links visible only to logged-in users -->
-                    <a href="{{ url_for('dashboard') }}">Dashboard</a>
-                    <a href="{{ url_for('learn') }}">Learn</a>
-                    <a href="{{ url_for('simulate') }}">Simulate</a>
-                    <a href="{{ url_for('analysis') }}">Analysis</a>
-                    <a href="{{ url_for('check_threats') }}">Check Threats</a>
+                    <a href="{{ url_for('web.dashboard') }}">Dashboard</a>
+                    <a href="{{ url_for('web.learn') }}">Learn</a>
+                    <a href="{{ url_for('web.simulate') }}">Simulate</a>
+                    <a href="{{ url_for('web.analysis') }}">Analysis</a>
+                    <a href="{{ url_for('web.check_threats') }}">Check Threats</a>
                 {% else %}
                     <!-- Links visible to non-logged-in users -->
-                    <a href="{{ url_for('welcome') }}">Home</a>
-                    <a href="{{ url_for('login') }}">Login</a>
-                    <a href="{{ url_for('register') }}">Register</a>
+                    <a href="{{ url_for('web.welcome') }}">Home</a>
+                    <a href="{{ url_for('web.login') }}">Login</a>
+                    <a href="{{ url_for('web.register') }}">Register</a>
                 {% endif %}
             </div>
             
             {% if session.get('token') %}
             <div class="user-info">
                 <span id="username">{{ session.get('user_name', 'User') }}</span>
-                <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                <a href="{{ url_for('web.logout') }}" class="logout-btn">Logout</a>
             </div>
             {% endif %}
         </nav>
