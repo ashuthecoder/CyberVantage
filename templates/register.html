@@ -17,7 +17,7 @@
         {% endif %}
     {% endwith %}
     
-    <form method="POST" action="{{ url_for('register') }}" autocomplete="off" novalidate>
+    <form method="POST" action="{{ url_for('auth.register') }}" autocomplete="off" novalidate>
         <!-- CSRF Token -->
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -63,7 +63,7 @@
     </form>
     
     <div style="text-align: center; margin-top: 20px;">
-        <p>Already have an account? <a href="{{ url_for('login') }}" style="color: #3498db;">Login here</a></p>
+        <p>Already have an account? <a href="{{ url_for('auth.login') }}" style="color: #3498db;">Login here</a></p>
     </div>
 </div>
 {% endblock %}
