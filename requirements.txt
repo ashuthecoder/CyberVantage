@@ -1,0 +1,38 @@
+# --- Web Framework & Templates ---
+flask
+jinja2
+flask-cors
+werkzeug
+
+# --- Authentication & Security ---
+pyjwt
+passlib
+bcrypt
+
+# --- HTML & Web Scraping ---
+beautifulsoup4
+lxml
+requests
+
+# --- AI & Machine Learning ---
+numpy
+pandas
+scikit-learn
+torch
+transformers
+openai
+
+# --- Data Visualization ---
+matplotlib
+seaborn
+plotly
+
+# --- Database ORM & Migrations ---
+sqlalchemy
+flask-sqlalchemy
+alembic
+
+# --- Misc Utilities ---
+python-dotenv
+tqdm
+openai
