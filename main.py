@@ -10,6 +10,10 @@ from routes.auth_routes import auth_bp, token_required
 from routes.simulation_routes import simulation_bp
 from routes.analysis_routes import analysis_bp
 from routes.threat_routes import threat_bp
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Create Flask app
 app = create_app()

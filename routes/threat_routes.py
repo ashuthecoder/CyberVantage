@@ -7,6 +7,10 @@ from flask import Blueprint, render_template, request, jsonify
 from routes.auth_routes import token_required
 from pyFunctions.threat_intelligence import ThreatIntelligence
 from pyFunctions.phishing_assignment import assign_phishing_creation, evaluate_phishing_creation
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 threat_bp = Blueprint('threat', __name__)
 
@@ -14,7 +18,7 @@ threat_bp = Blueprint('threat', __name__)
 @token_required
 def check_threats(current_user):
     # Get the VirusTotal API key from environment variables
-    virustotal_api_key = os.getenv("VIRUSTOTAL_API_KEY")
+    virustotal_api_key = os.getenv("VIRUS_TOTAL_KEY") or os.getenv("VIRUSTOTAL_API_KEY")
     return render_template('check_threats.html', username=current_user.name, virustotal_api_key=virustotal_api_key)
 
 @threat_bp.route('/deep_search')
@@ -74,10 +78,10 @@ def api_deep_scan(current_user):
             return jsonify({"error": "No URL provided"}), 400
         
         # Check if VirusTotal API key is configured
-        vt_api_key = os.getenv("VIRUSTOTAL_API_KEY")
+        vt_api_key = os.getenv("VIRUS_TOTAL_KEY") or os.getenv("VIRUSTOTAL_API_KEY")
         if not vt_api_key:
             return jsonify({
-                "error": "VirusTotal API key not configured. Please add it to your .env file."
+                "error": "VirusTotal API key not configured. Please add VIRUS_TOTAL_KEY to your .env file."
             }), 500
         
         # Initialize ThreatIntelligence with API key
@@ -99,7 +103,7 @@ def api_threat_history(current_user):
     """API endpoint to get threat scan history"""
     try:
         # Check if VirusTotal API key is configured
-        vt_api_key = os.getenv("VIRUSTOTAL_API_KEY")
+        vt_api_key = os.getenv("VIRUS_TOTAL_KEY") or os.getenv("VIRUSTOTAL_API_KEY")
         if not vt_api_key:
             return jsonify([]), 200  # Return empty history if no API key
         

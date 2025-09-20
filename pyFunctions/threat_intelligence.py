@@ -10,6 +10,10 @@ from datetime import datetime
 import logging
 from typing import Dict, Any, List, Optional
 from urllib.parse import urlparse
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -28,9 +32,9 @@ class ThreatIntelligence:
     """
     def __init__(self, api_key: str = None):
         """Initialize with API key from parameters or environment"""
-        self.api_key = api_key or os.getenv('VIRUSTOTAL_API_KEY')
+        self.api_key = api_key or os.getenv('VIRUS_TOTAL_KEY') or os.getenv('VIRUSTOTAL_API_KEY')
         if not self.api_key:
-            logger.warning("VirusTotal API key not found")
+            logger.warning("VirusTotal API key not found. Please add VIRUS_TOTAL_KEY to your .env file")
         
         self.base_url = 'https://www.virustotal.com/api/v3/'
         self.headers = {
