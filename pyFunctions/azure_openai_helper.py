@@ -120,6 +120,11 @@ def setup_azure_client(api_key: str, endpoint: str) -> Any:
     else:
         base_url = endpoint
     
+    # Remove trailing '/openai' if present to avoid double /openai/openai/ in URLs
+    # The AzureOpenAI client automatically adds the /openai prefix
+    if base_url.endswith('/openai'):
+        base_url = base_url[:-7]  # Remove '/openai'
+    
     api_version = get_api_version_from_endpoint(endpoint)
     
     # For OpenAI SDK v1.x
