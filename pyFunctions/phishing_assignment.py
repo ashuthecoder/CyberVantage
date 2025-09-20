@@ -10,9 +10,73 @@ def assign_phishing_creation(api_key, genai, app):
     Generate a phishing email creation assignment.
     Renamed from 'final assignment' to 'craft phishing email'
     """
-    # Keep existing function implementation but update references
-    # to "final assignment" to "craft phishing email"
-    # ...
+    try:
+        # Return structured assignment data
+        assignment_data = {
+            "instructions": """
+                <h3>Create a Phishing Email</h3>
+                <p>Your final challenge is to create a convincing phishing email that demonstrates your understanding of social engineering tactics. This exercise will help you understand how attackers think and craft malicious messages.</p>
+                
+                <h4>Your Task:</h4>
+                <p>Create a phishing email that targets an employee at a fictional company called "TechCorp Solutions". Your email should aim to steal login credentials by directing the target to a fake login page.</p>
+                
+                <h4>Required Elements:</h4>
+                <ul>
+                    <li><strong>Compelling Subject Line:</strong> Create urgency or curiosity</li>
+                    <li><strong>Sender Identity:</strong> Choose a believable sender (IT support, HR, management, etc.)</li>
+                    <li><strong>Social Engineering Hook:</strong> Use urgency, fear, authority, or curiosity</li>
+                    <li><strong>Call to Action:</strong> Include a fake link or instruction</li>
+                    <li><strong>Professional Appearance:</strong> Make it look legitimate</li>
+                </ul>
+                
+                <h4>Example Scenarios to Consider:</h4>
+                <ul>
+                    <li>IT security update requiring password verification</li>
+                    <li>HR announcement about benefits that requires login</li>
+                    <li>Executive request for urgent information</li>
+                    <li>Security alert about suspicious account activity</li>
+                </ul>
+                
+                <p><strong>Remember:</strong> This is for educational purposes only. Never use these techniques for malicious purposes.</p>
+            """,
+            "rubric": [
+                "Social Engineering Tactics (30%): Effective use of urgency, fear, authority, or curiosity",
+                "Technical Realism (25%): Believable sender, subject line, and technical details",
+                "Psychological Appeal (25%): Persuasive language and emotional triggers",
+                "Professional Appearance (20%): Formatting, grammar, and overall believability"
+            ]
+        }
+        
+        return assignment_data
+        
+    except Exception as e:
+        print(f"[PHISHING_ASSIGNMENT] Error generating assignment: {e}")
+        traceback.print_exc()
+        
+        # Return fallback assignment
+        return {
+            "instructions": """
+                <h3>Create a Phishing Email</h3>
+                <p>Create a phishing email that demonstrates your understanding of social engineering tactics. Your email should target a fictional company employee and aim to steal login credentials.</p>
+                
+                <h4>Include these elements:</h4>
+                <ul>
+                    <li>Compelling subject line</li>
+                    <li>Believable sender identity</li>
+                    <li>Social engineering hook (urgency, fear, authority, or curiosity)</li>
+                    <li>Call to action with fake link</li>
+                    <li>Professional appearance</li>
+                </ul>
+                
+                <p><strong>Note:</strong> This is for educational purposes only.</p>
+            """,
+            "rubric": [
+                "Social Engineering Tactics (30%)",
+                "Technical Realism (25%)",
+                "Psychological Appeal (25%)",
+                "Professional Appearance (20%)"
+            ]
+        }
 
 def evaluate_phishing_creation(phishing_email, api_key, genai, app):
     """
@@ -40,7 +104,7 @@ def evaluate_phishing_creation(phishing_email, api_key, genai, app):
         
         Student-created phishing email:
         ```
-        {user_phishing_email}
+        {phishing_email}
         ```
         
         Evaluate the phishing email on the following criteria:

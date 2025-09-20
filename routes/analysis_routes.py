@@ -18,7 +18,48 @@ def learn(current_user):
 @analysis_bp.route('/analysis')
 @token_required
 def analysis(current_user):
-    return render_template('analysis.html', username=current_user.name)
+    try:
+        # Get user's simulation data
+        responses = SimulationResponse.query.filter_by(user_id=current_user.id).all()
+        
+        # Calculate basic statistics
+        total_responses = len(responses)
+        correct_responses = sum(1 for r in responses if r.is_spam_actual == (r.user_response == 'true'))
+        
+        accuracy = round((correct_responses / total_responses) * 100) if total_responses > 0 else 0
+        
+        # Get phase-specific stats
+        phase1_responses = [r for r in responses if r.email_id <= 5]
+        phase2_responses = [r for r in responses if r.email_id > 5]
+        
+        phase1_correct = sum(1 for r in phase1_responses if r.is_spam_actual == (r.user_response == 'true'))
+        phase2_correct = sum(1 for r in phase2_responses if r.is_spam_actual == (r.user_response == 'true'))
+        
+        avg_score = round(sum(r.score for r in phase2_responses if r.score) / len(phase2_responses)) if phase2_responses else 0
+        
+        return render_template('analysis.html', 
+                             username=current_user.name,
+                             total_responses=total_responses,
+                             correct_responses=correct_responses,
+                             accuracy=accuracy,
+                             phase1_total=len(phase1_responses),
+                             phase1_correct=phase1_correct,
+                             phase2_total=len(phase2_responses),
+                             phase2_correct=phase2_correct,
+                             avg_score=avg_score)
+    except Exception as e:
+        print(f"[ANALYSIS] Error: {e}")
+        # Return basic template with default values
+        return render_template('analysis.html', 
+                             username=current_user.name,
+                             total_responses=0,
+                             correct_responses=0,
+                             accuracy=0,
+                             phase1_total=0,
+                             phase1_correct=0,
+                             phase2_total=0,
+                             phase2_correct=0,
+                             avg_score=0)
 
 @analysis_bp.route('/api_monitor')
 @token_required

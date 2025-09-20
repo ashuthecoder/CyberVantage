@@ -117,6 +117,10 @@ textarea {
     padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 auto;
 }
 
 .simulation-complete {
@@ -125,6 +129,30 @@ textarea {
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     text-align: center;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 auto;
+}
+
+.email-container {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 2rem 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+}
+
+/* Ensure consistent container width */
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1rem;
+    box-sizing: border-box;
 }
 
 .next-steps {
@@ -137,11 +165,12 @@ textarea {
 {% endblock %}
 
 {% block content %}
-<div class="top-actions">
-    <a href="{{ url_for('simulation.restart_simulation') }}" class="restart-btn">Restart Simulation</a>
-</div>
+<div class="container">
+    <div class="top-actions">
+        <a href="{{ url_for('simulation.restart_simulation') }}" class="restart-btn">Restart Simulation</a>
+    </div>
 
-<h1>Email Phishing Simulation</h1>
+    <h1>Email Phishing Simulation</h1>
 
 {# Phase 1: predefined emails 1..5 #}
 {% if phase == 1 and 1 <= current_email <= 5 %}
@@ -271,6 +300,7 @@ textarea {
         <a href="{{ url_for('simulation.restart_simulation') }}" class="btn secondary">Restart</a>
     </div>
 {% endif %}
+</div> <!-- Close container -->
 {% endblock %}
 
 {% block scripts %}
