@@ -10,9 +10,77 @@ def assign_phishing_creation(api_key, genai, app):
     Generate a phishing email creation assignment.
     Renamed from 'final assignment' to 'craft phishing email'
     """
-    # Keep existing function implementation but update references
-    # to "final assignment" to "craft phishing email"
-    # ...
+    try:
+        # Provide a static assignment when AI is not available
+        if not api_key:
+            return {
+                "instructions": """
+                <h2>Phishing Email Creation Assignment</h2>
+                <p>Your task is to create a convincing phishing email for educational purposes. This assignment helps you understand how attackers think and craft their messages.</p>
+                
+                <h3>Assignment Requirements:</h3>
+                <ul>
+                    <li><strong>Target Scenario:</strong> Create a phishing email pretending to be from a popular online service (e.g., bank, social media, or email provider)</li>
+                    <li><strong>Social Engineering Elements:</strong> Include urgency, fear, or authority to motivate quick action</li>
+                    <li><strong>Technical Elements:</strong> Use realistic sender addresses, subject lines, and formatting</li>
+                    <li><strong>Call to Action:</strong> Include a clear request for the victim to click a link or provide information</li>
+                </ul>
+                
+                <h3>Tips for Success:</h3>
+                <ul>
+                    <li>Research real phishing emails for inspiration (but don't copy directly)</li>
+                    <li>Think about what would make you click or respond to an email</li>
+                    <li>Use professional language and formatting to build trust</li>
+                    <li>Create a sense of urgency without being too obvious</li>
+                </ul>
+                
+                <p><strong>Remember:</strong> This is for educational purposes only. Never use these techniques maliciously!</p>
+                """,
+                "rubric": [
+                    {"criteria": "Social Engineering Tactics", "points": 30, "description": "Use of urgency, fear, curiosity, or authority"},
+                    {"criteria": "Technical Elements", "points": 30, "description": "URLs, formatting, email headers, spoofed sender addresses"},
+                    {"criteria": "Psychological Manipulation", "points": 20, "description": "Persuasive language and emotional triggers"},
+                    {"criteria": "Realism", "points": 20, "description": "How believable the scenario is in a real-world context"}
+                ]
+            }
+        
+        # If we have API access, we could generate dynamic assignments here
+        # For now, we'll still use the static version
+        return {
+            "instructions": """
+            <h2>Phishing Email Creation Assignment</h2>
+            <p>Your task is to create a convincing phishing email for educational purposes. This assignment helps you understand how attackers think and craft their messages.</p>
+            
+            <h3>Assignment Requirements:</h3>
+            <ul>
+                <li><strong>Target Scenario:</strong> Create a phishing email pretending to be from a popular online service (e.g., bank, social media, or email provider)</li>
+                <li><strong>Social Engineering Elements:</strong> Include urgency, fear, or authority to motivate quick action</li>
+                <li><strong>Technical Elements:</strong> Use realistic sender addresses, subject lines, and formatting</li>
+                <li><strong>Call to Action:</strong> Include a clear request for the victim to click a link or provide information</li>
+            </ul>
+            
+            <h3>Tips for Success:</h3>
+            <ul>
+                <li>Research real phishing emails for inspiration (but don't copy directly)</li>
+                <li>Think about what would make you click or respond to an email</li>
+                <li>Use professional language and formatting to build trust</li>
+                <li>Create a sense of urgency without being too obvious</li>
+            </ul>
+            
+            <p><strong>Remember:</strong> This is for educational purposes only. Never use these techniques maliciously!</p>
+            """,
+            "rubric": [
+                {"criteria": "Social Engineering Tactics", "points": 30, "description": "Use of urgency, fear, curiosity, or authority"},
+                {"criteria": "Technical Elements", "points": 30, "description": "URLs, formatting, email headers, spoofed sender addresses"},
+                {"criteria": "Psychological Manipulation", "points": 20, "description": "Persuasive language and emotional triggers"},
+                {"criteria": "Realism", "points": 20, "description": "How believable the scenario is in a real-world context"}
+            ]
+        }
+        
+    except Exception as e:
+        print(f"[PHISHING_ASSIGNMENT] Error in assign_phishing_creation: {str(e)}")
+        traceback.print_exc()
+        return None
 
 def evaluate_phishing_creation(phishing_email, api_key, genai, app):
     """
@@ -40,7 +108,7 @@ def evaluate_phishing_creation(phishing_email, api_key, genai, app):
         
         Student-created phishing email:
         ```
-        {user_phishing_email}
+        {phishing_email}
         ```
         
         Evaluate the phishing email on the following criteria:

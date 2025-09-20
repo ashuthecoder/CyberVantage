@@ -35,7 +35,7 @@
                 <p>This exercise is for educational purposes only. The skills learned here should be used responsibly to enhance your ability to identify and avoid phishing attacks, not to create them.</p>
             </div>
             
-            <form action="{{ url_for('evaluate_user_phishing') }}" method="post">
+            <form action="{{ url_for('threat.evaluate_user_phishing') }}" method="post">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div style="margin-top: 20px;">
                     <label for="phishing-email" style="display: block; margin-bottom: 8px; font-weight: bold;">Your Phishing Email:</label>
