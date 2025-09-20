@@ -8,21 +8,21 @@
     
     <div class="stats-cards">
         <div class="stat-card">
-            <h3>Overall Score</h3>
-            <div class="score">85<span>%</span></div>
-            <p>Based on all simulations</p>
+            <h3>Overall Accuracy</h3>
+            <div class="score">{{ accuracy }}<span>%</span></div>
+            <p>Based on {{ total_responses }} responses</p>
         </div>
         
         <div class="stat-card">
-            <h3>Simulations Completed</h3>
-            <div class="score">12</div>
-            <p>Out of 15 total</p>
+            <h3>Phase 1 Performance</h3>
+            <div class="score">{{ phase1_correct }}/{{ phase1_total }}</div>
+            <p>Basic email identification</p>
         </div>
         
         <div class="stat-card">
-            <h3>Correct Identifications</h3>
-            <div class="score">23</div>
-            <p>Out of 30 emails</p>
+            <h3>Phase 2 Performance</h3>
+            <div class="score">{{ phase2_correct }}/{{ phase2_total }}</div>
+            <p>Advanced analysis (Avg: {{ avg_score }}/10)</p>
         </div>
     </div>
     
@@ -35,12 +35,36 @@
     </div>
     
     <div class="recommendations">
-        <h2>Personalized Recommendations</h2>
-        <ul>
-            <li>Review URL identification tactics - you missed 3 suspicious links</li>
-            <li>Practice recognizing urgency language in phishing emails</li>
-            <li>Complete the "Advanced Header Analysis" module in Learn section</li>
-        </ul>
+        <h2>Analysis & Recommendations</h2>
+        {% if total_responses == 0 %}
+            <p>No simulation data available yet. Complete some phishing simulations to see your progress!</p>
+            <ul>
+                <li><a href="{{ url_for('simulation.simulate') }}">Start Phishing Simulation</a></li>
+                <li><a href="{{ url_for('analysis.learn') }}">Visit Learning Resources</a></li>
+            </ul>
+        {% else %}
+            {% if accuracy >= 80 %}
+                <p><strong>Excellent work!</strong> You're showing strong phishing detection skills.</p>
+            {% elif accuracy >= 60 %}
+                <p><strong>Good progress!</strong> Continue practicing to improve your detection accuracy.</p>
+            {% else %}
+                <p><strong>Keep practicing!</strong> Phishing detection improves with experience.</p>
+            {% endif %}
+            
+            <ul>
+                {% if phase1_correct < phase1_total %}
+                    <li>Practice basic phishing email recognition - focus on suspicious senders and urgent language</li>
+                {% endif %}
+                {% if phase2_correct < phase2_total %}
+                    <li>Improve advanced analysis skills - pay attention to URLs, headers, and technical details</li>
+                {% endif %}
+                {% if avg_score < 7 %}
+                    <li>Work on explanation quality - provide more detailed reasoning for your decisions</li>
+                {% endif %}
+                <li>Continue practicing with more simulations to reinforce your skills</li>
+                <li>Review the <a href="{{ url_for('analysis.learn') }}">learning materials</a> for additional tips</li>
+            </ul>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

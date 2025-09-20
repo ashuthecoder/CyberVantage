@@ -500,7 +500,18 @@ def restart_simulation(current_user):
     except Exception as e:
         print(f"[RESTART] Error in restart_simulation: {e}")
         db.session.rollback()
-        return redirect(url_for('dashboard'))
+        # Instead of going to dashboard, try to recover and go to simulation
+        try:
+            # Reset session to safe state
+            session['simulation_phase'] = 1
+            session['current_email_id'] = 1
+            session['simulation_id'] = str(uuid.uuid4())
+            session['phase2_emails_completed'] = 0
+            session.modified = True
+            return redirect(url_for('simulation.simulate'))
+        except:
+            # If all else fails, then go to dashboard
+            return redirect(url_for('dashboard'))
 
 @simulation_bp.route('/reset_stuck_simulation')
 @token_required
