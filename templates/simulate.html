@@ -138,7 +138,7 @@ textarea {
 
 {% block content %}
 <div class="top-actions">
-    <a href="{{ url_for('restart_simulation') }}" class="restart-btn">Restart Simulation</a>
+    <a href="{{ url_for('simulation.restart_simulation') }}" class="restart-btn">Restart Simulation</a>
 </div>
 
 <h1>Email Phishing Simulation</h1>
@@ -160,7 +160,7 @@ textarea {
             </div>
         </div>
 
-        <form method="POST" action="{{ url_for('submit_simulation') }}">
+        <form method="POST" action="{{ url_for('simulation.submit_simulation') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="email_id" value="{{ email.id }}">
             <input type="hidden" name="phase" value="1">
@@ -174,8 +174,8 @@ textarea {
             </div>
 
             <button type="submit" class="btn primary">Submit Answer</button>
-            <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart</a>
-            <a href="{{ url_for('skip_email') }}" class="btn warning">Skip Email</a>
+            <a href="{{ url_for('simulation.restart_simulation') }}" class="btn secondary">Restart</a>
+            <a href="{{ url_for('simulation.skip_email') }}" class="btn warning">Skip Email</a>
         </form>
 
         <div class="progress">
@@ -199,8 +199,8 @@ textarea {
                 <p class="muted">No email is available to display right now. Please try again or restart the simulation.</p>
                 <div style="margin-top: 1rem;">
                     <a href="{{ url_for('simulation.simulate') }}" class="btn secondary">Reload</a>
-                    <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart</a>
-                    <a href="{{ url_for('skip_email') }}" class="btn warning">Skip Email</a>
+                    <a href="{{ url_for('simulation.restart_simulation') }}" class="btn secondary">Restart</a>
+                    <a href="{{ url_for('simulation.skip_email') }}" class="btn warning">Skip Email</a>
                 </div>
             </div>
         {% else %}
@@ -217,7 +217,7 @@ textarea {
                 </div>
             </div>
 
-            <form method="POST" action="{{ url_for('submit_simulation') }}">
+            <form method="POST" action="{{ url_for('simulation.submit_simulation') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="email_id" value="{{ email.id }}">
                 <input type="hidden" name="phase" value="2">
@@ -237,8 +237,8 @@ textarea {
                 </div>
 
                 <button type="submit" class="btn primary">Submit Answer</button>
-                <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart</a>
-                <a href="{{ url_for('skip_email') }}" class="btn warning">Skip Email</a>
+                <a href="{{ url_for('simulation.restart_simulation') }}" class="btn secondary">Restart</a>
+                <a href="{{ url_for('simulation.skip_email') }}" class="btn warning">Skip Email</a>
             </form>
 
             <div class="progress">
@@ -268,7 +268,7 @@ textarea {
 {% else %}
     <div class="simulation-phase" style="text-align: center;">
         <p class="muted">No simulation content to display. Please try restarting the simulation.</p>
-        <a href="{{ url_for('restart_simulation') }}" class="btn secondary">Restart</a>
+        <a href="{{ url_for('simulation.restart_simulation') }}" class="btn secondary">Restart</a>
     </div>
 {% endif %}
 {% endblock %}
