@@ -40,7 +40,10 @@ def create_app():
     
     # Initialize extensions with app
     db.init_app(app)
+    
+    # Configure CSRF with exemptions for API endpoints
     csrf.init_app(app)
+    app.config['WTF_CSRF_CHECK_DEFAULT'] = False  # We'll manually enable for forms only
     
     # Check current date warning
     current_time = datetime.datetime.now()
