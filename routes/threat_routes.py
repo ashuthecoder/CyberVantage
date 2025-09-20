@@ -18,7 +18,7 @@ threat_bp = Blueprint('threat', __name__)
 @token_required
 def check_threats(current_user):
     # Get the VirusTotal API key from environment variables
-    virustotal_api_key = os.getenv("VIRUS_TOTAL_KEY") or os.getenv("VIRUSTOTAL_API_KEY")
+    virustotal_api_key = os.getenv("VIRUSTOTAL_API_KEY")
     return render_template('check_threats.html', username=current_user.name, virustotal_api_key=virustotal_api_key)
 
 @threat_bp.route('/deep_search')
@@ -43,7 +43,7 @@ def api_threat_scan(current_user):
         vt_api_key = os.getenv("VIRUSTOTAL_API_KEY")
         if not vt_api_key:
             return jsonify({
-                "error": "VirusTotal API key not configured. Please add it to your .env file."
+                "error": "VirusTotal API key not configured. Please add VIRUSTOTAL_API_KEY to your .env file."
             }), 500
         
         # Initialize ThreatIntelligence with API key
@@ -78,10 +78,10 @@ def api_deep_scan(current_user):
             return jsonify({"error": "No URL provided"}), 400
         
         # Check if VirusTotal API key is configured
-        vt_api_key = os.getenv("VIRUS_TOTAL_KEY") or os.getenv("VIRUSTOTAL_API_KEY")
+        vt_api_key = os.getenv("VIRUSTOTAL_API_KEY")
         if not vt_api_key:
             return jsonify({
-                "error": "VirusTotal API key not configured. Please add VIRUS_TOTAL_KEY to your .env file."
+                "error": "VirusTotal API key not configured. Please add VIRUSTOTAL_API_KEY to your .env file."
             }), 500
         
         # Initialize ThreatIntelligence with API key
@@ -103,7 +103,7 @@ def api_threat_history(current_user):
     """API endpoint to get threat scan history"""
     try:
         # Check if VirusTotal API key is configured
-        vt_api_key = os.getenv("VIRUS_TOTAL_KEY") or os.getenv("VIRUSTOTAL_API_KEY")
+        vt_api_key = os.getenv("VIRUSTOTAL_API_KEY")
         if not vt_api_key:
             return jsonify([]), 200  # Return empty history if no API key
         
@@ -117,6 +117,34 @@ def api_threat_history(current_user):
         print(f"[THREAT_HISTORY] Error: {str(e)}")
         traceback.print_exc()
         return jsonify({"error": f"Failed to fetch history: {str(e)}"}), 500
+
+@threat_bp.route('/api/test_vt_connection', methods=['GET'])
+@token_required
+def api_test_vt_connection(current_user):
+    """API endpoint to test VirusTotal connection"""
+    try:
+        # Check if VirusTotal API key is configured
+        vt_api_key = os.getenv("VIRUSTOTAL_API_KEY")
+        if not vt_api_key:
+            return jsonify({
+                "error": "VirusTotal API key not configured. Please add VIRUSTOTAL_API_KEY to your .env file."
+            }), 500
+        
+        # Initialize ThreatIntelligence with API key
+        ti = ThreatIntelligence(vt_api_key)
+        
+        # Test the connection
+        result = ti.test_api_connection()
+        
+        if "error" in result:
+            return jsonify(result), 400
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"[VT_CONNECTION_TEST] Error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": f"Connection test failed: {str(e)}"}), 500
 
 # Phishing Assignment Routes
 @threat_bp.route('/phishing_assignment')
