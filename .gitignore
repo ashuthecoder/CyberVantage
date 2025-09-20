@@ -20,3 +20,9 @@ wheels/
 .installed.cfg
 *.egg
 logs/
+
+# Environment files (contain secrets)
+.env
+*.db
+cybervantage.db
+
