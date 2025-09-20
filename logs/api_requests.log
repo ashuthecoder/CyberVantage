@@ -5,3 +5,4 @@
 [2025-09-17 21:32:08] [SYSTEM] test_system_function - SUCCESS - Prompt: 0 chars, Response: 10 chars
 [2025-09-17 22:08:41] [AZURE] azure_evaluation - SUCCESS - Prompt: 1185 chars, Response: 0 chars
 [2025-09-17 22:08:41] [AZURE] azure_openai_completion - SUCCESS - Prompt: 1185 chars, Response: 0 chars, Model: gpt-4.1-nano
+[2025-09-20 11:56:20] [AZURE] azure_openai_completion - SUCCESS - Prompt: 51 chars, Response: 0 chars, Model: gpt-4.1-nano

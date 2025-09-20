@@ -172,6 +172,27 @@ def call_azure_openai_with_retry(
     """
     global azure_client
     
+    # Ensure Azure client is initialized if needed
+    if IS_OPENAI_V1 and azure_client is None:
+        # Get API credentials
+        api_key = None
+        endpoint = None
+        
+        if app:
+            api_key = app.config.get('AZURE_OPENAI_KEY')
+            endpoint = app.config.get('AZURE_OPENAI_ENDPOINT')
+        
+        if not api_key:
+            api_key = os.getenv('AZURE_OPENAI_KEY')
+        
+        if not endpoint:
+            endpoint = os.getenv('AZURE_OPENAI_ENDPOINT')
+        
+        # Initialize client if we have credentials
+        if api_key and endpoint:
+            azure_client = setup_azure_client(api_key, endpoint)
+            print(f"[AZURE] Initialized Azure client with endpoint: {endpoint}")
+    
     if app:
         # Get deployment from app config if available
         deployment_name = deployment_name or app.config.get('AZURE_OPENAI_DEPLOYMENT', DEFAULT_AZURE_DEPLOYMENT)
