@@ -49,28 +49,7 @@ def create_app():
         print("   This may cause issues with authentication tokens and cookies.")
     
     # Encryption key for sensitive DB fields
-    ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
-    
-    if ENCRYPTION_KEY:
-        # Validate the provided encryption key
-        try:
-            # Try to create Fernet instance with the provided key
-            fernet_instance = Fernet(ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else ENCRYPTION_KEY)
-            app.config['FERNET'] = fernet_instance
-            print("✓ Using ENCRYPTION_KEY from environment")
-        except Exception as e:
-            # If the provided key is invalid, generate a new one and warn the user
-            print(f"⚠️  WARNING: Invalid ENCRYPTION_KEY in environment: {e}")
-            print("⚠️  Generating a new encryption key. Please update your .env file with:")
-            new_key = Fernet.generate_key()
-            print(f"   ENCRYPTION_KEY={new_key.decode()}")
-            app.config['FERNET'] = Fernet(new_key)
-    else:
-        # Generate a new key if none provided
-        print("⚠️  No ENCRYPTION_KEY found in environment. Generating a new one.")
-        print("   For production use, please add this to your .env file:")
-        new_key = Fernet.generate_key()
-        print(f"   ENCRYPTION_KEY={new_key.decode()}")
-        app.config['FERNET'] = Fernet(new_key)
+    ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", Fernet.generate_key())
+    app.config['FERNET'] = Fernet(ENCRYPTION_KEY)
     
     return app
