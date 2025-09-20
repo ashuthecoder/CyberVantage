@@ -32,9 +32,9 @@ class ThreatIntelligence:
     """
     def __init__(self, api_key: str = None):
         """Initialize with API key from parameters or environment"""
-        self.api_key = api_key or os.getenv('VIRUS_TOTAL_KEY') or os.getenv('VIRUSTOTAL_API_KEY')
+        self.api_key = api_key or os.getenv('VIRUSTOTAL_API_KEY')
         if not self.api_key:
-            logger.warning("VirusTotal API key not found. Please add VIRUS_TOTAL_KEY to your .env file")
+            logger.warning("VirusTotal API key not found. Please add VIRUSTOTAL_API_KEY to your .env file")
         
         self.base_url = 'https://www.virustotal.com/api/v3/'
         self.headers = {
@@ -46,10 +46,39 @@ class ThreatIntelligence:
         self.cache = {}
         self.scan_history = []
     
+    def test_api_connection(self) -> Dict[str, Any]:
+        """Test if the VirusTotal API key is working"""
+        if not self.api_key:
+            return {"error": "VirusTotal API key not configured"}
+        
+        try:
+            # Test with a simple API call to get user info
+            test_url = f"{self.base_url}users/{self.api_key}/overall_quotas"
+            response = requests.get(test_url, headers=self.headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "success": True,
+                    "message": "VirusTotal API connection successful",
+                    "quotas": data.get('data', {})
+                }
+            elif response.status_code == 401:
+                return {"error": "Invalid VirusTotal API key"}
+            else:
+                return {"error": f"API test failed with status {response.status_code}"}
+                
+        except Exception as e:
+            return {"error": f"API test failed: {str(e)}"}
+    
     def scan_url(self, url: str) -> Dict[str, Any]:
         """Scan a URL using VirusTotal API"""
         if not self.api_key:
             return {"error": "VirusTotal API key not configured"}
+        
+        # Validate URL format
+        if not url.startswith(('http://', 'https://')):
+            url = 'http://' + url
         
         # Check cache first
         cache_key = f"url:{url}"
@@ -60,32 +89,75 @@ class ThreatIntelligence:
         try:
             # First, submit URL for analysis
             submit_url = f"{self.base_url}urls"
+            
+            # Use form data for URL submission as per VirusTotal API docs
+            headers_for_submit = {
+                'x-apikey': self.api_key
+            }
+            
             payload = {'url': url}
-            response = requests.post(submit_url, headers=self.headers, data=payload)
+            logger.info(f"Submitting URL to VirusTotal: {url}")
+            response = requests.post(submit_url, headers=headers_for_submit, data=payload)
             
             if response.status_code != 200:
-                logger.error(f"Error submitting URL {url}: {response.text}")
-                return {"error": f"API Error: {response.status_code}"}
+                error_msg = f"Error submitting URL {url}: HTTP {response.status_code}"
+                if response.text:
+                    try:
+                        error_data = response.json()
+                        error_msg += f" - {error_data.get('error', {}).get('message', response.text)}"
+                    except:
+                        error_msg += f" - {response.text}"
+                logger.error(error_msg)
+                return {"error": f"VirusTotal API Error: {response.status_code}"}
             
             # Extract the analysis ID
             result = response.json()
             analysis_id = result.get('data', {}).get('id')
             
             if not analysis_id:
+                logger.error(f"Could not get analysis ID from VirusTotal response: {result}")
                 return {"error": "Could not get analysis ID from VirusTotal"}
             
-            # Wait a moment to allow processing
-            time.sleep(2)
+            logger.info(f"Got analysis ID: {analysis_id}")
             
-            # Get the analysis results
-            analysis_url = f"{self.base_url}analyses/{analysis_id}"
-            result_response = requests.get(analysis_url, headers=self.headers)
-            
-            if result_response.status_code != 200:
-                logger.error(f"Error getting analysis results: {result_response.text}")
-                return {"error": f"Analysis Error: {result_response.status_code}"}
-            
-            analysis_result = result_response.json()
+            # Wait for analysis to complete (increased wait time)
+            max_attempts = 10
+            attempt = 0
+            while attempt < max_attempts:
+                time.sleep(3)  # Increased from 2 to 3 seconds
+                
+                # Get the analysis results
+                analysis_url = f"{self.base_url}analyses/{analysis_id}"
+                result_response = requests.get(analysis_url, headers=self.headers)
+                
+                if result_response.status_code != 200:
+                    error_msg = f"Error getting analysis results: HTTP {result_response.status_code}"
+                    if result_response.text:
+                        try:
+                            error_data = result_response.json()
+                            error_msg += f" - {error_data.get('error', {}).get('message', result_response.text)}"
+                        except:
+                            error_msg += f" - {result_response.text}"
+                    logger.error(error_msg)
+                    return {"error": f"Analysis Error: {result_response.status_code}"}
+                
+                analysis_result = result_response.json()
+                attributes = analysis_result.get('data', {}).get('attributes', {})
+                status = attributes.get('status', 'unknown')
+                
+                logger.info(f"Analysis status: {status} (attempt {attempt + 1})")
+                
+                if status == 'completed':
+                    break
+                elif status in ['queued', 'running']:
+                    attempt += 1
+                    if attempt >= max_attempts:
+                        logger.warning(f"Analysis still running after {max_attempts} attempts")
+                        # Return partial results
+                        break
+                else:
+                    logger.warning(f"Unexpected analysis status: {status}")
+                    break
             
             # Process and format the results
             formatted_result = self._format_url_result(analysis_result, url)
@@ -96,8 +168,12 @@ class ThreatIntelligence:
             # Add to history
             self._add_to_history(formatted_result, 'url')
             
+            logger.info(f"Successfully scanned URL: {url}")
             return formatted_result
             
+        except requests.exceptions.RequestException as e:
+            logger.exception(f"Network error in scan_url: {str(e)}")
+            return {"error": f"Network error: {str(e)}"}
         except Exception as e:
             logger.exception(f"Exception in scan_url: {str(e)}")
             return {"error": f"Scan failed: {str(e)}"}
@@ -273,20 +349,69 @@ class ThreatIntelligence:
     def _format_url_result(self, vt_result: Dict[str, Any], url: str) -> Dict[str, Any]:
         """Format the VirusTotal URL result into a standardized format"""
         try:
-            attributes = vt_result.get('data', {}).get('attributes', {})
+            data = vt_result.get('data', {})
+            attributes = data.get('attributes', {})
             stats = attributes.get('stats', {})
+            
+            # Handle different response formats based on analysis status
+            status = attributes.get('status', 'unknown')
+            
+            if status == 'queued':
+                return {
+                    "resource": url,
+                    "scan_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "permalink": f"https://www.virustotal.com/gui/url/{hashlib.sha256(url.encode()).hexdigest()}/detection",
+                    "positives": 0,
+                    "total": 0,
+                    "status": "queued",
+                    "message": "URL is queued for analysis. Please try again in a few moments.",
+                    "scans": {}
+                }
+            elif status == 'running':
+                return {
+                    "resource": url,
+                    "scan_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "permalink": f"https://www.virustotal.com/gui/url/{hashlib.sha256(url.encode()).hexdigest()}/detection",
+                    "positives": 0,
+                    "total": 0,
+                    "status": "running",
+                    "message": "URL analysis is in progress. Please try again in a few moments.",
+                    "scans": {}
+                }
+            
+            # For completed analysis
+            analysis_date = attributes.get('date', datetime.now().timestamp())
+            if isinstance(analysis_date, (int, float)):
+                scan_date = datetime.fromtimestamp(analysis_date).strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                scan_date = str(analysis_date)
+            
+            # Calculate URL ID for permalink
+            url_id = data.get('id') or hashlib.sha256(url.encode()).hexdigest()
             
             return {
                 "resource": url,
-                "scan_date": attributes.get('date', datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                "permalink": f"https://www.virustotal.com/gui/url/{attributes.get('id', hashlib.sha256(url.encode()).hexdigest())}/detection",
+                "scan_date": scan_date,
+                "permalink": f"https://www.virustotal.com/gui/url/{url_id}/detection",
                 "positives": stats.get('malicious', 0),
-                "total": sum(stats.values()),
+                "total": sum(stats.values()) if stats else 0,
+                "status": status,
+                "harmless": stats.get('harmless', 0),
+                "suspicious": stats.get('suspicious', 0),
+                "undetected": stats.get('undetected', 0),
+                "timeout": stats.get('timeout', 0),
                 "scans": attributes.get('results', {})
             }
         except Exception as e:
             logger.exception(f"Error formatting URL result: {str(e)}")
-            return {"error": "Failed to process scan results", "raw": vt_result}
+            return {
+                "error": "Failed to process scan results", 
+                "raw": vt_result,
+                "resource": url,
+                "scan_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "positives": 0,
+                "total": 0
+            }
     
     def _format_ip_result(self, vt_result: Dict[str, Any], ip: str) -> Dict[str, Any]:
         """Format the VirusTotal IP result into a standardized format"""

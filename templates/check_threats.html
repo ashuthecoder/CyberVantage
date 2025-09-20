@@ -4,186 +4,140 @@
 
 {% block head %}
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row mb-5">
-        <div class="col-12 text-center">
-            <div class="hero-section p-4 rounded" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                <h1 class="display-5 mb-3 fw-bold">
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="hero-header text-center p-4 mb-4">
+                <h1 class="display-6 fw-bold text-primary mb-3">
                     <i class="fas fa-shield-alt me-3"></i>Threat Intelligence Center
                 </h1>
-                <p class="lead mb-4">
-                    Comprehensive threat analysis powered by VirusTotal's global security intelligence network.
-                    Protect yourself and your organization with real-time threat detection and advanced analysis capabilities.
+                <p class="lead text-muted mb-0">
+                    Comprehensive threat analysis powered by VirusTotal's global security intelligence network
                 </p>
-                <div class="row justify-content-center">
-                    <div class="col-md-3 col-6 mb-2">
-                        <div class="stats-card">
-                            <h3 class="h4 mb-1">80+</h3>
-                            <small>Security Engines</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-6 mb-2">
-                        <div class="stats-card">
-                            <h3 class="h4 mb-1">1M+</h3>
-                            <small>Daily Scans</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-6 mb-2">
-                        <div class="stats-card">
-                            <h3 class="h4 mb-1">99.9%</h3>
-                            <small>Accuracy Rate</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-6 mb-2">
-                        <div class="stats-card">
-                            <h3 class="h4 mb-1">&lt;5s</h3>
-                            <small>Scan Time</small>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <!-- Main Content -->
+    <div class="row g-4 mb-4">
+        <!-- Quick Scan Card -->
+        <div class="col-lg-6">
+            <div class="card modern-card h-100">
+                <div class="card-header bg-primary text-white">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-search-plus me-2"></i>
-                        <h4 class="mb-0">Quick Look</h4>
+                        <h5 class="mb-0">Quick Threat Scan</h5>
                         <span class="badge bg-light text-dark ms-auto">VirusTotal Powered</span>
                     </div>
                 </div>
                 <div class="card-body p-4">
-                    <p class="text-muted mb-3">
-                        <i class="fas fa-lightning-bolt text-warning me-2"></i>
-                        Instantly analyze URLs, files, domains or IP addresses using the VirusTotal intelligence network.
-                    </p>
-                    <div class="feature-list mb-4">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-check text-success me-2"></i>
-                            <small class="text-muted">Real-time threat detection</small>
-                        </div>
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-check text-success me-2"></i>
-                            <small class="text-muted">80+ security engine analysis</small>
-                        </div>
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-check text-success me-2"></i>
-                            <small class="text-muted">Instant reputation scoring</small>
-                        </div>
-                    </div>
                     <form id="quickScanForm">
                         <div class="mb-3">
-                            <label for="scanInput" class="form-label fw-semibold">Enter URL, IP, domain or file hash:</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0">
-                                    <i class="fas fa-globe text-muted"></i>
-                                </span>
-                                <input type="text" class="form-control border-start-0 ps-0" id="scanInput" required 
-                                    placeholder="https://example.com or 192.168.1.1 or hash">
-                            </div>
+                            <label for="scanInput" class="form-label fw-semibold">
+                                <i class="fas fa-globe text-primary me-2"></i>Enter URL, IP, or File Hash
+                            </label>
+                            <input type="text" class="form-control form-control-lg" id="scanInput" required 
+                                   placeholder="https://example.com, 192.168.1.1, or file hash">
                         </div>
+                        
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Scan Type:</label>
-                            <div class="btn-group d-block" role="group">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-cog text-primary me-2"></i>Scan Type
+                            </label>
+                            <div class="btn-group d-flex" role="group" aria-label="Scan type selection">
                                 <input class="btn-check" type="radio" name="scanType" id="urlScan" value="url" checked>
-                                <label class="btn btn-outline-primary btn-sm" for="urlScan">
+                                <label class="btn btn-outline-primary" for="urlScan">
                                     <i class="fas fa-link me-1"></i> URL/Domain
                                 </label>
                                 <input class="btn-check" type="radio" name="scanType" id="ipScan" value="ip">
-                                <label class="btn btn-outline-primary btn-sm" for="ipScan">
+                                <label class="btn btn-outline-primary" for="ipScan">
                                     <i class="fas fa-server me-1"></i> IP Address
                                 </label>
                                 <input class="btn-check" type="radio" name="scanType" id="fileScan" value="file">
-                                <label class="btn btn-outline-primary btn-sm" for="fileScan">
+                                <label class="btn btn-outline-primary" for="fileScan">
                                     <i class="fas fa-file me-1"></i> File Hash
                                 </label>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 py-2" id="quickScanBtn">
-                            <i class="fas fa-search me-2"></i> Start Quick Scan
-                        </button>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="quickScanBtn">
+                                <i class="fas fa-search me-2"></i> Start Scan
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="testConnectionBtn">
+                                <i class="fas fa-plug me-2"></i> Test API Connection
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+        <!-- Advanced Analysis Card -->
+        <div class="col-lg-6">
+            <div class="card modern-card h-100">
+                <div class="card-header bg-success text-white">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-microscope me-2"></i>
-                        <h4 class="mb-0">Deep Look</h4>
-                        <span class="badge bg-light text-dark ms-auto">Advanced Analysis</span>
+                        <h5 class="mb-0">Advanced Analysis</h5>
+                        <span class="badge bg-light text-dark ms-auto">Deep Scan</span>
                     </div>
                 </div>
                 <div class="card-body p-4">
-                    <p class="text-muted mb-3">
-                        <i class="fas fa-shield-alt text-info me-2"></i>
-                        Advanced analysis to detect sophisticated threats, multi-hop redirects, and evasive malware.
+                    <p class="text-muted mb-4">
+                        <i class="fas fa-shield-alt text-success me-2"></i>
+                        Advanced multi-hop redirect tracking, JavaScript analysis, and behavioral detection.
                     </p>
-                    <div class="feature-list mb-4">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-route text-warning me-2"></i>
-                            <small class="text-muted">Multi-hop link traversal</small>
+                    
+                    <div class="features-list mb-4">
+                        <div class="feature-item">
+                            <i class="fas fa-route text-success me-2"></i>
+                            <span>Multi-hop redirect chain analysis</span>
                         </div>
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-code text-warning me-2"></i>
-                            <small class="text-muted">JavaScript deobfuscation</small>
+                        <div class="feature-item">
+                            <i class="fas fa-code text-success me-2"></i>
+                            <span>JavaScript deobfuscation & analysis</span>
                         </div>
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-bug text-warning me-2"></i>
-                            <small class="text-muted">Behavior-based detection</small>
+                        <div class="feature-item">
+                            <i class="fas fa-bug text-success me-2"></i>
+                            <span>Behavioral pattern detection</span>
                         </div>
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-network-wired text-warning me-2"></i>
-                            <small class="text-muted">Network traffic analysis</small>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-chain text-warning me-2"></i>
-                            <small class="text-muted">Full-chain redirect tracking</small>
+                        <div class="feature-item">
+                            <i class="fas fa-network-wired text-success me-2"></i>
+                            <span>Network traffic analysis</span>
                         </div>
                     </div>
-                    <div class="d-grid gap-2">
-                        <a href="/deep_search" class="btn btn-success py-2">
-                            <i class="fas fa-microscope me-2"></i> Start Deep Analysis
+                    
+                    <div class="d-grid">
+                        <a href="/deep_search" class="btn btn-success btn-lg">
+                            <i class="fas fa-microscope me-2"></i> Launch Deep Analysis
                         </a>
-                        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" 
-                                data-bs-target="#deepLookInfo" aria-expanded="false">
-                            <i class="fas fa-info-circle me-1"></i> Learn More
-                        </button>
-                        <div class="collapse" id="deepLookInfo">
-                            <div class="card card-body bg-light border-0 mt-2">
-                                <small class="text-muted">
-                                    Deep Look uses advanced heuristics and sandboxing to detect threats that bypass traditional scanners.
-                                    Perfect for investigating suspicious shortened URLs and complex attack chains.
-                                </small>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="scanResultsContainer" class="mt-5" style="display: none;">
-        <div class="card shadow-lg border-0">
-            <div class="card-header text-white" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);">
+    <!-- Results Section -->
+    <div id="scanResultsContainer" class="mb-4" style="display: none;">
+        <div class="card modern-card">
+            <div class="card-header bg-dark text-white">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-chart-line me-2"></i>
-                        <h4 class="mb-0">Scan Results</h4>
+                        <h5 class="mb-0">Scan Results</h5>
                     </div>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-light btn-sm" id="refreshScanBtn">
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-light" id="refreshScanBtn" title="Refresh">
                             <i class="fas fa-sync-alt"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-light btn-sm" id="exportResultsBtn">
+                        <button type="button" class="btn btn-outline-light" id="exportResultsBtn" title="Export">
                             <i class="fas fa-download"></i>
                         </button>
                     </div>
@@ -195,64 +149,61 @@
         </div>
     </div>
 
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-header text-white" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-history me-2"></i>
-                            <h4 class="mb-0">Recent Scan History</h4>
-                        </div>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-outline-light btn-sm" id="clearHistoryBtn">
-                                <i class="fas fa-trash-alt"></i> Clear
-                            </button>
-                            <button type="button" class="btn btn-outline-light btn-sm" id="exportHistoryBtn">
-                                <i class="fas fa-file-export"></i> Export
-                            </button>
-                        </div>
-                    </div>
+    <!-- History Section -->
+    <div class="card modern-card">
+        <div class="card-header bg-info text-white">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-history me-2"></i>
+                    <h5 class="mb-0">Recent Scan History</h5>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0" id="scanHistoryTable">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="px-4 py-3">
-                                        <i class="fas fa-clock me-1 text-muted"></i> Date/Time
-                                    </th>
-                                    <th class="py-3">
-                                        <i class="fas fa-crosshairs me-1 text-muted"></i> Target
-                                    </th>
-                                    <th class="py-3">
-                                        <i class="fas fa-tag me-1 text-muted"></i> Type
-                                    </th>
-                                    <th class="py-3">
-                                        <i class="fas fa-shield-alt me-1 text-muted"></i> Verdict
-                                    </th>
-                                    <th class="py-3">
-                                        <i class="fas fa-chart-bar me-1 text-muted"></i> Detection
-                                    </th>
-                                    <th class="py-3 text-center">
-                                        <i class="fas fa-cogs me-1 text-muted"></i> Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="text-center text-muted">
-                                    <td colspan="6" class="py-4">
-                                        <div class="empty-state">
-                                            <i class="fas fa-search fa-2x mb-3 text-muted opacity-50"></i>
-                                            <p class="mb-0">No scan history available</p>
-                                            <small>Your recent scans will appear here</small>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-light" id="clearHistoryBtn" title="Clear History">
+                        <i class="fas fa-trash-alt me-1"></i> Clear
+                    </button>
+                    <button type="button" class="btn btn-outline-light" id="exportHistoryBtn" title="Export History">
+                        <i class="fas fa-file-export me-1"></i> Export
+                    </button>
                 </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="scanHistoryTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="px-4 py-3">
+                                <i class="fas fa-clock me-1 text-muted"></i> Date/Time
+                            </th>
+                            <th class="py-3">
+                                <i class="fas fa-crosshairs me-1 text-muted"></i> Target
+                            </th>
+                            <th class="py-3">
+                                <i class="fas fa-tag me-1 text-muted"></i> Type
+                            </th>
+                            <th class="py-3">
+                                <i class="fas fa-shield-alt me-1 text-muted"></i> Status
+                            </th>
+                            <th class="py-3">
+                                <i class="fas fa-chart-bar me-1 text-muted"></i> Detection
+                            </th>
+                            <th class="py-3 text-center">
+                                <i class="fas fa-cogs me-1 text-muted"></i> Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="text-center text-muted">
+                            <td colspan="6" class="py-5">
+                                <div class="empty-state">
+                                    <i class="fas fa-search fa-3x mb-3 text-muted opacity-50"></i>
+                                    <h6 class="text-muted">No scan history available</h6>
+                                    <p class="small mb-0">Your recent scans will appear here</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -262,167 +213,274 @@
 <div class="modal fade" id="resultDetailModal" tabindex="-1" aria-labelledby="resultDetailModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="resultDetailModalLabel">Detailed Analysis</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="resultDetailModalLabel">
+                    <i class="fas fa-chart-pie me-2"></i>Detailed Analysis Report
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="detailedResultContent">
                 <!-- Detailed results will be loaded here -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="downloadReportBtn">Download Report</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Close
+                </button>
+                <button type="button" class="btn btn-primary" id="downloadReportBtn">
+                    <i class="fas fa-download me-1"></i> Download Report
+                </button>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Add Bootstrap CSS and JS -->
 {% endblock %}
 
 {% block extra_styles %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-    /* Enhanced styles for the threats page */
-    .hero-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-    
-    .stats-card {
-        text-align: center;
-        opacity: 0.9;
-    }
-    
-    .card {
-        border: none;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        margin-bottom: 1.5rem;
-        border-radius: 15px;
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-    
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-    }
-    
-    .card-header {
-        font-weight: 600;
-        border: none;
-        padding: 1.25rem 1.5rem;
-    }
-    
-    .bg-gradient {
-        background-size: 200% 200%;
-        animation: gradientShift 6s ease infinite;
-    }
-    
-    @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    
-    .feature-list {
-        border-left: 3px solid #e9ecef;
-        padding-left: 1rem;
-        margin-left: 0.5rem;
-    }
-    
-    .table th {
-        font-weight: 600;
+    /* Modern, clean styling for the threats page */
+    body {
         background-color: #f8f9fa;
-        border-color: #e9ecef;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    
-    .badge {
-        padding: 0.5em 0.75em;
-        font-size: 0.8rem;
+
+    .hero-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    
-    .progress {
-        height: 1.8rem;
-        font-size: 0.9rem;
-        font-weight: 600;
-        border-radius: 10px;
+
+    .modern-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
         overflow: hidden;
     }
-    
+
+    .modern-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+        border: none;
+        padding: 1.5rem 2rem;
+        font-weight: 600;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    .features-list {
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .feature-item:last-child {
+        margin-bottom: 0;
+    }
+
     .btn {
-        border-radius: 8px;
+        border-radius: 10px;
         font-weight: 500;
+        padding: 0.75rem 1.5rem;
         transition: all 0.3s ease;
+        border: 2px solid transparent;
     }
-    
+
+    .btn-lg {
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+    }
+
     .btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
-    
-    .btn-check:checked + .btn {
+
+    .btn-check:checked + .btn-outline-primary {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-color: transparent;
+        transform: scale(1.02);
     }
-    
-    #scanResults {
-        min-height: 120px;
+
+    .form-control {
         border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
     }
-    
-    .input-group-text {
-        border: 1px solid #ced4da;
-        background-color: #f8f9fa;
-    }
-    
+
     .form-control:focus {
         border-color: #667eea;
         box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        transform: translateY(-1px);
     }
-    
-    .tab-content {
-        padding-top: 1.5rem;
+
+    .form-control-lg {
+        padding: 1rem 1.25rem;
+        font-size: 1.1rem;
     }
-    
-    .alert {
-        margin-bottom: 1.5rem;
-        border-radius: 10px;
+
+    .table {
+        font-size: 0.95rem;
+    }
+
+    .table th {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        padding: 1.25rem 1rem;
     }
-    
+
+    .table td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-color: #f1f3f4;
+    }
+
+    .empty-state {
+        padding: 3rem 2rem;
+    }
+
+    .badge {
+        font-weight: 500;
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+    }
+
+    .progress {
+        height: 1.5rem;
+        border-radius: 10px;
+        background-color: #f1f3f4;
+    }
+
+    .progress-bar {
+        border-radius: 10px;
+    }
+
+    .modal-content {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #f1f3f4;
+        padding: 1.5rem 2rem;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .alert {
+        border-radius: 12px;
+        border: none;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-success {
+        background: linear-gradient(135deg, #d1edff 0%, #a7f3d0 100%);
+        color: #065f46;
+    }
+
+    .alert-warning {
+        background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+        color: #92400e;
+    }
+
+    .alert-danger {
+        background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+        color: #991b1b;
+    }
+
+    /* Loading animations */
     .loading-indicator {
         text-align: center;
-        padding: 2rem;
-        color: #6c757d;
+        padding: 3rem 2rem;
+        color: #6b7280;
     }
-    
-    .loading-indicator .spinner-border {
-        width: 2rem;
-        height: 2rem;
-        color: #667eea;
+
+    .spinner-border {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-width: 0.3rem;
     }
-    
+
+    /* Custom scrollbar for modal */
+    .modal-body::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .modal-body::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    /* Responsive improvements */
+    @media (max-width: 768px) {
+        .hero-header {
+            margin-bottom: 2rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .btn-group .btn {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Success/Error states */
     .threat-status-clean {
-        background: linear-gradient(135deg, #28a745, #20c997);
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         color: white;
-        border-radius: 10px;
-        padding: 1rem;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
     }
-    
+
     .threat-status-warning {
-        background: linear-gradient(135deg, #ffc107, #fd7e14);
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         color: white;
-        border-radius: 10px;
-        padding: 1rem;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
     }
-    
+
     .threat-status-danger {
-        background: linear-gradient(135deg, #dc3545, #e91e63);
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         color: white;
-        border-radius: 10px;
-        padding: 1rem;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
     }
 </style>
 {% endblock %}
@@ -430,341 +488,489 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Get CSRF token from meta tag for API requests
-    function getCSRFToken() {
-        const metaTag = document.querySelector('meta[name=csrf-token]');
-        return metaTag ? metaTag.getAttribute('content') : '';
-    }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        const quickScanForm = document.getElementById('quickScanForm');
-        const scanResultsContainer = document.getElementById('scanResultsContainer');
-        const scanResults = document.getElementById('scanResults');
-        
-        // Handle quick scan form submission
-        quickScanForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+    // Enhanced JavaScript for better UX and functionality
+    class ThreatScanManager {
+        constructor() {
+            this.quickScanForm = document.getElementById('quickScanForm');
+            this.scanResultsContainer = document.getElementById('scanResultsContainer');
+            this.scanResults = document.getElementById('scanResults');
+            this.testConnectionBtn = document.getElementById('testConnectionBtn');
+            this.init();
+        }
+
+        init() {
+            this.bindEvents();
+            this.loadScanHistory();
+        }
+
+        bindEvents() {
+            this.quickScanForm.addEventListener('submit', this.handleQuickScan.bind(this));
+            this.testConnectionBtn.addEventListener('click', this.testConnection.bind(this));
+            
+            // Auto-detect scan type based on input
+            document.getElementById('scanInput').addEventListener('input', this.autoDetectScanType.bind(this));
+        }
+
+        getCSRFToken() {
+            const metaTag = document.querySelector('meta[name=csrf-token]');
+            return metaTag ? metaTag.getAttribute('content') : '';
+        }
+
+        autoDetectScanType(event) {
+            const input = event.target.value.trim();
+            const urlRadio = document.getElementById('urlScan');
+            const ipRadio = document.getElementById('ipScan');
+            const fileRadio = document.getElementById('fileScan');
+
+            // IP address pattern
+            const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+            // Hash pattern (MD5, SHA1, SHA256)
+            const hashPattern = /^[a-fA-F0-9]{32}$|^[a-fA-F0-9]{40}$|^[a-fA-F0-9]{64}$/;
+
+            if (ipPattern.test(input)) {
+                ipRadio.checked = true;
+            } else if (hashPattern.test(input)) {
+                fileRadio.checked = true;
+            } else {
+                urlRadio.checked = true;
+            }
+        }
+
+        async testConnection() {
+            this.testConnectionBtn.disabled = true;
+            this.testConnectionBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Testing...';
+
+            try {
+                const response = await fetch('/api/test_vt_connection', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': this.getCSRFToken()
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    this.showAlert('success', '✅ VirusTotal API Connection Successful', 
+                        'Your API key is working correctly.');
+                } else {
+                    this.showAlert('danger', '❌ Connection Failed', 
+                        result.error || 'Unable to connect to VirusTotal API');
+                }
+            } catch (error) {
+                this.showAlert('danger', '❌ Connection Error', 
+                    'Network error while testing connection: ' + error.message);
+            } finally {
+                this.testConnectionBtn.disabled = false;
+                this.testConnectionBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Test API Connection';
+            }
+        }
+
+        async handleQuickScan(event) {
+            event.preventDefault();
             
             const scanInput = document.getElementById('scanInput').value.trim();
             const scanType = document.querySelector('input[name="scanType"]:checked').value;
             
-            // Show loading indicator
-            scanResultsContainer.style.display = 'block';
-            scanResults.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Analyzing your request...</p></div>';
-            
-            // Make API request to backend which will call VirusTotal
-            fetch('/api/threat_scan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCSRFToken()
-                },
-                body: JSON.stringify({
-                    target: scanInput,
-                    type: scanType
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                displayScanResults(data);
-                updateScanHistory(data);
-            })
-            .catch(error => {
-                scanResults.innerHTML = `
-                    <div class="alert alert-danger">
-                        <h5>Error</h5>
-                        <p>Failed to perform scan: ${error.message || 'Unknown error'}</p>
-                    </div>
-                `;
-            });
-        });
-        
-        // Function to display scan results
-        function displayScanResults(data) {
-            if (data.error) {
-                scanResults.innerHTML = `
-                    <div class="alert alert-danger">
-                        <h5>Error</h5>
-                        <p>${data.error}</p>
-                    </div>
-                `;
+            if (!scanInput) {
+                this.showAlert('warning', 'Input Required', 'Please enter a URL, IP address, or file hash to scan.');
                 return;
             }
+
+            this.showLoadingState();
             
-            let statusClass = 'success';
-            if (data.positives > 0) {
-                statusClass = data.positives > 5 ? 'danger' : 'warning';
-            }
-            
-            let resultsHtml = `
-                <div class="alert alert-${statusClass} mb-4">
-                    <h5>${data.positives > 0 ? '⚠️ Threat Detected' : '✅ No Threats Detected'}</h5>
-                    <p>${data.positives} out of ${data.total} security vendors flagged this as malicious</p>
-                </div>
+            try {
+                const response = await fetch('/api/threat_scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        target: scanInput,
+                        type: scanType
+                    })
+                });
+
+                const data = await response.json();
                 
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>Target Information</h5>
-                        <table class="table table-bordered">
-                            <tr>
-                                <th>Resource</th>
-                                <td>${data.resource}</td>
-                            </tr>
-                            <tr>
-                                <th>Scan Date</th>
-                                <td>${data.scan_date}</td>
-                            </tr>
-                            <tr>
-                                <th>Permalink</th>
-                                <td><a href="${data.permalink}" target="_blank">View on VirusTotal</a></td>
-                            </tr>
-                        </table>
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+
+                this.displayScanResults(data);
+                this.updateScanHistory(data);
+                
+            } catch (error) {
+                this.displayError('Scan Failed', error.message);
+            }
+        }
+
+        showLoadingState() {
+            this.scanResultsContainer.style.display = 'block';
+            this.scanResults.innerHTML = `
+                <div class="loading-indicator">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
                     </div>
+                    <h5 class="mb-2">Analyzing your request...</h5>
+                    <p class="text-muted mb-0">This may take a few moments</p>
+                </div>
+            `;
+            this.scanResultsContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        displayScanResults(data) {
+            if (data.error) {
+                this.displayError('Scan Error', data.error);
+                return;
+            }
+
+            const statusClass = this.getStatusClass(data.positives, data.total);
+            const threatLevel = this.getThreatLevel(data.positives);
+
+            let resultsHtml = `
+                <div class="threat-status-${statusClass} mb-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h4 class="mb-2">
+                                ${threatLevel.icon} ${threatLevel.title}
+                            </h4>
+                            <p class="mb-0 opacity-90">
+                                ${data.positives} out of ${data.total} security vendors flagged this resource
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <div class="h2 mb-0">${data.positives}/${data.total}</div>
+                            <small class="opacity-75">detections</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
                     <div class="col-md-6">
-                        <h5>Detection Summary</h5>
-                        <div class="progress mb-3" style="height: 25px;">
-                            <div class="progress-bar bg-${statusClass}" role="progressbar" 
-                                style="width: ${(data.positives/data.total)*100}%;" 
-                                aria-valuenow="${data.positives}" aria-valuemin="0" aria-valuemax="${data.total}">
-                                ${data.positives}/${data.total}
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Resource Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm mb-0">
+                                    <tr>
+                                        <td class="fw-semibold">Target</td>
+                                        <td class="text-break">${data.resource}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-semibold">Scan Date</td>
+                                        <td>${data.scan_date}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-semibold">Status</td>
+                                        <td><span class="badge bg-${statusClass}">${data.status || 'Completed'}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-semibold">VirusTotal</td>
+                                        <td><a href="${data.permalink}" target="_blank" class="btn btn-sm btn-outline-primary">View Report <i class="fas fa-external-link-alt ms-1"></i></a></td>
+                                    </tr>
+                                </table>
                             </div>
                         </div>
-                        
-                        <div class="d-flex justify-content-between">
-                            <button class="btn btn-outline-primary" id="showDetailsBtn">Show Detection Details</button>
-                            <button class="btn btn-outline-secondary" id="addToWatchlistBtn">Add to Watchlist</button>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Detection Summary</h6>
+                            </div>
+                            <div class="card-body">
+                                ${this.generateDetectionChart(data)}
+                                <div class="d-grid gap-2 mt-3">
+                                    <button class="btn btn-primary" onclick="threatScanManager.showDetailedResults(${JSON.stringify(data).replace(/"/g, '&quot;')})">
+                                        <i class="fas fa-microscope me-2"></i>View Detailed Analysis
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
-            
-            scanResults.innerHTML = resultsHtml;
-            
-            // Add event listener for the details button
-            document.getElementById('showDetailsBtn').addEventListener('click', function() {
-                showDetailedResults(data);
-            });
+
+            this.scanResults.innerHTML = resultsHtml;
         }
-        
-        // Function to show detailed results in modal
-        function showDetailedResults(data) {
+
+        generateDetectionChart(data) {
+            const total = data.total || 1;
+            const malicious = data.positives || 0;
+            const suspicious = data.suspicious || 0;
+            const harmless = data.harmless || 0;
+            const undetected = data.undetected || 0;
+
+            return `
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Malicious (${malicious})</small>
+                        <span class="badge bg-danger">${((malicious/total)*100).toFixed(1)}%</span>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-danger" style="width: ${(malicious/total)*100}%"></div>
+                    </div>
+                </div>
+                
+                ${suspicious > 0 ? `
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Suspicious (${suspicious})</small>
+                        <span class="badge bg-warning">${((suspicious/total)*100).toFixed(1)}%</span>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-warning" style="width: ${(suspicious/total)*100}%"></div>
+                    </div>
+                </div>
+                ` : ''}
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Clean (${harmless})</small>
+                        <span class="badge bg-success">${((harmless/total)*100).toFixed(1)}%</span>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: ${(harmless/total)*100}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        displayError(title, message) {
+            this.scanResults.innerHTML = `
+                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                    <i class="fas fa-exclamation-triangle me-3 fa-2x"></i>
+                    <div>
+                        <h5 class="alert-heading mb-2">${title}</h5>
+                        <p class="mb-0">${message}</p>
+                        ${message.includes('API key') ? `
+                        <hr class="my-3">
+                        <div class="d-flex gap-2">
+                            <a href="https://www.virustotal.com/gui/my-apikey" target="_blank" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-key me-1"></i>Get API Key
+                            </a>
+                            <button class="btn btn-sm btn-danger" onclick="threatScanManager.testConnection()">
+                                <i class="fas fa-plug me-1"></i>Test Connection
+                            </button>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        getStatusClass(positives, total) {
+            if (positives === 0) return 'success';
+            if (positives <= 2) return 'warning';
+            return 'danger';
+        }
+
+        getThreatLevel(positives) {
+            if (positives === 0) {
+                return { icon: '✅', title: 'No Threats Detected' };
+            } else if (positives <= 2) {
+                return { icon: '⚠️', title: 'Potentially Suspicious' };
+            } else {
+                return { icon: '🚨', title: 'Threat Detected' };
+            }
+        }
+
+        showAlert(type, title, message) {
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 9999; max-width: 400px;" role="alert">
+                    <strong>${title}</strong><br>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', alertHtml);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = document.querySelector('.alert:last-of-type');
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 5000);
+        }
+
+        showDetailedResults(data) {
             const modal = new bootstrap.Modal(document.getElementById('resultDetailModal'));
             const detailedContent = document.getElementById('detailedResultContent');
             
-            // Generate content for the modal based on available scan data
+            // Generate detailed content
+            detailedContent.innerHTML = this.generateDetailedContent(data);
+            modal.show();
+        }
+
+        generateDetailedContent(data) {
+            const scans = data.scans || {};
             let detailsHtml = `
-                <ul class="nav nav-tabs" id="resultTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="detections-tab" data-bs-toggle="tab" 
-                            data-bs-target="#detections" type="button" role="tab" 
-                            aria-controls="detections" aria-selected="true">Detections</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="details-tab" data-bs-toggle="tab" 
-                            data-bs-target="#details" type="button" role="tab" 
-                            aria-controls="details" aria-selected="false">Details</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="behavior-tab" data-bs-toggle="tab" 
-                            data-bs-target="#behavior" type="button" role="tab" 
-                            aria-controls="behavior" aria-selected="false">Behavior Analysis</button>
-                    </li>
-                </ul>
-                <div class="tab-content p-3 border border-top-0 rounded-bottom" id="resultTabsContent">
-                    <div class="tab-pane fade show active" id="detections" role="tabpanel" aria-labelledby="detections-tab">
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <h6 class="mb-3"><i class="fas fa-shield-alt me-2"></i>Security Vendor Results</h6>
                         <div class="table-responsive">
                             <table class="table table-sm table-striped">
                                 <thead>
                                     <tr>
                                         <th>Vendor</th>
-                                        <th>Detected</th>
+                                        <th>Category</th>
                                         <th>Result</th>
                                     </tr>
                                 </thead>
                                 <tbody>
             `;
-            
-            // Display actual scan results if available, otherwise use placeholders
-            const scans = data.scans || {};
+
             if (Object.keys(scans).length > 0) {
                 for (const [vendor, result] of Object.entries(scans)) {
+                    const category = result.category || 'unknown';
+                    const categoryClass = category === 'malicious' ? 'danger' : 
+                                        category === 'suspicious' ? 'warning' : 'success';
+                    
                     detailsHtml += `
                         <tr>
-                            <td>${vendor}</td>
-                            <td>${result.detected ? '<span class="text-danger">Yes</span>' : '<span class="text-success">No</span>'}</td>
+                            <td class="fw-semibold">${vendor}</td>
+                            <td><span class="badge bg-${categoryClass}">${category}</span></td>
                             <td>${result.result || 'Clean'}</td>
                         </tr>
                     `;
                 }
             } else {
-                // Placeholder data if no scans are available
-                const mockVendors = [
-                    {name: "Kaspersky", detected: true, result: "Phishing.Generic"},
-                    {name: "McAfee", detected: true, result: "Malicious Site"},
-                    {name: "Symantec", detected: false, result: "Clean"},
-                    {name: "Microsoft", detected: true, result: "Phishing"},
-                    {name: "Sophos", detected: false, result: "Undetected"}
-                ];
-                
-                mockVendors.forEach(vendor => {
-                    detailsHtml += `
-                        <tr>
-                            <td>${vendor.name}</td>
-                            <td>${vendor.detected ? '<span class="text-danger">Yes</span>' : '<span class="text-success">No</span>'}</td>
-                            <td>${vendor.result}</td>
-                        </tr>
-                    `;
-                });
+                detailsHtml += `
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Detailed scan results not available
+                        </td>
+                    </tr>
+                `;
             }
-            
+
             detailsHtml += `
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="details" role="tabpanel" aria-labelledby="details-tab">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h5>Basic Properties</h5>
-                                <table class="table table-bordered">
-                                    <tr>
-                                        <th>First Seen</th>
-                                        <td>${data.first_seen || 'N/A'}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Last Seen</th>
-                                        <td>${data.last_seen || data.scan_date || 'N/A'}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Categories</th>
-                                        <td>${data.categories || 'Not categorized'}</td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <div class="col-md-6">
-                                <h5>Associated Indicators</h5>
-                                <table class="table table-bordered">
-                                    <tr>
-                                        <th>Related IPs</th>
-                                        <td>${data.related_ips || 'None detected'}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Related Domains</th>
-                                        <td>${data.related_domains || 'None detected'}</td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tab-pane fade" id="behavior" role="tabpanel" aria-labelledby="behavior-tab">
-                        <h5>Behavior Analysis</h5>
-                        <div class="alert alert-info">
-                            ${data.behavior_info || 'Behavior analysis is available for executable files only.'}
-                        </div>
-                        <div class="card">
-                            <div class="card-header">Network Communication</div>
+                    <div class="col-md-4">
+                        <h6 class="mb-3"><i class="fas fa-chart-bar me-2"></i>Quick Stats</h6>
+                        <div class="card bg-light">
                             <div class="card-body">
-                                <p>${data.network_data || 'No behavior data available for this resource type.'}</p>
+                                <div class="row text-center g-3">
+                                    <div class="col-6">
+                                        <div class="h4 text-danger mb-1">${data.positives || 0}</div>
+                                        <small class="text-muted">Malicious</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="h4 text-success mb-1">${data.harmless || 0}</div>
+                                        <small class="text-muted">Clean</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="h4 text-warning mb-1">${data.suspicious || 0}</div>
+                                        <small class="text-muted">Suspicious</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="h4 text-muted mb-1">${data.undetected || 0}</div>
+                                        <small class="text-muted">Undetected</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
-            
-            detailedContent.innerHTML = detailsHtml;
-            modal.show();
+
+            return detailsHtml;
         }
-        
-        // Function to update scan history
-        function updateScanHistory(data) {
+
+        updateScanHistory(data) {
             const historyTable = document.getElementById('scanHistoryTable').querySelector('tbody');
             
-            // Remove "No scan history available" row if it exists
+            // Remove "No scan history" row if it exists
             if (historyTable.querySelector('tr td[colspan="6"]')) {
                 historyTable.innerHTML = '';
             }
-            
-            // Create a new row
+
             const newRow = document.createElement('tr');
-            
-            let statusClass = 'success';
-            let verdictText = 'Clean';
-            
-            if (data.positives > 0) {
-                statusClass = data.positives > 5 ? 'danger' : 'warning';
-                verdictText = data.positives > 5 ? 'Malicious' : 'Suspicious';
-            }
-            
+            const statusClass = this.getStatusClass(data.positives, data.total);
+            const verdictText = statusClass === 'success' ? 'Clean' : 
+                               statusClass === 'warning' ? 'Suspicious' : 'Malicious';
+
             newRow.innerHTML = `
                 <td>${new Date().toLocaleString()}</td>
-                <td>${data.resource || document.getElementById('scanInput').value}</td>
-                <td>${document.querySelector('input[name="scanType"]:checked').value}</td>
+                <td class="text-break">${data.resource || document.getElementById('scanInput').value}</td>
+                <td><span class="badge bg-secondary">${document.querySelector('input[name="scanType"]:checked').value}</span></td>
                 <td><span class="badge bg-${statusClass}">${verdictText}</span></td>
-                <td>${data.positives || 0}/${data.total || 0}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary view-details-btn">View</button>
-                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                <td><strong>${data.positives || 0}</strong>/${data.total || 0}</td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="threatScanManager.showDetailedResults(${JSON.stringify(data).replace(/"/g, '&quot;')})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </td>
             `;
-            
-            // Add at the top of the table
+
+            // Add at the top
             if (historyTable.firstChild) {
                 historyTable.insertBefore(newRow, historyTable.firstChild);
             } else {
                 historyTable.appendChild(newRow);
             }
-            
-            // Add event listener for the view button
-            newRow.querySelector('.view-details-btn').addEventListener('click', function() {
-                showDetailedResults(data);
-            });
         }
-        
-        // Initialize the history table
-        function loadScanHistory() {
-            // This would typically come from your backend API
-            // For now we'll just leave the "No scan history available" message
-            fetch('/api/threat_history', {
-                headers: {
-                    'X-CSRFToken': getCSRFToken()
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        const historyTable = document.getElementById('scanHistoryTable').querySelector('tbody');
-                        historyTable.innerHTML = '';
-                        
-                        data.forEach(item => {
-                            const row = document.createElement('tr');
-                            let statusClass = 'success';
-                            let verdictText = 'Clean';
-                            
-                            if (item.positives > 0) {
-                                statusClass = item.positives > 5 ? 'danger' : 'warning';
-                                verdictText = item.positives > 5 ? 'Malicious' : 'Suspicious';
-                            }
-                            
-                            row.innerHTML = `
-                                <td>${new Date(item.scan_date).toLocaleString()}</td>
-                                <td>${item.resource}</td>
-                                <td>${item.type}</td>
-                                <td><span class="badge bg-${statusClass}">${verdictText}</span></td>
-                                <td>${item.positives}/${item.total}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary view-details-btn" data-id="${item.id}">View</button>
-                                    <button class="btn btn-sm btn-outline-danger" data-id="${item.id}">Delete</button>
-                                </td>
-                            `;
-                            
-                            historyTable.appendChild(row);
-                        });
+
+        async loadScanHistory() {
+            try {
+                const response = await fetch('/api/threat_history', {
+                    headers: {
+                        'X-CSRFToken': this.getCSRFToken()
                     }
-                })
-                .catch(error => console.error('Error loading scan history:', error));
+                });
+
+                const data = await response.json();
+                
+                if (data.length > 0) {
+                    const historyTable = document.getElementById('scanHistoryTable').querySelector('tbody');
+                    historyTable.innerHTML = '';
+                    
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        const statusClass = this.getStatusClass(item.positives, item.total);
+                        const verdictText = statusClass === 'success' ? 'Clean' : 
+                                           statusClass === 'warning' ? 'Suspicious' : 'Malicious';
+
+                        row.innerHTML = `
+                            <td>${new Date(item.scan_date).toLocaleString()}</td>
+                            <td class="text-break">${item.resource}</td>
+                            <td><span class="badge bg-secondary">${item.type}</span></td>
+                            <td><span class="badge bg-${statusClass}">${verdictText}</span></td>
+                            <td><strong>${item.positives}</strong>/${item.total}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary me-1" data-id="${item.id}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+
+                        historyTable.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.warn('Could not load scan history:', error);
+            }
         }
-        
-        loadScanHistory();
+    }
+
+    // Initialize the threat scan manager when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        window.threatScanManager = new ThreatScanManager();
     });
 </script>
 {% endblock %}
