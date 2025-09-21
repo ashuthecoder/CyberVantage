@@ -5,6 +5,19 @@ import markdown
 import traceback
 from pyFunctions.api_logging import log_api_request
 
+# Import Azure OpenAI helper functions with fallback
+try:
+    from .azure_openai_helper import (
+        call_azure_openai_with_retry, extract_text_from_response
+    )
+    AZURE_HELPERS_AVAILABLE = True
+except ImportError:
+    AZURE_HELPERS_AVAILABLE = False
+    def call_azure_openai_with_retry(*args, **kwargs): 
+        return None, "IMPORT_ERROR"
+    def extract_text_from_response(*args, **kwargs): 
+        return ""
+
 def assign_phishing_creation(api_key, genai, app):
     """
     Generate a phishing email creation assignment.
@@ -83,13 +96,107 @@ def evaluate_phishing_creation(phishing_email, api_key, genai, app):
     Evaluate user-created phishing email and provide detailed scoring and feedback
     """
     try:
-        if not api_key:
-            return {
-                "feedback": "API key not available for evaluation. Using fallback evaluation.",
-                "score": 50,
-                "effectiveness_rating": "Not Rated"
-            }
-            
+        # Try Azure OpenAI first if available
+        if AZURE_HELPERS_AVAILABLE and app and app.config.get('AZURE_OPENAI_KEY'):
+            print("[PHISHING_EVAL] Attempting Azure OpenAI evaluation")
+            result = evaluate_phishing_creation_azure(phishing_email, app)
+            if result:
+                return result
+        
+        # Try Gemini if API key is available
+        if api_key and genai:
+            print("[PHISHING_EVAL] Attempting Gemini evaluation")
+            return evaluate_phishing_creation_gemini(phishing_email, api_key, genai, app)
+        
+        # Use enhanced fallback evaluation
+        print("[PHISHING_EVAL] Using enhanced fallback evaluation")
+        return get_enhanced_fallback_evaluation(phishing_email)
+        
+    except Exception as e:
+        error_message = f"Error evaluating phishing creation: {str(e)}"
+        print(f"[PHISHING_EVAL] {error_message}")
+        traceback.print_exc()
+        
+        return {
+            "feedback": "<p>We couldn't evaluate your phishing email at this time. Please try again later.</p>",
+            "score": 0,
+            "effectiveness_rating": "Not Rated"
+        }
+
+def evaluate_phishing_creation_azure(phishing_email, app):
+    """
+    Evaluate phishing email using Azure OpenAI
+    """
+    try:
+        # Enhanced evaluation prompt for better scoring
+        prompt = f"""You are a cybersecurity expert evaluating a phishing email created by a student for educational purposes.
+
+Student-created phishing email:
+{phishing_email}
+
+Evaluate this phishing email on these criteria and provide scores for each:
+
+1. **Social Engineering Tactics (30 points)**:
+   - Use of urgency, fear, curiosity, or authority
+   - Emotional triggers and psychological pressure
+   
+2. **Technical Realism (30 points)**:
+   - Believable sender address/domain
+   - Professional formatting and layout
+   - Realistic links or attachments mentioned
+   
+3. **Psychological Manipulation (20 points)**:
+   - Persuasive language and tone
+   - Exploitation of trust or authority
+   - Use of social proof or scarcity
+   
+4. **Scenario Believability (20 points)**:
+   - Realistic context and timing
+   - Appropriate target audience
+   - Credible reason for action
+
+For each criterion, assign a specific score and explain your reasoning.
+
+Then provide:
+- Overall score (out of 100)
+- Effectiveness rating (Low/Medium/High/Very High)
+- Specific strengths in the approach
+- Areas for improvement
+- Actionable recommendations
+
+Format your response as HTML with clear headings and organized content. Be constructive and educational in your feedback."""
+
+        # Call Azure OpenAI
+        response, status = call_azure_openai_with_retry(
+            messages=[{"role": "user", "content": prompt}],
+            app=app,
+            max_tokens=1024,
+            temperature=0.3
+        )
+        
+        if response and status == "SUCCESS":
+            feedback_html = extract_text_from_response(response)
+            if feedback_html:
+                # Extract score and effectiveness rating
+                score, effectiveness_rating = parse_evaluation_response(feedback_html)
+                
+                return {
+                    "feedback": feedback_html,
+                    "score": score,
+                    "effectiveness_rating": effectiveness_rating
+                }
+        
+        return None
+        
+    except Exception as e:
+        print(f"[PHISHING_EVAL] Azure evaluation error: {e}")
+        return None
+
+def evaluate_phishing_creation_gemini(phishing_email, api_key, genai, app):
+    """
+    Evaluate phishing email using Gemini (original implementation with enhanced prompt)
+    """
+    try:
         # Configure safety settings
         safety_settings = {
             genai.types.HarmCategory.HARM_CATEGORY_HARASSMENT: genai.types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
@@ -98,32 +205,45 @@ def evaluate_phishing_creation(phishing_email, api_key, genai, app):
             genai.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: genai.types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
         }
         
-        # Prepare evaluation prompt
-        prompt = f"""
-        You are a cybersecurity expert evaluating a phishing email created by a student as part of their training.
-        
-        Student-created phishing email:
-        ```
-        {phishing_email}
-        ```
-        
-        Evaluate the phishing email on the following criteria:
-        1. Social Engineering Tactics (30 points): Use of urgency, fear, curiosity, or authority
-        2. Technical Elements (30 points): URLs, formatting, email headers, spoofed sender addresses
-        3. Psychological Manipulation (20 points): Persuasive language and emotional triggers
-        4. Realism (20 points): How believable the scenario is in a real-world context
-        
-        For each criterion, assign a specific score and explain why.
-        
-        Then provide:
-        1. Overall score (out of 100)
-        2. Effectiveness rating (Low, Medium, High, Very High)
-        3. Detailed feedback with specific improvements
-        4. What worked well in their approach
-        
-        Format your response as HTML with appropriate headings (<h3>) and paragraphs (<p>).
-        Begin with an overall assessment and end with actionable recommendations.
-        """
+        # Enhanced evaluation prompt
+        prompt = f"""You are a cybersecurity expert evaluating a phishing email created by a student for educational purposes.
+
+Student-created phishing email:
+```
+{phishing_email}
+```
+
+Evaluate this phishing email on these criteria and provide scores for each:
+
+1. **Social Engineering Tactics (30 points)**:
+   - Use of urgency, fear, curiosity, or authority
+   - Emotional triggers and psychological pressure
+   
+2. **Technical Realism (30 points)**:
+   - Believable sender address/domain
+   - Professional formatting and layout
+   - Realistic links or attachments mentioned
+   
+3. **Psychological Manipulation (20 points)**:
+   - Persuasive language and tone
+   - Exploitation of trust or authority
+   - Use of social proof or scarcity
+   
+4. **Scenario Believability (20 points)**:
+   - Realistic context and timing
+   - Appropriate target audience
+   - Credible reason for action
+
+For each criterion, assign a specific score and explain your reasoning.
+
+Then provide:
+- Overall score (out of 100)
+- Effectiveness rating (Low/Medium/High/Very High)
+- Specific strengths in the approach
+- Areas for improvement
+- Actionable recommendations
+
+Format your response as HTML with clear headings and organized content. Be constructive and educational in your feedback."""
         
         model = genai.GenerativeModel('gemini-1.5-pro', 
                                      safety_settings=safety_settings)
@@ -147,29 +267,7 @@ def evaluate_phishing_creation(phishing_email, api_key, genai, app):
         
         # Extract score and effectiveness
         feedback_html = response.text
-        
-        # Extract score using rough heuristics (more sophisticated parsing could be implemented)
-        score = 0
-        effectiveness_rating = "Medium"
-        
-        if "overall score" in feedback_html.lower():
-            try:
-                score_text = feedback_html.lower().split("overall score")[1].split(".")[0]
-                possible_scores = [int(s) for s in score_text.split() if s.isdigit()]
-                if possible_scores:
-                    score = possible_scores[0]
-            except:
-                score = 70  # Default if parsing fails
-                
-        if "effectiveness rating" in feedback_html.lower():
-            if "very high" in feedback_html.lower():
-                effectiveness_rating = "Very High"
-            elif "high" in feedback_html.lower():
-                effectiveness_rating = "High"
-            elif "medium" in feedback_html.lower():
-                effectiveness_rating = "Medium"
-            elif "low" in feedback_html.lower():
-                effectiveness_rating = "Low"
+        score, effectiveness_rating = parse_evaluation_response(feedback_html)
         
         return {
             "feedback": feedback_html,
@@ -193,8 +291,171 @@ def evaluate_phishing_creation(phishing_email, api_key, genai, app):
             error_message=error_message
         )
         
-        return {
-            "feedback": "<p>We couldn't evaluate your phishing email at this time. Please try again later.</p>",
-            "score": 0,
-            "effectiveness_rating": "Not Rated"
-        }
+        return None
+
+def parse_evaluation_response(feedback_html):
+    """
+    Parse evaluation response to extract score and effectiveness rating
+    """
+    score = 70  # Default score
+    effectiveness_rating = "Medium"
+    
+    # Extract score using improved heuristics
+    if "overall score" in feedback_html.lower():
+        try:
+            score_text = feedback_html.lower().split("overall score")[1].split(".")[0]
+            possible_scores = [int(s) for s in score_text.split() if s.isdigit()]
+            if possible_scores:
+                score = min(100, max(0, possible_scores[0]))  # Clamp between 0-100
+        except:
+            pass
+    
+    # Look for score patterns like "Score: 85" or "85/100"
+    score_patterns = [
+        r'score[:\s]+(\d+)',
+        r'(\d+)/100',
+        r'(\d+)\s*out\s*of\s*100',
+        r'(\d+)\s*points?'
+    ]
+    
+    for pattern in score_patterns:
+        matches = re.findall(pattern, feedback_html, re.IGNORECASE)
+        if matches:
+            try:
+                potential_score = int(matches[0])
+                if 0 <= potential_score <= 100:
+                    score = potential_score
+                    break
+            except:
+                continue
+    
+    # Extract effectiveness rating
+    if "effectiveness rating" in feedback_html.lower():
+        if "very high" in feedback_html.lower():
+            effectiveness_rating = "Very High"
+        elif "high" in feedback_html.lower():
+            effectiveness_rating = "High"
+        elif "medium" in feedback_html.lower():
+            effectiveness_rating = "Medium"
+        elif "low" in feedback_html.lower():
+            effectiveness_rating = "Low"
+    
+    return score, effectiveness_rating
+
+def get_enhanced_fallback_evaluation(phishing_email):
+    """
+    Provide enhanced fallback evaluation when AI is not available
+    """
+    # Analyze email content for basic scoring factors
+    email_lower = phishing_email.lower()
+    
+    # Base score
+    score = 40
+    
+    # Check for various phishing techniques
+    techniques_found = []
+    
+    # Urgency indicators
+    urgency_words = ['urgent', 'immediate', 'asap', 'expires', 'deadline', 'limited time', 'act now', 'hurry']
+    if any(word in email_lower for word in urgency_words):
+        score += 15
+        techniques_found.append("urgency")
+    
+    # Authority indicators
+    authority_words = ['security', 'admin', 'it department', 'management', 'ceo', 'hr', 'support team']
+    if any(word in email_lower for word in authority_words):
+        score += 12
+        techniques_found.append("authority")
+    
+    # Fear tactics
+    fear_words = ['suspended', 'compromised', 'hack', 'breach', 'virus', 'unauthorized', 'locked', 'terminated']
+    if any(word in email_lower for word in fear_words):
+        score += 10
+        techniques_found.append("fear")
+    
+    # Links/actions
+    action_words = ['click', 'verify', 'confirm', 'update', 'login', 'download', 'open attachment']
+    if any(word in email_lower for word in action_words):
+        score += 8
+        techniques_found.append("call-to-action")
+    
+    # Professional appearance (length and structure)
+    if len(phishing_email) > 200:
+        score += 5
+    
+    if '@' in phishing_email:  # Has email addresses
+        score += 3
+    
+    if 'http' in phishing_email or 'www' in phishing_email:  # Has links
+        score += 5
+    
+    # Determine effectiveness rating based on score
+    if score >= 80:
+        effectiveness_rating = "Very High"
+    elif score >= 65:
+        effectiveness_rating = "High"
+    elif score >= 45:
+        effectiveness_rating = "Medium"
+    else:
+        effectiveness_rating = "Low"
+    
+    # Generate detailed feedback
+    feedback = f"""
+    <h3>Phishing Email Analysis Results</h3>
+    <p><strong>Note:</strong> This evaluation is performed using automated analysis since AI evaluation is not currently available.</p>
+    
+    <h3>Overall Assessment</h3>
+    <p>Your phishing email shows {"good understanding" if score >= 60 else "basic understanding"} of social engineering techniques.</p>
+    
+    <h3>Techniques Identified</h3>
+    <ul>
+    """
+    
+    if techniques_found:
+        for technique in techniques_found:
+            if technique == "urgency":
+                feedback += "<li><strong>Urgency:</strong> ✓ Creates time pressure to prompt quick action</li>"
+            elif technique == "authority":
+                feedback += "<li><strong>Authority:</strong> ✓ Uses authoritative sources to build trust</li>"
+            elif technique == "fear":
+                feedback += "<li><strong>Fear:</strong> ✓ Creates anxiety about potential consequences</li>"
+            elif technique == "call-to-action":
+                feedback += "<li><strong>Action Request:</strong> ✓ Includes clear instructions for victim</li>"
+    else:
+        feedback += "<li>No clear social engineering techniques identified</li>"
+    
+    feedback += """
+    </ul>
+    
+    <h3>Areas for Improvement</h3>
+    <ul>
+    """
+    
+    if "urgency" not in techniques_found:
+        feedback += "<li>Add time-sensitive elements to create urgency</li>"
+    if "authority" not in techniques_found:
+        feedback += "<li>Impersonate a trusted authority figure or organization</li>"
+    if "call-to-action" not in techniques_found:
+        feedback += "<li>Include a clear, specific action for the victim to take</li>"
+    if len(phishing_email) < 200:
+        feedback += "<li>Expand the email content for more realistic appearance</li>"
+    
+    feedback += """
+    </ul>
+    
+    <h3>Security Learning Points</h3>
+    <p>Understanding these techniques helps you:</p>
+    <ul>
+        <li>Recognize similar tactics in real phishing attempts</li>
+        <li>Educate others about social engineering risks</li>
+        <li>Develop better security awareness</li>
+    </ul>
+    
+    <p><strong>Remember:</strong> This knowledge should only be used for defensive security purposes and education.</p>
+    """
+    
+    return {
+        "feedback": feedback,
+        "score": min(100, score),
+        "effectiveness_rating": effectiveness_rating
+    }

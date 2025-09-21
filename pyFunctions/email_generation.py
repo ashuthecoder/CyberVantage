@@ -209,7 +209,7 @@ def evaluate_with_azure(email_content, is_spam, user_response, user_explanation,
         correct_answer = "phishing" if is_spam else "legitimate"
         user_answer = "phishing" if user_response else "legitimate"
         
-        prompt = f"""Evaluate this cybersecurity training response:
+        prompt = f"""You are a cybersecurity expert evaluating a student's analysis of an email for phishing detection training.
 
 Email Content: {email_content[:500]}...
 
@@ -217,8 +217,24 @@ Correct Classification: {correct_answer}
 User Classification: {user_answer}
 User Explanation: {user_explanation}
 
-Provide constructive feedback on the user's explanation and give a score from 1-10. 
-Format as JSON: {{"feedback": "...", "score": 8}}"""
+Evaluate the student's explanation considering these factors:
+
+1. **Accuracy (40%)**: Did they correctly identify the email type?
+2. **Analysis Quality (30%)**: How well did they explain their reasoning?
+3. **Security Awareness (20%)**: Did they identify relevant security indicators?
+4. **Learning Progress (10%)**: Evidence of cybersecurity understanding
+
+Score calculation:
+- Base score starts at 5/10
+- Correct classification: +2-3 points
+- Good reasoning/explanation: +1-2 points  
+- Identification of specific indicators: +1-2 points
+- Demonstration of security knowledge: +0-1 points
+- Incorrect classification but good reasoning: partial credit possible
+
+Provide detailed, constructive feedback that helps them improve their phishing detection skills.
+
+Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendations", "score": 7}}"""
         
         # Call Azure OpenAI
         response, status = call_azure_openai_with_retry(
@@ -296,17 +312,70 @@ def parse_email_response(text_content):
         return None
 
 def get_fallback_evaluation(is_spam, user_response):
-    """Generate a basic evaluation when AI isn't available"""
+    """Generate a dynamic evaluation when AI isn't available"""
     correct = (user_response == is_spam)
     
+    # Base scoring - more nuanced than just 8 or 3
     if correct:
-        feedback = "<p>✓ Correct identification! You properly identified this email.</p>"
-        score = 8
+        # Correct answers get scores between 6-9 with some randomness for variety
+        base_score = 7 + random.randint(0, 2)  # 7-9 range
+        feedback = "<p>✓ <strong>Correct identification!</strong> You properly identified this email.</p>"
     else:
-        feedback = "<p>✗ Incorrect identification. Review the email characteristics more carefully.</p>"
-        score = 3
+        # Incorrect answers get scores between 2-5 with some variation
+        base_score = 3 + random.randint(0, 2)  # 3-5 range  
+        feedback = "<p>✗ <strong>Incorrect identification.</strong> Review the email characteristics more carefully.</p>"
+    
+    # Add additional feedback based on email type
+    if is_spam:
+        if correct:
+            feedback += """
+            <p><strong>Good catch!</strong> This was indeed a phishing/spam email. Key indicators to look for in such emails include:</p>
+            <ul>
+                <li>Suspicious sender domains or mismatched addresses</li>
+                <li>Urgency tactics or threats</li>
+                <li>Requests for personal information or credentials</li>
+                <li>Poor grammar or formatting</li>
+                <li>Unexpected attachments or links</li>
+            </ul>
+            """
+        else:
+            feedback += """
+            <p><strong>This was actually a phishing email.</strong> Here are some warning signs you might have missed:</p>
+            <ul>
+                <li>Check the sender's email address carefully</li>
+                <li>Look for urgent language designed to make you act quickly</li>
+                <li>Be suspicious of unexpected requests for information</li>
+                <li>Verify independently before clicking any links</li>
+            </ul>
+            """
+    else:
+        if correct:
+            feedback += """
+            <p><strong>Well done!</strong> This was a legitimate email. Good signs that indicated authenticity might include:</p>
+            <ul>
+                <li>Sender from a recognized, legitimate domain</li>
+                <li>Professional formatting and tone</li>
+                <li>Reasonable requests appropriate to the context</li>
+                <li>No urgent pressure tactics</li>
+            </ul>
+            """
+        else:
+            feedback += """
+            <p><strong>This was actually a legitimate email.</strong> Consider these factors when evaluating emails:</p>
+            <ul>
+                <li>Verify the sender's domain and identity</li>
+                <li>Consider if the request makes sense in context</li>
+                <li>Look for signs of authenticity vs. deception</li>
+                <li>When in doubt, verify through alternative means</li>
+            </ul>
+            """
+    
+    # Add general security tips
+    feedback += """
+    <p><strong>Remember:</strong> When in doubt about an email's authenticity, it's always better to verify through independent means before taking any action.</p>
+    """
     
     return {
         "feedback": feedback,
-        "score": score
+        "score": base_score
     }
