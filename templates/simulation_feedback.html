@@ -61,6 +61,9 @@
             border-radius: 4px;
             border-left: 4px solid #2a3f54;
             margin-top: 1rem;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
         }
         /* Add styles for the markdown-generated content */
         .feedback-content h3 {
@@ -70,12 +73,17 @@
         }
         .feedback-content ul, .feedback-content ol {
             margin-left: 1.5rem;
+            padding-left: 1rem;
         }
         .feedback-content strong {
             color: #2a3f54;
         }
         .feedback-content p {
             margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        .feedback-content li {
+            margin-bottom: 0.5rem;
         }
         .actions {
             margin: 2rem 0;

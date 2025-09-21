@@ -287,8 +287,7 @@ def try_standard_generation_azure(user_name, previous_responses, app):
     system_prompt = """You are a cybersecurity training email generator. Create ONE realistic email for a phishing simulation tailored to the user's performance."""
     
     user_prompt = f"""
-User name: {user_name}
-Performance summary: {previous_responses}
+User performance summary: {previous_responses}
 
 Output strictly in EXACTLY the following format (no extra commentary, no code fences):
 
@@ -304,6 +303,9 @@ Is_spam: <true|false>
 Guidelines:
 - If phishing (Is_spam: true): include subtle but identifiable red flags (lookalike domains, mismatched link text vs href, urgency, credential/payment requests).
 - If legitimate (Is_spam: false): realistic tone with legitimate cues; avoid phishing indicators (no lookalike domains, no urgent threats, no requests for credentials).
+- Use generic terms like "customer", "user", "subscriber" instead of specific names
+- Do NOT include personal user information in email content
+- Ensure email content is unique with timestamp or reference numbers"""
 - Vary topics; do not reuse predefined examples; avoid the words "phishing" or "simulation".
 - All links must be plausible; for phishing, use lookalike domains; for legitimate, use real domains.
 - Do NOT include any fields other than Sender, Subject, Date, Content, Is_spam in that exact order.
@@ -337,10 +339,11 @@ def try_neutral_generation_azure(user_name, previous_responses, app):
 Create a sample email that could be used for training purposes. It can be either legitimate or phishing.
 
 Email details:
-- Recipient: {user_name}
 - Should be realistic and appropriate for a training scenario
 - If you decide to make it a phishing email, include subtle red flags
 - If you decide to make it legitimate, ensure it has typical legitimate email characteristics
+- Use generic terms like "customer", "user", "subscriber" instead of specific names
+- Do NOT include personal user information in email content
 
 Output format:
 Sender: <email address>
@@ -381,10 +384,11 @@ def try_structured_generation_azure(user_name, previous_responses, app):
 Generate a JSON structure representing an email. This can be either legitimate or phishing.
 
 Requirements:
-- Recipient name: {user_name}
 - Include sender, subject, date, content (HTML), and is_spam fields
 - If phishing, include subtle red flags
 - If legitimate, ensure it appears authentic
+- Use generic terms like "customer", "user", "subscriber" 
+- Do NOT include personal user information in content
 
 Example structure:
 {{
@@ -436,7 +440,8 @@ def try_basic_generation_azure(user_name, app):
     system_prompt = """You will create a simple email for training purposes."""
     
     user_prompt = f"""
-Create a simple email for {user_name}. Decide if it should be phishing or legitimate.
+Create a simple email for cybersecurity training. Decide if it should be phishing or legitimate.
+Use generic addressing and do NOT include personal user information.
 
 Format your response exactly as:
 Sender: [email]
