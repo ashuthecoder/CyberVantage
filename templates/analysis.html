@@ -159,7 +159,7 @@
 }
 
 .chart-placeholder {
-    height: 300px;
+    height: 350px; /* Increased height to accommodate better spacing */
     background-color: #f8f9fa;
     display: flex;
     align-items: center;
@@ -174,34 +174,44 @@
     display: flex;
     align-items: end;
     justify-content: space-around;
-    padding: 20px;
+    padding: 30px 20px 40px 20px; /* Increased bottom padding for labels */
 }
 
 .chart-bar {
     background: linear-gradient(to top, #3498db, #2980b9);
     border-radius: 4px 4px 0 0;
-    min-width: 30px;
+    min-width: 40px; /* Increased minimum width */
     position: relative;
-    margin: 0 5px;
+    margin: 0 8px; /* Increased margin between bars */
+    flex: 1;
+    max-width: 60px; /* Prevent bars from getting too wide */
 }
 
 .chart-label {
     position: absolute;
-    bottom: -25px;
+    bottom: -35px; /* Moved further down to prevent overlap */
     left: 50%;
     transform: translateX(-50%);
-    font-size: 12px;
+    font-size: 11px;
     color: #666;
+    text-align: center;
+    white-space: nowrap; /* Prevent text wrapping */
+    width: max-content; /* Ensure label fits content */
 }
 
 .chart-value {
     position: absolute;
-    top: -20px;
+    top: -25px; /* Moved further up */
     left: 50%;
     transform: translateX(-50%);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     color: #333;
+    background: rgba(255, 255, 255, 0.9); /* Add background for better visibility */
+    padding: 2px 4px;
+    border-radius: 2px;
+    text-align: center;
+    white-space: nowrap;
 }
 {% endblock %}
 
