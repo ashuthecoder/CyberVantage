@@ -2,15 +2,7 @@
 {% block title %}Phishing Email Creation Assignment | CyberVantage{% endblock %}
 
 {% block content %}
-<div style="background-color: #2a3f54; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <a href="{{ url_for('simulation.simulate') }}" style="color: white; text-decoration: none;">← Back to Simulation</a>
-    <div>
-        <span>Welcome, {{ username }}</span>
-        <a href="{{ url_for('auth.logout') }}" style="background-color: #e74c3c; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; margin-left: 10px;">Logout</a>
-    </div>
-</div>
-
-<div style="max-width: 1200px; margin: 2rem auto; padding: 0 2rem;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
     <h1>Final Challenge: Create a Phishing Email</h1>
     <p>Now it's time to apply everything you've learned about phishing detection by creating your own phishing email.</p>
     

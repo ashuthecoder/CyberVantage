@@ -276,11 +276,13 @@ def build_generation_prompt(base_prompt, user_name, previous_responses):
 Requirements:
 - Create ONE realistic email (either phishing or legitimate)
 - Include sender, subject, date, and content
-- Make it appropriate for user: {user_name}
+- Make it appropriate for cybersecurity training
 - Performance context: {previous_responses}
 - Format as JSON with keys: sender, subject, date, content, is_spam
 - Content should be HTML formatted
 - Vary topics to keep training interesting
+- Do NOT use personal user information in email content
+- Use generic terms like "user", "customer", "subscriber" instead of specific names
 
 Generate the email now:"""
     

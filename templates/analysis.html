@@ -157,4 +157,97 @@
     margin-bottom: 10px;
     color: #34495e;
 }
+
+.chart-placeholder {
+    height: 300px;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    position: relative;
+}
+
+.simple-chart {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: end;
+    justify-content: space-around;
+    padding: 20px;
+}
+
+.chart-bar {
+    background: linear-gradient(to top, #3498db, #2980b9);
+    border-radius: 4px 4px 0 0;
+    min-width: 30px;
+    position: relative;
+    margin: 0 5px;
+}
+
+.chart-label {
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: #666;
+}
+
+.chart-value {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+}
 {% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Performance chart data
+    const totalResponses = {{ total_responses }};
+    const accuracy = {{ accuracy }};
+    const phase1Correct = {{ phase1_correct }};
+    const phase1Total = {{ phase1_total }};
+    const phase2Correct = {{ phase2_correct }};
+    const phase2Total = {{ phase2_total }};
+    
+    // Calculate performance metrics
+    const phase1Accuracy = phase1Total > 0 ? Math.round((phase1Correct / phase1Total) * 100) : 0;
+    const phase2Accuracy = phase2Total > 0 ? Math.round((phase2Correct / phase2Total) * 100) : 0;
+    const avgScore = {{ avg_score }};
+    
+    // Replace loading message with actual chart
+    const chartContainer = document.getElementById('performance-chart');
+    
+    if (totalResponses === 0) {
+        chartContainer.innerHTML = '<p style="color: #7f8c8d; text-align: center;">No simulation data available yet. Complete some phishing simulations to see your progress!</p>';
+    } else {
+        // Create a simple bar chart
+        chartContainer.innerHTML = `
+            <div class="simple-chart">
+                <div class="chart-bar" style="height: ${Math.max(10, accuracy)}%">
+                    <div class="chart-value">${accuracy}%</div>
+                    <div class="chart-label">Overall</div>
+                </div>
+                <div class="chart-bar" style="height: ${Math.max(10, phase1Accuracy)}%">
+                    <div class="chart-value">${phase1Accuracy}%</div>
+                    <div class="chart-label">Phase 1</div>
+                </div>
+                <div class="chart-bar" style="height: ${Math.max(10, phase2Accuracy)}%">
+                    <div class="chart-value">${phase2Accuracy}%</div>
+                    <div class="chart-label">Phase 2</div>
+                </div>
+                <div class="chart-bar" style="height: ${Math.max(10, (avgScore / 10) * 100)}%">
+                    <div class="chart-value">${avgScore}/10</div>
+                    <div class="chart-label">Avg Score</div>
+                </div>
+            </div>
+        `;
+    }
+});
+</script>
