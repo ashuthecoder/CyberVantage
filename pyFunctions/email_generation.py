@@ -200,6 +200,57 @@ def multi_approach_generation_azure(user_name, previous_responses, app):
     print("[AZURE] All approaches failed")
     return None
 
+def extract_score_from_feedback(feedback_text, is_spam, user_response):
+    """Extract the actual score from AI feedback text that contains point breakdowns"""
+    try:
+        import re
+        
+        # Look for point patterns like "+3 points", "+0 points", etc.
+        point_pattern = r'\(\+(\d+)\s+points?\)'
+        matches = re.findall(point_pattern, feedback_text)
+        
+        if matches:
+            # Sum all the points found
+            total_points = sum(int(match) for match in matches)
+            print(f"[EXTRACT_SCORE] Found point breakdown: {matches}, total: {total_points}")
+            return total_points
+        
+        # Alternative pattern: look for "X points" without parentheses  
+        alt_pattern = r'\+(\d+)\s+points?'
+        alt_matches = re.findall(alt_pattern, feedback_text)
+        
+        if alt_matches:
+            total_points = sum(int(match) for match in alt_matches)
+            print(f"[EXTRACT_SCORE] Found alternative point breakdown: {alt_matches}, total: {total_points}")
+            return total_points
+        
+        # Look for direct score mentions like "score: 7" or "Score: 7"
+        score_pattern = r'score[:\s]+(\d+)'
+        score_match = re.search(score_pattern, feedback_text, re.IGNORECASE)
+        
+        if score_match:
+            score = int(score_match.group(1))
+            print(f"[EXTRACT_SCORE] Found direct score mention: {score}")
+            return score
+        
+        # Look for "X/10" pattern
+        fraction_pattern = r'(\d+)/10'
+        fraction_match = re.search(fraction_pattern, feedback_text)
+        
+        if fraction_match:
+            score = int(fraction_match.group(1))
+            print(f"[EXTRACT_SCORE] Found fraction score: {score}")
+            return score
+        
+        # If no score found, use fallback logic
+        print("[EXTRACT_SCORE] No score pattern found, using fallback logic")
+        return 7 if user_response == is_spam else 3
+        
+    except Exception as e:
+        print(f"[EXTRACT_SCORE] Error extracting score: {e}")
+        # Return fallback score
+        return 7 if user_response == is_spam else 3
+
 def evaluate_with_azure(email_content, is_spam, user_response, user_explanation, app):
     """Evaluate user explanation using Azure OpenAI"""
     try:
@@ -253,10 +304,11 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
                     if "feedback" in result and "score" in result:
                         return result
                 except json.JSONDecodeError:
-                    # Fallback parsing
+                    # Fallback parsing - extract score from text content
+                    extracted_score = extract_score_from_feedback(text_content, is_spam, user_response)
                     return {
                         "feedback": text_content,
-                        "score": 7
+                        "score": extracted_score
                     }
         
         return None
