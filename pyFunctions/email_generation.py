@@ -240,7 +240,7 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
         response, status = call_azure_openai_with_retry(
             messages=[{"role": "user", "content": prompt}],
             app=app,
-            max_tokens=256,
+            max_tokens=1024,  # Increased from 256 to prevent feedback truncation
             temperature=0.3
         )
         
@@ -271,6 +271,12 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
 
 def build_generation_prompt(base_prompt, user_name, previous_responses):
     """Build a complete prompt for email generation"""
+    import random
+    
+    # Add randomization to ensure uniqueness
+    random_id = random.randint(10000, 99999)
+    timestamp = datetime.datetime.now().strftime("%H%M%S")
+    
     prompt = f"""{base_prompt}
 
 Requirements:
@@ -283,6 +289,8 @@ Requirements:
 - Vary topics to keep training interesting
 - Do NOT use personal user information in email content
 - Use generic terms like "user", "customer", "subscriber" instead of specific names
+- Include unique reference ID {random_id}-{timestamp} for variety
+- Ensure content is unique and not repetitive
 
 Generate the email now:"""
     
