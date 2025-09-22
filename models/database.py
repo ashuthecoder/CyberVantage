@@ -7,10 +7,6 @@ import os
 from passlib.hash import bcrypt
 from config.app_config import db
 
-def get_actual_database_path():
-    """Get the actual database path that SQLAlchemy is using"""
-    return str(db.engine.url).replace('sqlite:///', '')
-
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
@@ -67,8 +63,8 @@ class SimulationSession(db.Model):
 def update_database_schema(app):
     """Add the simulation_id column to the SimulationEmail table if it exists and the column is missing."""
     try:
-        # Use the actual database path from SQLAlchemy engine
-        db_path = get_actual_database_path()
+        # Connect directly to the SQLite database
+        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
@@ -189,7 +185,7 @@ def log_simulation_event(user_id, username, event_type, session_id=None, details
 def get_simulation_id_for_email(email_id, app):
     """Get the simulation ID for a specific email"""
     try:
-        db_path = get_actual_database_path()
+        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info(simulation_email)")
@@ -208,7 +204,7 @@ def get_simulation_id_for_email(email_id, app):
 def set_simulation_id_for_email(email_id, simulation_id, app):
     """Set the simulation ID for a specific email"""
     try:
-        db_path = get_actual_database_path()
+        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info(simulation_email)")
@@ -227,7 +223,7 @@ def set_simulation_id_for_email(email_id, simulation_id, app):
 def get_emails_for_simulation(simulation_id, app):
     """Get all emails for a specific simulation"""
     try:
-        db_path = get_actual_database_path()
+        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info(simulation_email)")
