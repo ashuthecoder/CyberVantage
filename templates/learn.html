@@ -38,6 +38,11 @@
     margin-top: 1.5rem;
     border-top: 1px solid #eee;
     padding-top: 1.5rem;
+    display: none; /* Hide quiz initially */
+}
+
+.quiz-container.available {
+    display: block; /* Show quiz when available */
 }
 
 .progress-bar {
@@ -809,17 +814,19 @@
 
         // Initialize module states
         function initializeModules() {
-            // Check localStorage for completion status
-            if (localStorage.getItem('module1-quiz-completed') === 'true') {
-                modules[1].completed = true;
-                unlockModule(2);
-            }
-            if (localStorage.getItem('module2-quiz-completed') === 'true') {
-                modules[2].completed = true;
-                unlockModule(3);
-            }
-            if (localStorage.getItem('module3-quiz-completed') === 'true') {
-                modules[3].completed = true;
+            // Check localStorage for completion status and show quizzes for completed modules
+            for (let i = 1; i <= 3; i++) {
+                if (localStorage.getItem(`module${i}-quiz-completed`) === 'true') {
+                    modules[i].completed = true;
+                    if (i < 3) unlockModule(i + 1);
+                    
+                    // Show quiz for completed modules
+                    const moduleCard = document.getElementById(`module${i}`) || (i === 1 ? document.querySelector('.module-card') : null);
+                    const quizContainer = moduleCard ? moduleCard.querySelector('.quiz-container') : null;
+                    if (quizContainer) {
+                        quizContainer.classList.add('available');
+                    }
+                }
             }
             
             updateAllProgress();
@@ -877,6 +884,21 @@
                 
                 if (prevBtn) prevBtn.disabled = module.currentSlide === 1;
                 if (nextBtn) nextBtn.disabled = module.currentSlide === module.totalSlides;
+                
+                // Show quiz when user reaches the last slide
+                const moduleCard = document.getElementById(`module${moduleNum}`) || document.querySelector('.module-card');
+                const quizContainer = moduleCard ? moduleCard.querySelector('.quiz-container') : null;
+                
+                if (quizContainer && module.currentSlide === module.totalSlides) {
+                    quizContainer.classList.add('available');
+                    // Add a visual indicator that quiz is now available
+                    if (!quizContainer.querySelector('.quiz-available-notice')) {
+                        const notice = document.createElement('div');
+                        notice.className = 'quiz-available-notice';
+                        notice.innerHTML = '<p style="color: #27ae60; font-weight: bold; margin-bottom: 1rem;">📚 Great! You\'ve completed the learning material. Now test your knowledge below:</p>';
+                        quizContainer.insertBefore(notice, quizContainer.firstChild);
+                    }
+                }
                 
                 updateModuleProgress(moduleNum);
             }
