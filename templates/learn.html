@@ -910,24 +910,36 @@
             const nextBtn = document.getElementById(nextBtnId);
             const prevBtn = document.getElementById(prevBtnId);
             
-            if (nextBtn && !nextBtn.hasAttribute('data-listener-added')) {
-                nextBtn.setAttribute('data-listener-added', 'true');
-                nextBtn.addEventListener('click', function() {
+            if (nextBtn) {
+                // Clone and preserve all attributes including ID
+                const newNextBtn = nextBtn.cloneNode(true);
+                
+                // Add fresh event listener
+                newNextBtn.addEventListener('click', function() {
                     if (module.currentSlide < module.totalSlides) {
                         module.currentSlide++;
                         updateSlide();
                     }
                 });
+                
+                // Replace the original button with the clone
+                nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
             }
             
-            if (prevBtn && !prevBtn.hasAttribute('data-listener-added')) {
-                prevBtn.setAttribute('data-listener-added', 'true');
-                prevBtn.addEventListener('click', function() {
+            if (prevBtn) {
+                // Clone and preserve all attributes including ID
+                const newPrevBtn = prevBtn.cloneNode(true);
+                
+                // Add fresh event listener
+                newPrevBtn.addEventListener('click', function() {
                     if (module.currentSlide > 1) {
                         module.currentSlide--;
                         updateSlide();
                     }
                 });
+                
+                // Replace the original button with the clone
+                prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
             }
             
             // Slide indicators
@@ -936,13 +948,17 @@
             if (moduleContainer) {
                 const indicators = moduleContainer.querySelectorAll('.slide-indicator');
                 indicators.forEach(indicator => {
-                    if (!indicator.hasAttribute('data-listener-added')) {
-                        indicator.setAttribute('data-listener-added', 'true');
-                        indicator.addEventListener('click', function() {
-                            module.currentSlide = parseInt(this.getAttribute('data-slide'));
-                            updateSlide();
-                        });
-                    }
+                    // Clone and preserve all attributes
+                    const newIndicator = indicator.cloneNode(true);
+                    
+                    // Add fresh event listener
+                    newIndicator.addEventListener('click', function() {
+                        module.currentSlide = parseInt(this.getAttribute('data-slide'));
+                        updateSlide();
+                    });
+                    
+                    // Replace the original indicator with the clone
+                    indicator.parentNode.replaceChild(newIndicator, indicator);
                 });
             }
             
@@ -963,54 +979,65 @@
             // Quiz option selection
             const quizOptions = moduleCard.querySelectorAll('.quiz-option');
             quizOptions.forEach(option => {
-                if (!option.hasAttribute('data-listener-added')) {
-                    option.setAttribute('data-listener-added', 'true');
-                    option.addEventListener('click', function() {
-                        const question = this.closest('.quiz-question');
-                        const siblings = this.parentElement.querySelectorAll('.quiz-option');
-                        const deselectBtn = question.querySelector('.deselect-btn');
-                        
-                        siblings.forEach(sib => sib.classList.remove('selected'));
-                        this.classList.add('selected');
-                        
-                        // Show deselect button
-                        if (deselectBtn) {
-                            deselectBtn.style.display = 'inline-block';
-                        }
-                    });
-                }
+                // Clone and preserve all attributes
+                const newOption = option.cloneNode(true);
+                
+                // Add fresh event listener
+                newOption.addEventListener('click', function() {
+                    const question = this.closest('.quiz-question');
+                    const siblings = this.parentElement.querySelectorAll('.quiz-option');
+                    const deselectBtn = question.querySelector('.deselect-btn');
+                    
+                    siblings.forEach(sib => sib.classList.remove('selected'));
+                    this.classList.add('selected');
+                    
+                    // Show deselect button
+                    if (deselectBtn) {
+                        deselectBtn.style.display = 'inline-block';
+                    }
+                });
+                
+                // Replace the original option with the clone
+                option.parentNode.replaceChild(newOption, option);
             });
             
             // Deselect button functionality
             const deselectBtns = moduleCard.querySelectorAll('.deselect-btn');
             deselectBtns.forEach(btn => {
-                if (!btn.hasAttribute('data-listener-added')) {
-                    btn.setAttribute('data-listener-added', 'true');
-                    btn.addEventListener('click', function() {
-                        const question = this.closest('.quiz-question');
-                        const options = question.querySelectorAll('.quiz-option');
-                        const feedback = question.querySelector('.quiz-feedback');
-                        
-                        // Remove selection and feedback
-                        options.forEach(opt => {
-                            opt.classList.remove('selected', 'correct', 'incorrect');
-                        });
-                        
-                        feedback.style.display = 'none';
-                        feedback.textContent = '';
-                        
-                        // Hide deselect button
-                        this.style.display = 'none';
+                // Clone and preserve all attributes
+                const newBtn = btn.cloneNode(true);
+                
+                // Add fresh event listener
+                newBtn.addEventListener('click', function() {
+                    const question = this.closest('.quiz-question');
+                    const options = question.querySelectorAll('.quiz-option');
+                    const feedback = question.querySelector('.quiz-feedback');
+                    
+                    // Remove selection and feedback
+                    options.forEach(opt => {
+                        opt.classList.remove('selected', 'correct', 'incorrect');
                     });
-                }
+                    
+                    feedback.style.display = 'none';
+                    feedback.textContent = '';
+                    
+                    // Hide deselect button
+                    this.style.display = 'none';
+                });
+                
+                // Replace the original button with the clone
+                btn.parentNode.replaceChild(newBtn, btn);
             });
             
             // Quiz submission
             const submitBtn = document.getElementById(`${prefix}submit-quiz`) || 
                              document.getElementById('submit-quiz');
-            if (submitBtn && !submitBtn.hasAttribute('data-listener-added')) {
-                submitBtn.setAttribute('data-listener-added', 'true');
-                submitBtn.addEventListener('click', function() {
+            if (submitBtn) {
+                // Clone and preserve all attributes
+                const newSubmitBtn = submitBtn.cloneNode(true);
+                
+                // Add fresh event listener
+                newSubmitBtn.addEventListener('click', function() {
                     let correct = 0;
                     const questions = moduleCard.querySelectorAll('.quiz-question');
                     
@@ -1063,14 +1090,20 @@
                         alert(`You got ${correct} out of ${questions.length} questions correct. Review the incorrect answers and try again!`);
                     }
                 });
+                
+                // Replace the original button with the clone
+                submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
             }
             
             // Quiz reset functionality
             const resetBtn = document.getElementById(`${prefix}reset-quiz`) || 
                             document.getElementById('reset-quiz');
-            if (resetBtn && !resetBtn.hasAttribute('data-listener-added')) {
-                resetBtn.setAttribute('data-listener-added', 'true');
-                resetBtn.addEventListener('click', function() {
+            if (resetBtn) {
+                // Clone and preserve all attributes
+                const newResetBtn = resetBtn.cloneNode(true);
+                
+                // Add fresh event listener
+                newResetBtn.addEventListener('click', function() {
                     if (confirm('Are you sure you want to reset the quiz? This will generate new questions and clear your answers.')) {
                         // Reset all selections and feedback
                         const questions = moduleCard.querySelectorAll('.quiz-question');
@@ -1095,6 +1128,9 @@
                         populateQuiz(moduleNum);
                     }
                 });
+                
+                // Replace the original button with the clone
+                resetBtn.parentNode.replaceChild(newResetBtn, resetBtn);
             }
         }
 
