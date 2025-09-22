@@ -158,11 +158,13 @@ Evaluate this phishing email on these criteria and provide scores for each (out 
 For each criterion, assign a specific score and explain your reasoning.
 
 Then provide:
-- Overall score (out of 10)
+- **Overall score: X/10** (where X is a number from 0 to 10)
 - Effectiveness rating (Low/Medium/High/Very High)
 - Specific strengths in the approach
 - Areas for improvement
 - Actionable recommendations
+
+IMPORTANT: Always express the overall score as "X/10" where X is the actual score out of 10 points.
 
 Format your response as HTML with clear headings and organized content. Be constructive and educational in your feedback."""
 
@@ -235,11 +237,13 @@ Evaluate this phishing email on these criteria and provide scores for each (out 
 For each criterion, assign a specific score and explain your reasoning.
 
 Then provide:
-- Overall score (out of 10)
+- **Overall score: X/10** (where X is a number from 0 to 10)
 - Effectiveness rating (Low/Medium/High/Very High)
 - Specific strengths in the approach
 - Areas for improvement
 - Actionable recommendations
+
+IMPORTANT: Always express the overall score as "X/10" where X is the actual score out of 10 points.
 
 Format your response as HTML with clear headings and organized content. Be constructive and educational in your feedback."""
         
@@ -309,29 +313,49 @@ def parse_evaluation_response(feedback_html):
         except:
             pass
     
-    # Look for score patterns like "Score: 85" or "85/100" or "8/10"
-    score_patterns = [
-        r'score[:\s]+(\d+)',
-        r'(\d+)/100',
-        r'(\d+)/10',
-        r'(\d+)\s*out\s*of\s*100',
-        r'(\d+)\s*out\s*of\s*10',
-        r'(\d+)\s*points?'
+    # Look for score patterns with proper scale detection
+    # First try patterns that explicitly indicate scale
+    explicit_scale_patterns = [
+        (r'(\d+)/100', 100),  # X/100 format
+        (r'(\d+)\s*out\s*of\s*100', 100),  # X out of 100 format
+        (r'(\d+)/10', 10),   # X/10 format  
+        (r'(\d+)\s*out\s*of\s*10', 10),   # X out of 10 format
     ]
     
-    for pattern in score_patterns:
+    for pattern, scale in explicit_scale_patterns:
         matches = re.findall(pattern, feedback_html, re.IGNORECASE)
         if matches:
             try:
                 potential_score = int(matches[0])
-                if 0 <= potential_score <= 100:
-                    score = round(potential_score / 10)  # Convert to 10-point scale
+                if scale == 100 and 0 <= potential_score <= 100:
+                    score = round(potential_score / 10)  # Convert 100-point to 10-point
                     break
-                elif 0 <= potential_score <= 10:
+                elif scale == 10 and 0 <= potential_score <= 10:
                     score = potential_score  # Already on 10-point scale
                     break
             except:
                 continue
+    else:
+        # If no explicit scale found, try generic patterns
+        generic_patterns = [
+            r'score[:\s]+(\d+)',
+            r'(\d+)\s*points?'
+        ]
+        
+        for pattern in generic_patterns:
+            matches = re.findall(pattern, feedback_html, re.IGNORECASE)
+            if matches:
+                try:
+                    potential_score = int(matches[0])
+                    # Guess scale based on value range
+                    if 0 <= potential_score <= 10:
+                        score = potential_score  # Assume 10-point scale
+                        break
+                    elif 11 <= potential_score <= 100:
+                        score = round(potential_score / 10)  # Assume 100-point scale, convert
+                        break
+                except:
+                    continue
     
     # Extract effectiveness rating
     if "effectiveness rating" in feedback_html.lower():
