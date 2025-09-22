@@ -162,6 +162,18 @@ textarea {
     gap: 1rem;
     margin-top: 2rem;
 }
+
+.next-steps-info h3 {
+    margin-top: 0;
+}
+
+.next-steps-info ul {
+    text-align: left;
+}
+
+.next-steps-info li {
+    margin-bottom: 0.5rem;
+}
 {% endblock %}
 
 {% block content %}
@@ -282,15 +294,27 @@ textarea {
 
 {% elif phase == 'complete' %}
     <div class="simulation-complete">
-        <h2>Simulation Complete!</h2>
-        <p>You've completed both phases of the phishing email simulation.</p>
+        <h2>🎉 Simulation Complete!</h2>
+        <p>Congratulations! You've successfully completed both phases of the phishing email simulation.</p>
         <p>Your responses have been recorded and will be analyzed to provide you with a detailed report.</p>
+        
+        <div class="next-steps-info" style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin: 2rem 0; text-align: left;">
+            <h3 style="color: #2a3f54; margin-bottom: 1rem;">📚 What's Next?</h3>
+            <ul style="color: #555; line-height: 1.6; margin: 0; padding-left: 1.5rem;">
+                <li><strong>View Your Analysis:</strong> See detailed feedback on your performance and learn from your responses</li>
+                <li><strong>Final Assignment:</strong> Put your skills to the test by crafting realistic phishing emails to understand attacker tactics</li>
+                <li><strong>Advanced Learning:</strong> Explore threat intelligence tools and deepen your cybersecurity knowledge</li>
+            </ul>
+            <div style="background: #e8f4f8; padding: 1rem; border-left: 4px solid #3498db; margin-top: 1rem;">
+                <p style="margin: 0; color: #2c3e50;"><strong>💡 Pro Tip:</strong> The final assignment will help you understand how attackers create convincing phishing emails, making you better at spotting them in the real world!</p>
+            </div>
+        </div>
 
         <div class="next-steps">
-            <a href="{{ url_for('analysis.analysis') }}" class="btn primary">View Your Analysis</a>
-            <a href="{{ url_for('threat.phishing_assignment') }}" class="btn primary">Proceed to Final Assignment</a>
-            <a href="{{ url_for('simulation.restart_simulation') }}" class="restart-btn">Restart Simulation</a>
-            <a href="{{ url_for('dashboard') }}" class="btn secondary">Return to Dashboard</a>
+            <a href="{{ url_for('analysis.analysis') }}" class="btn primary">📊 View Your Analysis</a>
+            <a href="{{ url_for('threat.get_phishing_assignment') }}" class="btn primary">🎯 Start Final Assignment</a>
+            <a href="{{ url_for('simulation.restart_simulation') }}" class="restart-btn">🔄 Restart Simulation</a>
+            <a href="{{ url_for('dashboard') }}" class="btn secondary">🏠 Return to Dashboard</a>
         </div>
     </div>
 

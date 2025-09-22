@@ -474,8 +474,13 @@ def restart_simulation(current_user):
         # Generate a new simulation ID
         new_simulation_id = str(uuid.uuid4())
 
-        # Clear session completely and set new values
-        session.clear()
+        # Clear only simulation-related session data, preserve authentication
+        simulation_keys = ['simulation_phase', 'current_email_id', 'simulation_id', 
+                         'phase2_emails_completed', 'active_phase2_email_id']
+        for key in simulation_keys:
+            session.pop(key, None)
+        
+        # Set new simulation values
         session['simulation_phase'] = 1
         session['current_email_id'] = 1
         session['simulation_id'] = new_simulation_id
@@ -502,7 +507,11 @@ def restart_simulation(current_user):
         db.session.rollback()
         # Instead of going to dashboard, try to recover and go to simulation
         try:
-            # Reset session to safe state
+            # Reset session to safe state (preserve authentication)
+            simulation_keys = ['simulation_phase', 'current_email_id', 'simulation_id', 
+                             'phase2_emails_completed', 'active_phase2_email_id']
+            for key in simulation_keys:
+                session.pop(key, None)
             session['simulation_phase'] = 1
             session['current_email_id'] = 1
             session['simulation_id'] = str(uuid.uuid4())
@@ -521,8 +530,13 @@ def reset_stuck_simulation(current_user):
         # Generate a new simulation ID
         new_simulation_id = str(uuid.uuid4())
 
-        # Clear session data and start fresh
-        session.clear()
+        # Clear only simulation-related session data, preserve authentication
+        simulation_keys = ['simulation_phase', 'current_email_id', 'simulation_id', 
+                         'phase2_emails_completed', 'active_phase2_email_id']
+        for key in simulation_keys:
+            session.pop(key, None)
+        
+        # Set new simulation values
         session['simulation_phase'] = 1
         session['current_email_id'] = 1
         session['simulation_id'] = new_simulation_id
