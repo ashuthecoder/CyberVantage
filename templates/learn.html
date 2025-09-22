@@ -877,10 +877,10 @@
                 });
                 
                 // Update buttons
-                const prevBtn = document.getElementById(`${prefix}prev-slide`) || 
-                               document.getElementById('prev-slide');
-                const nextBtn = document.getElementById(`${prefix}next-slide`) || 
-                               document.getElementById('next-slide');
+                const nextBtnId = prefix ? `${prefix}next-slide` : 'next-slide';
+                const prevBtnId = prefix ? `${prefix}prev-slide` : 'prev-slide';
+                const prevBtn = document.getElementById(prevBtnId);
+                const nextBtn = document.getElementById(nextBtnId);
                 
                 if (prevBtn) prevBtn.disabled = module.currentSlide === 1;
                 if (nextBtn) nextBtn.disabled = module.currentSlide === module.totalSlides;
@@ -903,13 +903,12 @@
                 updateModuleProgress(moduleNum);
             }
             
-            // Next slide button - improved selector logic
-            let nextBtn;
-            if (prefix) {
-                nextBtn = document.getElementById(`${prefix}next-slide`);
-            } else {
-                nextBtn = document.getElementById('next-slide');
-            }
+            // Button setup - use consistent naming pattern
+            const nextBtnId = prefix ? `${prefix}next-slide` : 'next-slide';
+            const prevBtnId = prefix ? `${prefix}prev-slide` : 'prev-slide';
+            
+            const nextBtn = document.getElementById(nextBtnId);
+            const prevBtn = document.getElementById(prevBtnId);
             
             if (nextBtn && !nextBtn.hasAttribute('data-listener-added')) {
                 nextBtn.setAttribute('data-listener-added', 'true');
@@ -919,14 +918,6 @@
                         updateSlide();
                     }
                 });
-            }
-            
-            // Previous slide button - improved selector logic
-            let prevBtn;
-            if (prefix) {
-                prevBtn = document.getElementById(`${prefix}prev-slide`);
-            } else {
-                prevBtn = document.getElementById('prev-slide');
             }
             
             if (prevBtn && !prevBtn.hasAttribute('data-listener-added')) {

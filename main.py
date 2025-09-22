@@ -47,9 +47,18 @@ if __name__ == '__main__':
     
     # Check if we're in development mode
     debug_mode = os.getenv('FLASK_ENV') == 'development'
+    host = os.getenv('FLASK_HOST', '127.0.0.1')
+    port = int(os.getenv('FLASK_PORT', 5000))
+    
     if debug_mode:
         print("🔧 Running in DEVELOPMENT mode with debugging enabled")
         print("   Set FLASK_ENV=production for production deployment")
     
+    print(f"🚀 CyberVantage is starting...")
+    print(f"📍 Server will be accessible at: http://{host}:{port}")
+    print(f"🌐 If running locally, visit: http://localhost:{port}")
+    if host != '127.0.0.1':
+        print(f"🔗 Network access available at: http://{host}:{port}")
+    
     # Disable the reloader to avoid double-execution side-effects in dev
-    app.run(debug=debug_mode, use_reloader=False)
+    app.run(debug=debug_mode, host=host, port=port, use_reloader=False)
