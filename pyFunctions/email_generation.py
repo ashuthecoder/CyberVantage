@@ -298,10 +298,16 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
         if response and status == "SUCCESS":
             text_content = extract_text_from_response(response)
             if text_content:
+                # Clean HTML code blocks from AI response
+                text_content = clean_html_code_blocks(text_content)
+                
                 try:
                     # Try to parse JSON response
                     result = json.loads(text_content.strip())
                     if "feedback" in result and "score" in result:
+                        # Clean HTML code blocks from feedback if it exists
+                        if "feedback" in result:
+                            result["feedback"] = clean_html_code_blocks(result["feedback"])
                         return result
                 except json.JSONDecodeError:
                     # Fallback parsing - extract score from text content
@@ -372,6 +378,36 @@ def parse_email_response(text_content):
     except Exception as e:
         print(f"[PARSE] Error parsing response: {e}")
         return None
+
+def clean_html_code_blocks(text):
+    """
+    Remove markdown code blocks (```html) from AI responses.
+    This fixes the issue where AI returns HTML wrapped in markdown code blocks.
+    """
+    if not text:
+        return text
+    
+    import re
+    
+    # First handle explicit HTML code blocks (```html ... ```)
+    html_block_pattern = r'^```html\s*\n?(.*?)\n?```\s*$'
+    html_match = re.search(html_block_pattern, text, flags=re.IGNORECASE | re.DOTALL)
+    if html_match:
+        return html_match.group(1).strip()
+    
+    # Then handle generic code blocks, but only if content looks like HTML
+    generic_block_pattern = r'^```\s*\n?(.*?)\n?```\s*$'
+    generic_match = re.search(generic_block_pattern, text, flags=re.DOTALL)
+    if generic_match:
+        content = generic_match.group(1).strip()
+        # Only remove code blocks if content clearly looks like HTML
+        if (content.startswith('<') and content.endswith('>') and
+            ('<h' in content.lower() or '<p' in content.lower() or '<div' in content.lower() or 
+             '<strong' in content.lower() or '<ul' in content.lower() or '<li' in content.lower())):
+            return content
+    
+    # If no code blocks found or content doesn't look like HTML, return original
+    return text.strip()
 
 def get_fallback_evaluation(is_spam, user_response):
     """Generate a dynamic evaluation when AI isn't available"""

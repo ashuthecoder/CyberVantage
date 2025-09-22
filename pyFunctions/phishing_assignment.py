@@ -179,6 +179,9 @@ Format your response as HTML with clear headings and organized content. Be const
         if response and status == "SUCCESS":
             feedback_html = extract_text_from_response(response)
             if feedback_html:
+                # Clean HTML code blocks from AI response
+                feedback_html = clean_html_code_blocks(feedback_html)
+                
                 # Extract score and effectiveness rating
                 score, effectiveness_rating = parse_evaluation_response(feedback_html)
                 
@@ -269,6 +272,10 @@ Format your response as HTML with clear headings and organized content. Be const
         
         # Extract score and effectiveness
         feedback_html = response.text
+        
+        # Clean HTML code blocks from AI response
+        feedback_html = clean_html_code_blocks(feedback_html)
+        
         score, effectiveness_rating = parse_evaluation_response(feedback_html)
         
         return {
@@ -294,6 +301,36 @@ Format your response as HTML with clear headings and organized content. Be const
         )
         
         return None
+
+def clean_html_code_blocks(text):
+    """
+    Remove markdown code blocks (```html) from AI responses.
+    This fixes the issue where AI returns HTML wrapped in markdown code blocks.
+    """
+    if not text:
+        return text
+    
+    import re
+    
+    # First handle explicit HTML code blocks (```html ... ```)
+    html_block_pattern = r'^```html\s*\n?(.*?)\n?```\s*$'
+    html_match = re.search(html_block_pattern, text, flags=re.IGNORECASE | re.DOTALL)
+    if html_match:
+        return html_match.group(1).strip()
+    
+    # Then handle generic code blocks, but only if content looks like HTML
+    generic_block_pattern = r'^```\s*\n?(.*?)\n?```\s*$'
+    generic_match = re.search(generic_block_pattern, text, flags=re.DOTALL)
+    if generic_match:
+        content = generic_match.group(1).strip()
+        # Only remove code blocks if content clearly looks like HTML
+        if (content.startswith('<') and content.endswith('>') and
+            ('<h' in content.lower() or '<p' in content.lower() or '<div' in content.lower() or 
+             '<strong' in content.lower() or '<ul' in content.lower() or '<li' in content.lower())):
+            return content
+    
+    # If no code blocks found or content doesn't look like HTML, return original
+    return text.strip()
 
 def parse_evaluation_response(feedback_html):
     """
