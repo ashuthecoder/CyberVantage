@@ -209,9 +209,7 @@ def evaluate_phishing_creation_gemini(phishing_email, api_key, genai, app):
         prompt = f"""You are a cybersecurity expert evaluating a phishing email created by a student for educational purposes.
 
 Student-created phishing email:
-```
 {phishing_email}
-```
 
 Evaluate this phishing email on these criteria and provide scores for each (out of 10 points total):
 
