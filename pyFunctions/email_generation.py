@@ -389,13 +389,14 @@ def clean_html_code_blocks(text):
     
     import re
     
-    # First handle explicit HTML code blocks (```html ... ```)
+    # Step 1: Handle complete text that is just a code block
+    # Check for ```html ... ``` patterns that span the entire text
     html_block_pattern = r'^```html\s*\n?(.*?)\n?```\s*$'
     html_match = re.search(html_block_pattern, text, flags=re.IGNORECASE | re.DOTALL)
     if html_match:
         return html_match.group(1).strip()
     
-    # Then handle generic code blocks, but only if content looks like HTML
+    # Check for generic code blocks that span the entire text
     generic_block_pattern = r'^```\s*\n?(.*?)\n?```\s*$'
     generic_match = re.search(generic_block_pattern, text, flags=re.DOTALL)
     if generic_match:
@@ -406,7 +407,35 @@ def clean_html_code_blocks(text):
              '<strong' in content.lower() or '<ul' in content.lower() or '<li' in content.lower())):
             return content
     
-    # If no code blocks found or content doesn't look like HTML, return original
+    # Step 2: Handle embedded code blocks within text
+    def is_html_content(content):
+        """Check if content looks like HTML"""
+        content = content.strip()
+        return (content.startswith('<') and content.endswith('>') and
+                ('<h' in content.lower() or '<p' in content.lower() or '<div' in content.lower() or 
+                 '<strong' in content.lower() or '<ul' in content.lower() or '<li' in content.lower()))
+    
+    # Find and replace all ```html blocks (with proper closing)
+    def replace_html_block(match):
+        content = match.group(1).strip()
+        if is_html_content(content):
+            return content
+        return match.group(0)  # Return original if not HTML
+    
+    # Pattern for ```html ... ``` anywhere in text
+    text = re.sub(r'```html\s*\n?(.*?)\n?```', replace_html_block, text, flags=re.IGNORECASE | re.DOTALL)
+    
+    # Step 3: Handle malformed blocks (missing closing ```)
+    def replace_malformed_block(match):
+        content = match.group(1).strip()
+        if is_html_content(content):
+            return content
+        return match.group(0)  # Return original if not HTML
+    
+    # Look for ```html at start of line or after whitespace, followed by HTML content
+    # Stop at double newline, start of new sentence, or end of string
+    text = re.sub(r'```html\s*\n?(.*?)(?=\n\s*\n|\n[A-Z]|$)', replace_malformed_block, text, flags=re.IGNORECASE | re.DOTALL)
+    
     return text.strip()
 
 def get_fallback_evaluation(is_spam, user_response):
