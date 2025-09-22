@@ -66,6 +66,118 @@
     background-color: #0056b3;
 }
 
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: none;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #2a3f54;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0,123,255,0.3);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.password-strength {
+    margin-top: 5px;
+    font-size: 12px;
+}
+
+.strength-weak { color: #dc3545; }
+.strength-medium { color: #ffc107; }
+.strength-strong { color: #28a745; }
+
 .stats-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -163,6 +275,24 @@
                                 </button>
                             </form>
                         {% endif %}
+                        
+                        <!-- Password Management Button -->
+                        <button type="button" class="btn btn-small btn-warning" 
+                                onclick="openPasswordModal({{ user.id }}, '{{ user.name }}', '{{ user.email }}')">
+                            <i class="fas fa-key"></i> Reset Password
+                        </button>
+                        
+                        {% if user.id != current_user.id %}
+                        <!-- Delete User Button (only if not current user) -->
+                        <form method="POST" action="{{ url_for('auth.delete_user', user_id=user.id) }}" 
+                              onsubmit="return confirm('Are you sure you want to delete {{ user.name }}? This action cannot be undone.');" 
+                              style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-small btn-danger">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                        {% endif %}
                     </div>
                 </td>
             </tr>
@@ -182,4 +312,195 @@
         </a>
     </div>
 </div>
+
+<!-- Password Reset Modal -->
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Reset User Password</h3>
+            <span class="close" onclick="closePasswordModal()">&times;</span>
+        </div>
+        
+        <form id="passwordForm" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" id="userId" name="user_id" value="">
+            
+            <div class="form-group">
+                <label>User Details:</label>
+                <p id="userDetails" style="background-color: #f8f9fa; padding: 10px; border-radius: 4px; margin: 5px 0;"></p>
+            </div>
+            
+            <div class="form-group">
+                <label for="newPassword">New Password:</label>
+                <input type="password" id="newPassword" name="new_password" required 
+                       placeholder="Enter new password" onkeyup="checkPasswordStrength()">
+                <div id="passwordStrength" class="password-strength"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password:</label>
+                <input type="password" id="confirmPassword" name="confirm_password" required 
+                       placeholder="Confirm new password" onkeyup="validatePasswordMatch()">
+                <div id="passwordMatch" class="password-strength"></div>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="generatePassword" onchange="togglePasswordGeneration()">
+                    Generate secure password automatically
+                </label>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
+                <button type="submit" class="btn btn-warning">Reset Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openPasswordModal(userId, userName, userEmail) {
+    document.getElementById('userId').value = userId;
+    document.getElementById('userDetails').innerHTML = 
+        '<strong>Name:</strong> ' + userName + '<br>' +
+        '<strong>Email:</strong> ' + userEmail;
+    
+    // Set form action dynamically
+    document.getElementById('passwordForm').action = '/admin/reset_password/' + userId;
+    
+    document.getElementById('passwordModal').style.display = 'block';
+}
+
+function closePasswordModal() {
+    document.getElementById('passwordModal').style.display = 'none';
+    document.getElementById('passwordForm').reset();
+    document.getElementById('passwordStrength').innerHTML = '';
+    document.getElementById('passwordMatch').innerHTML = '';
+}
+
+function checkPasswordStrength() {
+    const password = document.getElementById('newPassword').value;
+    const strengthDiv = document.getElementById('passwordStrength');
+    
+    if (password.length === 0) {
+        strengthDiv.innerHTML = '';
+        return;
+    }
+    
+    let strength = 0;
+    let feedback = [];
+    
+    // Length check
+    if (password.length >= 8) strength++;
+    else feedback.push('at least 8 characters');
+    
+    // Uppercase check
+    if (/[A-Z]/.test(password)) strength++;
+    else feedback.push('uppercase letter');
+    
+    // Lowercase check
+    if (/[a-z]/.test(password)) strength++;
+    else feedback.push('lowercase letter');
+    
+    // Number check
+    if (/\d/.test(password)) strength++;
+    else feedback.push('number');
+    
+    // Special character check
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
+    else feedback.push('special character');
+    
+    let className = 'strength-weak';
+    let message = 'Weak';
+    
+    if (strength >= 4) {
+        className = 'strength-strong';
+        message = 'Strong';
+    } else if (strength >= 2) {
+        className = 'strength-medium';
+        message = 'Medium';
+    }
+    
+    if (feedback.length > 0) {
+        message += ' (needs: ' + feedback.join(', ') + ')';
+    }
+    
+    strengthDiv.innerHTML = '<span class="' + className + '">Password strength: ' + message + '</span>';
+}
+
+function validatePasswordMatch() {
+    const password = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmPassword').value;
+    const matchDiv = document.getElementById('passwordMatch');
+    
+    if (confirm.length === 0) {
+        matchDiv.innerHTML = '';
+        return;
+    }
+    
+    if (password === confirm) {
+        matchDiv.innerHTML = '<span class="strength-strong">Passwords match!</span>';
+    } else {
+        matchDiv.innerHTML = '<span class="strength-weak">Passwords do not match</span>';
+    }
+}
+
+function generateSecurePassword() {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+    let password = "";
+    
+    // Ensure at least one character from each required category
+    const lowercase = "abcdefghijklmnopqrstuvwxyz";
+    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const numbers = "0123456789";
+    const special = "!@#$%^&*()";
+    
+    password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
+    password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
+    password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    password += special.charAt(Math.floor(Math.random() * special.length));
+    
+    // Fill the rest randomly
+    for (let i = password.length; i < length; i++) {
+        password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    
+    // Shuffle the password
+    return password.split('').sort(() => 0.5 - Math.random()).join('');
+}
+
+function togglePasswordGeneration() {
+    const generate = document.getElementById('generatePassword').checked;
+    const passwordField = document.getElementById('newPassword');
+    const confirmField = document.getElementById('confirmPassword');
+    
+    if (generate) {
+        const newPassword = generateSecurePassword();
+        passwordField.value = newPassword;
+        confirmField.value = newPassword;
+        passwordField.type = 'text';
+        confirmField.type = 'text';
+        checkPasswordStrength();
+        validatePasswordMatch();
+    } else {
+        passwordField.value = '';
+        confirmField.value = '';
+        passwordField.type = 'password';
+        confirmField.type = 'password';
+        document.getElementById('passwordStrength').innerHTML = '';
+        document.getElementById('passwordMatch').innerHTML = '';
+    }
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('passwordModal');
+    if (event.target == modal) {
+        closePasswordModal();
+    }
+}
+</script>
+
 {% endblock %}

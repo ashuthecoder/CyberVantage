@@ -187,10 +187,109 @@
     background-color: #3498db;
 }
 
+/* Enhanced module styling */
+.example-box {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.danger-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+.video-example {
+    margin: 1rem 0;
+    padding: 0.75rem;
+    background-color: #e3f2fd;
+    border-radius: 5px;
+}
+
+.demo-link {
+    color: #1976d2;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.demo-link:hover {
+    text-decoration: underline;
+}
+
+.tip-box, .emergency-box {
+    background-color: #e8f5e8;
+    border: 1px solid #4caf50;
+    border-radius: 5px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.emergency-box {
+    background-color: #ffebee;
+    border-color: #f44336;
+    color: #c62828;
+}
+
+.security-measures {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.measure {
+    background-color: #f5f5f5;
+    padding: 1rem;
+    border-radius: 5px;
+    border-left: 4px solid #2196f3;
+}
+
+.awareness-tips {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.tip {
+    background-color: #fff8e1;
+    padding: 1rem;
+    border-radius: 5px;
+    border-left: 4px solid #ff9800;
+}
+
+.module-card.locked .module-content {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.module-status {
+    font-weight: bold;
+}
+
+.module-status.unlocked {
+    color: #4caf50;
+}
+
+.module-status.locked {
+    color: #f44336;
+}
+
 @media (max-width: 768px) {
     .module-header {
         flex-direction: column;
         gap: 0.5rem;
+    }
+    
+    .security-measures, .awareness-tips {
+        grid-template-columns: 1fr;
     }
 }
 {% endblock %}
@@ -283,24 +382,289 @@
     </div>
     
     <!-- Module 2 -->
-    <div class="module-card">
+    <div class="module-card" id="module2">
         <div class="module-header">
             <div>Module 2: Types of Phishing Attacks</div>
-            <div>Status: <span class="module-status">Locked</span></div>
+            <div>Progress: <span id="module2-progress">0%</span> | Status: <span class="module-status">Locked</span></div>
         </div>
-        <div class="module-content">
-            <p>Complete Module 1 to unlock this content.</p>
+        <div class="module-content" id="module2-content">
+            <div class="progress-bar">
+                <div class="progress-fill" id="module2-progress-bar" style="width: 0%"></div>
+            </div>
+            
+            <div class="slides-container" id="module2-slides">
+                <div class="slide active" id="module2-slide1">
+                    <h3>Email Phishing</h3>
+                    <p>The most common form of phishing where attackers send fraudulent emails that appear to be from legitimate sources.</p>
+                    <div class="example-box">
+                        <h4>Example Attack Vector:</h4>
+                        <p><strong>Scenario:</strong> Fake bank email requesting immediate account verification</p>
+                        <p><strong>Payload:</strong> Malicious link leading to credential harvesting site</p>
+                        <div class="danger-warning">⚠️ This could lead to account takeover and financial theft!</div>
+                    </div>
+                    <div class="video-example">
+                        <p><strong>Interactive Demo:</strong> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="demo-link">See how attackers craft convincing emails</a></p>
+                    </div>
+                </div>
+                
+                <div class="slide" id="module2-slide2">
+                    <h3>Spear Phishing</h3>
+                    <p>Highly targeted attacks aimed at specific individuals or organizations using personalized information.</p>
+                    <div class="example-box">
+                        <h4>Advanced Attack Example:</h4>
+                        <p><strong>Target:</strong> Company executives or IT administrators</p>
+                        <p><strong>Technique:</strong> Social engineering with research-backed personal details</p>
+                        <p><strong>RCE Risk:</strong> Malicious attachments that execute code when opened</p>
+                        <div class="danger-warning">🔥 Could result in complete system compromise and data breaches!</div>
+                    </div>
+                    <div class="video-example">
+                        <p><strong>Learn More:</strong> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="demo-link">Advanced spear phishing techniques</a></p>
+                    </div>
+                </div>
+                
+                <div class="slide" id="module2-slide3">
+                    <h3>Whaling & CEO Fraud</h3>
+                    <p>Attacks targeting high-profile individuals like CEOs, CFOs, or other executives.</p>
+                    <div class="example-box">
+                        <h4>High-Impact Attack:</h4>
+                        <p><strong>Method:</strong> Impersonating C-level executives to authorize fraudulent transactions</p>
+                        <p><strong>Impact:</strong> Financial losses in millions, reputation damage</p>
+                        <div class="danger-warning">💰 Average loss per successful whaling attack: $130,000+</div>
+                    </div>
+                </div>
+                
+                <div class="slide" id="module2-slide4">
+                    <h3>Smishing & Vishing</h3>
+                    <p>SMS (Smishing) and Voice (Vishing) based phishing attacks targeting mobile users.</p>
+                    <div class="example-box">
+                        <h4>Mobile-First Attacks:</h4>
+                        <p><strong>Smishing:</strong> Fake SMS from "banks" with malicious links</p>
+                        <p><strong>Vishing:</strong> Fake phone calls requesting sensitive information</p>
+                        <div class="danger-warning">📱 Mobile users are 3x more likely to fall for phishing attacks!</div>
+                    </div>
+                    <div class="video-example">
+                        <p><strong>Real Examples:</strong> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="demo-link">Mobile phishing in action</a></p>
+                    </div>
+                </div>
+                
+                <div class="slide-controls">
+                    <button id="module2-prev-slide" class="slide-btn" disabled>Previous</button>
+                    <button id="module2-next-slide" class="slide-btn">Next</button>
+                </div>
+                
+                <div class="slide-indicators">
+                    <div class="slide-indicator active" data-slide="1"></div>
+                    <div class="slide-indicator" data-slide="2"></div>
+                    <div class="slide-indicator" data-slide="3"></div>
+                    <div class="slide-indicator" data-slide="4"></div>
+                </div>
+            </div>
+            
+            <div class="quiz-container">
+                <h3>Advanced Quiz: Attack Types</h3>
+                <div class="quiz-question">
+                    <p>1. Which type of phishing attack specifically targets high-profile executives?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">Email phishing</div>
+                        <div class="quiz-option" data-correct="false">Spear phishing</div>
+                        <div class="quiz-option" data-correct="true">Whaling</div>
+                        <div class="quiz-option" data-correct="false">Smishing</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+                
+                <div class="quiz-question">
+                    <p>2. What makes spear phishing more dangerous than regular phishing?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">It uses more colorful emails</div>
+                        <div class="quiz-option" data-correct="true">It uses personalized information to target specific individuals</div>
+                        <div class="quiz-option" data-correct="false">It only targets mobile devices</div>
+                        <div class="quiz-option" data-correct="false">It's sent through social media only</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+                
+                <div class="quiz-question">
+                    <p>3. RCE (Remote Code Execution) attacks through phishing typically use:</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="true">Malicious email attachments that execute code when opened</div>
+                        <div class="quiz-option" data-correct="false">Colorful images in emails</div>
+                        <div class="quiz-option" data-correct="false">Long email subject lines</div>
+                        <div class="quiz-option" data-correct="false">Multiple recipients in CC</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+                
+                <div class="quiz-question">
+                    <p>4. What is 'Smishing'?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">Email-based phishing attacks</div>
+                        <div class="quiz-option" data-correct="true">SMS/text message-based phishing attacks</div>
+                        <div class="quiz-option" data-correct="false">Social media phishing</div>
+                        <div class="quiz-option" data-correct="false">Phone call-based attacks</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+                
+                <button id="module2-submit-quiz" class="module-btn">Submit Answers</button>
+            </div>
         </div>
     </div>
     
     <!-- Module 3 -->
-    <div class="module-card">
+    <div class="module-card" id="module3">
         <div class="module-header">
             <div>Module 3: Protecting Yourself Online</div>
-            <div>Status: <span class="module-status">Locked</span></div>
+            <div>Progress: <span id="module3-progress">0%</span> | Status: <span class="module-status">Locked</span></div>
         </div>
-        <div class="module-content">
-            <p>Complete Module 2 to unlock this content.</p>
+        <div class="module-content" id="module3-content">
+            <div class="progress-bar">
+                <div class="progress-fill" id="module3-progress-bar" style="width: 0%"></div>
+            </div>
+            
+            <div class="slides-container" id="module3-slides">
+                <div class="slide active" id="module3-slide1">
+                    <h3>Email Security Best Practices</h3>
+                    <ul>
+                        <li><strong>Verify sender identity:</strong> Check email addresses carefully</li>
+                        <li><strong>Hover over links:</strong> See the real destination before clicking</li>
+                        <li><strong>Be skeptical:</strong> If it seems too good to be true, it probably is</li>
+                        <li><strong>Use 2FA:</strong> Enable two-factor authentication on all accounts</li>
+                    </ul>
+                    <div class="tip-box">
+                        <h4>💡 Pro Tip:</h4>
+                        <p>When in doubt, contact the organization directly through official channels!</p>
+                    </div>
+                </div>
+                
+                <div class="slide" id="module3-slide2">
+                    <h3>Technical Security Measures</h3>
+                    <div class="security-measures">
+                        <div class="measure">
+                            <h4>🛡️ Endpoint Protection</h4>
+                            <p>Use reliable antivirus and anti-malware solutions that can detect malicious attachments.</p>
+                        </div>
+                        <div class="measure">
+                            <h4>🔒 Email Filtering</h4>
+                            <p>Implement advanced email security solutions that can detect and block phishing attempts.</p>
+                        </div>
+                        <div class="measure">
+                            <h4>🌐 Browser Security</h4>
+                            <p>Keep browsers updated and use extensions that warn about malicious websites.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="slide" id="module3-slide3">
+                    <h3>Incident Response</h3>
+                    <p>What to do if you suspect you've encountered a phishing attempt:</p>
+                    <ol>
+                        <li><strong>Don't panic</strong> - Stay calm and think clearly</li>
+                        <li><strong>Don't click</strong> - Avoid clicking any suspicious links or attachments</li>
+                        <li><strong>Report it</strong> - Forward the email to your IT security team</li>
+                        <li><strong>Change passwords</strong> - If you think you've been compromised</li>
+                        <li><strong>Monitor accounts</strong> - Watch for unauthorized activity</li>
+                    </ol>
+                    <div class="emergency-box">
+                        <h4>🚨 If You Already Clicked:</h4>
+                        <p>Immediately disconnect from the internet, run a full system scan, and contact your IT department!</p>
+                    </div>
+                </div>
+                
+                <div class="slide" id="module3-slide4">
+                    <h3>Training and Awareness</h3>
+                    <p>Building a security-conscious mindset:</p>
+                    <div class="awareness-tips">
+                        <div class="tip">
+                            <h4>📚 Continuous Learning</h4>
+                            <p>Stay updated on the latest phishing techniques and security threats.</p>
+                        </div>
+                        <div class="tip">
+                            <h4>👥 Share Knowledge</h4>
+                            <p>Help educate friends and colleagues about cybersecurity best practices.</p>
+                        </div>
+                        <div class="tip">
+                            <h4>🧠 Think Before You Click</h4>
+                            <p>Always pause and analyze emails, especially urgent requests or too-good-to-be-true offers.</p>
+                        </div>
+                    </div>
+                    <div class="video-example">
+                        <p><strong>Master Class:</strong> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="demo-link">Advanced cybersecurity awareness</a></p>
+                    </div>
+                </div>
+                
+                <div class="slide-controls">
+                    <button id="module3-prev-slide" class="slide-btn" disabled>Previous</button>
+                    <button id="module3-next-slide" class="slide-btn">Next</button>
+                </div>
+                
+                <div class="slide-indicators">
+                    <div class="slide-indicator active" data-slide="1"></div>
+                    <div class="slide-indicator" data-slide="2"></div>
+                    <div class="slide-indicator" data-slide="3"></div>
+                    <div class="slide-indicator" data-slide="4"></div>
+                </div>
+            </div>
+            
+            <div class="quiz-container">
+                <h3>Expert-Level Quiz: Protection & Response</h3>
+                <div class="quiz-question">
+                    <p>1. What is the FIRST thing you should do if you receive a suspicious email?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">Click the link to investigate</div>
+                        <div class="quiz-option" data-correct="false">Reply to ask if it's legitimate</div>
+                        <div class="quiz-option" data-correct="true">Don't click anything and verify through official channels</div>
+                        <div class="quiz-option" data-correct="false">Forward it to all your contacts</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+                
+                <div class="quiz-question">
+                    <p>2. Two-Factor Authentication (2FA) helps protect against phishing because:</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">It makes emails harder to send</div>
+                        <div class="quiz-option" data-correct="true">Even if credentials are stolen, attackers need the second factor</div>
+                        <div class="quiz-option" data-correct="false">It automatically deletes phishing emails</div>
+                        <div class="quiz-option" data-correct="false">It makes passwords longer</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+                
+                <div class="quiz-question">
+                    <p>3. If you accidentally clicked a malicious link, what should you do IMMEDIATELY?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="true">Disconnect from the internet and run a security scan</div>
+                        <div class="quiz-option" data-correct="false">Keep browsing normally</div>
+                        <div class="quiz-option" data-correct="false">Click more links to see what happens</div>
+                        <div class="quiz-option" data-correct="false">Wait to see if anything bad happens</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+                
+                <div class="quiz-question">
+                    <p>4. The most effective defense against phishing is:</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">Having the newest computer</div>
+                        <div class="quiz-option" data-correct="false">Using complex passwords only</div>
+                        <div class="quiz-option" data-correct="true">A combination of technology, training, and vigilant behavior</div>
+                        <div class="quiz-option" data-correct="false">Never using email</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+                
+                <div class="quiz-question">
+                    <p>5. Which of these is a sign of a sophisticated spear phishing attack?</p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">Generic greeting like "Dear Customer"</div>
+                        <div class="quiz-option" data-correct="false">Poor grammar and spelling</div>
+                        <div class="quiz-option" data-correct="true">Personalized content with specific details about you or your company</div>
+                        <div class="quiz-option" data-correct="false">Bright colors and flashy graphics</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+                
+                <button id="module3-submit-quiz" class="module-btn">Submit Answers</button>
+            </div>
         </div>
     </div>
 </div>
@@ -309,147 +673,280 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Slide functionality
-        let currentSlide = 1;
-        const totalSlides = 3;
-        
-        function updateSlide() {
-            // Hide all slides
-            document.querySelectorAll('.slide').forEach(slide => {
-                slide.classList.remove('active');
-            });
+        // Enhanced multi-module learning system
+        const modules = {
+            1: { 
+                currentSlide: 1, 
+                totalSlides: 3, 
+                completed: false,
+                prefix: '',
+                nextModule: 2
+            },
+            2: { 
+                currentSlide: 1, 
+                totalSlides: 4, 
+                completed: false,
+                prefix: 'module2-',
+                nextModule: 3
+            },
+            3: { 
+                currentSlide: 1, 
+                totalSlides: 4, 
+                completed: false,
+                prefix: 'module3-',
+                nextModule: null
+            }
+        };
+
+        // Initialize module states
+        function initializeModules() {
+            // Check localStorage for completion status
+            if (localStorage.getItem('module1-quiz-completed') === 'true') {
+                modules[1].completed = true;
+                unlockModule(2);
+            }
+            if (localStorage.getItem('module2-quiz-completed') === 'true') {
+                modules[2].completed = true;
+                unlockModule(3);
+            }
+            if (localStorage.getItem('module3-quiz-completed') === 'true') {
+                modules[3].completed = true;
+            }
             
-            // Show current slide
-            document.getElementById(`slide${currentSlide}`).classList.add('active');
-            
-            // Update indicators
-            document.querySelectorAll('.slide-indicator').forEach(indicator => {
-                indicator.classList.remove('active');
-            });
-            document.querySelector(`.slide-indicator[data-slide="${currentSlide}"]`).classList.add('active');
-            
-            // Update buttons
-            document.getElementById('prev-slide').disabled = currentSlide === 1;
-            document.getElementById('next-slide').disabled = currentSlide === totalSlides;
-            
-            // Update progress
-            updateProgress();
+            updateAllProgress();
         }
-        
-        document.getElementById('next-slide').addEventListener('click', function() {
-            if (currentSlide < totalSlides) {
-                currentSlide++;
-                updateSlide();
+
+        function unlockModule(moduleNum) {
+            const moduleCard = document.getElementById(`module${moduleNum}`);
+            const moduleStatus = moduleCard ? moduleCard.querySelector('.module-status') : null;
+            
+            if (moduleCard) {
+                moduleCard.classList.remove('locked');
+                if (moduleStatus) {
+                    moduleStatus.textContent = 'Unlocked';
+                    moduleStatus.classList.add('unlocked');
+                    moduleStatus.classList.remove('locked');
+                }
             }
-        });
-        
-        document.getElementById('prev-slide').addEventListener('click', function() {
-            if (currentSlide > 1) {
-                currentSlide--;
-                updateSlide();
-            }
-        });
-        
-        // Allow clicking indicators to navigate
-        document.querySelectorAll('.slide-indicator').forEach(indicator => {
-            indicator.addEventListener('click', function() {
-                currentSlide = parseInt(this.getAttribute('data-slide'));
-                updateSlide();
-            });
-        });
-        
-        // Quiz functionality
-        const quizOptions = document.querySelectorAll('.quiz-option');
-        
-        quizOptions.forEach(option => {
-            option.addEventListener('click', function() {
-                // Unselect siblings
-                const siblings = this.parentElement.querySelectorAll('.quiz-option');
-                siblings.forEach(sib => {
-                    sib.classList.remove('selected');
+        }
+
+        function setupSlideNavigation(moduleNum) {
+            const module = modules[moduleNum];
+            const prefix = module.prefix;
+            
+            function updateSlide() {
+                // Hide all slides for this module
+                const moduleContainer = document.getElementById(`module${moduleNum}-slides`) || 
+                                       document.querySelector('#module1 .slides-container');
+                if (!moduleContainer) return;
+                
+                const slides = moduleContainer.querySelectorAll('.slide');
+                slides.forEach(slide => slide.classList.remove('active'));
+                
+                // Show current slide
+                const currentSlideEl = document.getElementById(`${prefix}slide${module.currentSlide}`) ||
+                                     document.getElementById(`slide${module.currentSlide}`);
+                if (currentSlideEl) {
+                    currentSlideEl.classList.add('active');
+                }
+                
+                // Update indicators
+                const indicators = moduleContainer.querySelectorAll('.slide-indicator');
+                indicators.forEach((indicator, index) => {
+                    if (index + 1 === module.currentSlide) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
                 });
                 
-                // Select this option
-                this.classList.add('selected');
-            });
-        });
-        
-        document.getElementById('submit-quiz').addEventListener('click', function() {
-            let correct = 0;
-            const questions = document.querySelectorAll('.quiz-question');
-            
-            questions.forEach(question => {
-                const selected = question.querySelector('.quiz-option.selected');
-                const feedback = question.querySelector('.quiz-feedback');
+                // Update buttons
+                const prevBtn = document.getElementById(`${prefix}prev-slide`) || 
+                               document.getElementById('prev-slide');
+                const nextBtn = document.getElementById(`${prefix}next-slide`) || 
+                               document.getElementById('next-slide');
                 
-                if (!selected) {
-                    feedback.textContent = 'Please select an answer.';
-                    feedback.className = 'quiz-feedback feedback-incorrect';
-                    feedback.style.display = 'block';
-                    return;
-                }
+                if (prevBtn) prevBtn.disabled = module.currentSlide === 1;
+                if (nextBtn) nextBtn.disabled = module.currentSlide === module.totalSlides;
                 
-                const options = question.querySelectorAll('.quiz-option');
-                options.forEach(opt => {
-                    opt.classList.remove('correct', 'incorrect');
-                });
-                
-                if (selected.getAttribute('data-correct') === 'true') {
-                    selected.classList.add('correct');
-                    feedback.textContent = 'Correct!';
-                    feedback.className = 'quiz-feedback feedback-correct';
-                    correct++;
-                } else {
-                    selected.classList.add('incorrect');
-                    
-                    // Also highlight the correct answer
-                    question.querySelector('.quiz-option[data-correct="true"]').classList.add('correct');
-                    
-                    feedback.textContent = 'Incorrect. Please try again.';
-                    feedback.className = 'quiz-feedback feedback-incorrect';
-                }
-                
-                feedback.style.display = 'block';
-            });
-            
-            // Update progress if all correct
-            if (correct === questions.length) {
-                localStorage.setItem('module1-quiz-completed', 'true');
-                updateProgress();
-                
-                // Unlock Module 2
-                const moduleStatuses = document.querySelectorAll('.module-status');
-                if (moduleStatuses.length > 0) {
-                    moduleStatuses[0].textContent = 'Unlocked';
-                    moduleStatuses[0].style.color = '#2ecc71';
-                }
+                updateModuleProgress(moduleNum);
             }
-        });
-        
-        // Progress tracking
-        function updateProgress() {
+            
+            // Next slide button
+            const nextBtn = document.getElementById(`${prefix}next-slide`) || 
+                           document.getElementById('next-slide');
+            if (nextBtn && !nextBtn.hasAttribute('data-listener-added')) {
+                nextBtn.setAttribute('data-listener-added', 'true');
+                nextBtn.addEventListener('click', function() {
+                    if (module.currentSlide < module.totalSlides) {
+                        module.currentSlide++;
+                        updateSlide();
+                    }
+                });
+            }
+            
+            // Previous slide button
+            const prevBtn = document.getElementById(`${prefix}prev-slide`) || 
+                           document.getElementById('prev-slide');
+            if (prevBtn && !prevBtn.hasAttribute('data-listener-added')) {
+                prevBtn.setAttribute('data-listener-added', 'true');
+                prevBtn.addEventListener('click', function() {
+                    if (module.currentSlide > 1) {
+                        module.currentSlide--;
+                        updateSlide();
+                    }
+                });
+            }
+            
+            // Slide indicators
+            const moduleContainer = document.getElementById(`module${moduleNum}-slides`) || 
+                                   document.querySelector('#module1 .slides-container');
+            if (moduleContainer) {
+                const indicators = moduleContainer.querySelectorAll('.slide-indicator');
+                indicators.forEach(indicator => {
+                    if (!indicator.hasAttribute('data-listener-added')) {
+                        indicator.setAttribute('data-listener-added', 'true');
+                        indicator.addEventListener('click', function() {
+                            module.currentSlide = parseInt(this.getAttribute('data-slide'));
+                            updateSlide();
+                        });
+                    }
+                });
+            }
+            
+            // Initialize
+            updateSlide();
+        }
+
+        function setupQuizFunctionality(moduleNum) {
+            const module = modules[moduleNum];
+            const prefix = module.prefix;
+            const moduleCard = document.getElementById(`module${moduleNum}`) || document.querySelector('.module-card');
+            
+            if (!moduleCard) return;
+            
+            // Quiz option selection
+            const quizOptions = moduleCard.querySelectorAll('.quiz-option');
+            quizOptions.forEach(option => {
+                if (!option.hasAttribute('data-listener-added')) {
+                    option.setAttribute('data-listener-added', 'true');
+                    option.addEventListener('click', function() {
+                        const siblings = this.parentElement.querySelectorAll('.quiz-option');
+                        siblings.forEach(sib => sib.classList.remove('selected'));
+                        this.classList.add('selected');
+                    });
+                }
+            });
+            
+            // Quiz submission
+            const submitBtn = document.getElementById(`${prefix}submit-quiz`) || 
+                             document.getElementById('submit-quiz');
+            if (submitBtn && !submitBtn.hasAttribute('data-listener-added')) {
+                submitBtn.setAttribute('data-listener-added', 'true');
+                submitBtn.addEventListener('click', function() {
+                    let correct = 0;
+                    const questions = moduleCard.querySelectorAll('.quiz-question');
+                    
+                    questions.forEach(question => {
+                        const selected = question.querySelector('.quiz-option.selected');
+                        const feedback = question.querySelector('.quiz-feedback');
+                        
+                        if (!selected) {
+                            feedback.textContent = 'Please select an answer.';
+                            feedback.className = 'quiz-feedback feedback-incorrect';
+                            feedback.style.display = 'block';
+                            return;
+                        }
+                        
+                        const options = question.querySelectorAll('.quiz-option');
+                        options.forEach(opt => {
+                            opt.classList.remove('correct', 'incorrect');
+                        });
+                        
+                        if (selected.getAttribute('data-correct') === 'true') {
+                            selected.classList.add('correct');
+                            feedback.textContent = 'Correct!';
+                            feedback.className = 'quiz-feedback feedback-correct';
+                            correct++;
+                        } else {
+                            selected.classList.add('incorrect');
+                            question.querySelector('.quiz-option[data-correct="true"]').classList.add('correct');
+                            feedback.textContent = 'Incorrect. The correct answer is highlighted.';
+                            feedback.className = 'quiz-feedback feedback-incorrect';
+                        }
+                        
+                        feedback.style.display = 'block';
+                    });
+                    
+                    // Check if quiz is completed successfully
+                    if (correct === questions.length) {
+                        localStorage.setItem(`module${moduleNum}-quiz-completed`, 'true');
+                        modules[moduleNum].completed = true;
+                        
+                        // Show success message
+                        alert(`Congratulations! You've completed Module ${moduleNum} with a perfect score!`);
+                        
+                        // Unlock next module
+                        if (module.nextModule) {
+                            unlockModule(module.nextModule);
+                        }
+                        
+                        updateModuleProgress(moduleNum);
+                    } else {
+                        alert(`You got ${correct} out of ${questions.length} questions correct. Review the incorrect answers and try again!`);
+                    }
+                });
+            }
+        }
+
+        function updateModuleProgress(moduleNum) {
+            const module = modules[moduleNum];
             let progress = 0;
             
-            // Slides viewed (33% per slide)
-            progress += Math.min(currentSlide, totalSlides) * (33 / totalSlides);
+            // Slides viewed (50% for viewing all slides)
+            progress += (module.currentSlide / module.totalSlides) * 50;
             
-            // Quiz completed (67%)
-            if (localStorage.getItem('module1-quiz-completed') === 'true') {
-                progress += 67;
+            // Quiz completed (50% for completing quiz)
+            if (localStorage.getItem(`module${moduleNum}-quiz-completed`) === 'true') {
+                progress += 50;
             }
             
-            // Cap at 100%
-            progress = Math.min(progress, 100);
-            progress = Math.round(progress);
+            progress = Math.min(Math.round(progress), 100);
             
-            document.getElementById('module1-progress').textContent = `${progress}%`;
-            document.getElementById('module1-progress-bar').style.width = `${progress}%`;
+            const progressText = document.getElementById(`module${moduleNum}-progress`);
+            const progressBar = document.getElementById(`module${moduleNum}-progress-bar`);
+            
+            if (progressText) progressText.textContent = `${progress}%`;
+            if (progressBar) progressBar.style.width = `${progress}%`;
             
             return progress;
         }
+
+        function updateAllProgress() {
+            for (let i = 1; i <= 3; i++) {
+                updateModuleProgress(i);
+            }
+        }
+
+        // Initialize all modules
+        initializeModules();
         
-        // Initialize
-        updateProgress();
+        // Setup functionality for each module
+        for (let i = 1; i <= 3; i++) {
+            setupSlideNavigation(i);
+            setupQuizFunctionality(i);
+        }
+
+        // Add some visual feedback for locked modules
+        document.querySelectorAll('.module-card').forEach((card, index) => {
+            const moduleNum = index + 1;
+            if (moduleNum > 1) {
+                const prevModuleCompleted = localStorage.getItem(`module${moduleNum-1}-quiz-completed`) === 'true';
+                if (!prevModuleCompleted && moduleNum > 1) {
+                    card.classList.add('locked');
+                }
+            }
+        });
     });
 </script>
 {% endblock %}
