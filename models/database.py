@@ -3,6 +3,7 @@ Database models and helper functions
 """
 import datetime
 import sqlite3
+import os
 from passlib.hash import bcrypt
 from config.app_config import db
 
@@ -43,6 +44,21 @@ class SimulationEmail(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     # simulation_id managed via raw SQL (optional column)
 
+class SimulationSession(db.Model):
+    """Tracks individual simulation attempts/sessions"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    session_id = db.Column(db.String(36), nullable=False)  # UUID for session tracking
+    phase1_completed = db.Column(db.Boolean, default=False)
+    phase2_completed = db.Column(db.Boolean, default=False)
+    phase1_score = db.Column(db.Integer, nullable=True)  # Score out of 5
+    phase2_score = db.Column(db.Integer, nullable=True)  # Score out of 5  
+    avg_phase2_score = db.Column(db.Float, nullable=True)  # Average AI score out of 10
+    started_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    
+    user = db.relationship('User', backref=db.backref('simulation_sessions', lazy=True))
+
 # Database helper functions
 def update_database_schema(app):
     """Add the simulation_id column to the SimulationEmail table if it exists and the column is missing."""
@@ -77,6 +93,94 @@ def update_database_schema(app):
     except Exception as e:
         print(f"[DB] Error updating database schema: {str(e)}")
         return False
+
+def group_responses_into_sessions(responses):
+    """
+    Group simulation responses into logical sessions based on timing and email patterns.
+    A session is considered complete when there are responses to 5 phase1 emails (1-5)
+    and optionally 5 phase2 emails (>5).
+    """
+    if not responses:
+        return []
+    
+    sessions = []
+    current_session = []
+    
+    # Sort by creation time
+    responses = sorted(responses, key=lambda r: r.created_at)
+    
+    for i, response in enumerate(responses):
+        if not current_session:
+            # Start new session
+            current_session = [response]
+        else:
+            # Check if this response belongs to current session or starts a new one
+            last_response = current_session[-1]
+            time_gap = response.created_at - last_response.created_at
+            
+            # New session if gap > 2 hours OR if we see email_id=1 again (restart)
+            if time_gap.total_seconds() > 7200 or (response.email_id == 1 and any(r.email_id == 1 for r in current_session)):
+                # Finalize current session
+                sessions.append(current_session)
+                current_session = [response]
+            else:
+                current_session.append(response)
+    
+    # Add final session
+    if current_session:
+        sessions.append(current_session)
+    
+    # Calculate statistics for each session
+    session_stats = []
+    for session in sessions:
+        phase1_responses = [r for r in session if r.email_id <= 5]
+        phase2_responses = [r for r in session if r.email_id > 5]
+        
+        phase1_correct = sum(1 for r in phase1_responses if r.user_response == r.is_spam_actual)
+        phase2_correct = sum(1 for r in phase2_responses if r.user_response == r.is_spam_actual)
+        
+        phase2_scores = [r.score for r in phase2_responses if r.score is not None]
+        avg_phase2_score = sum(phase2_scores) / len(phase2_scores) if phase2_scores else None
+        
+        session_stats.append({
+            'responses': session,
+            'started_at': min(r.created_at for r in session),
+            'completed_at': max(r.created_at for r in session),
+            'phase1_total': len(phase1_responses),
+            'phase1_correct': phase1_correct,
+            'phase2_total': len(phase2_responses), 
+            'phase2_correct': phase2_correct,
+            'avg_phase2_score': avg_phase2_score,
+            'total_responses': len(session),
+            'is_complete': len(phase1_responses) >= 5  # At least completed phase 1
+        })
+    
+    return session_stats
+
+def log_simulation_event(user_id, username, event_type, session_id=None, details=None):
+    """
+    Log simulation events to a dedicated log file.
+    event_type: 'started', 'completed', 'phase1_completed', 'phase2_completed'
+    """
+    log_dir = 'logs'
+    log_file = os.path.join(log_dir, 'simulation_activity.log')
+    
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+        
+        timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+        log_entry = f"[{timestamp}] USER:{username}(ID:{user_id}) SESSION:{session_id} EVENT:{event_type}"
+        
+        if details:
+            log_entry += f" DETAILS:{details}"
+        
+        log_entry += "\n"
+        
+        with open(log_file, 'a', encoding='utf-8') as f:
+            f.write(log_entry)
+            
+    except Exception as e:
+        print(f"[LOG] Error writing simulation log: {str(e)}")
 
 def get_simulation_id_for_email(email_id, app):
     """Get the simulation ID for a specific email"""

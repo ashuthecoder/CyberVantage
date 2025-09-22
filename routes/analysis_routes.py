@@ -22,33 +22,42 @@ def analysis(current_user):
         # Get user's simulation data
         responses = SimulationResponse.query.filter_by(user_id=current_user.id).all()
         
-        # Calculate basic statistics
+        # Group responses into sessions
+        from models.database import group_responses_into_sessions
+        sessions = group_responses_into_sessions(responses)
+        
+        # Calculate basic statistics from all responses
         total_responses = len(responses)
-        correct_responses = sum(1 for r in responses if r.is_spam_actual == (r.user_response == 'true'))
+        correct_responses = sum(1 for r in responses if r.is_spam_actual == r.user_response)
         
         accuracy = round((correct_responses / total_responses) * 100) if total_responses > 0 else 0
         
-        # Get phase-specific stats
-        phase1_responses = [r for r in responses if r.email_id <= 5]
-        phase2_responses = [r for r in responses if r.email_id > 5]
-        
-        phase1_correct = sum(1 for r in phase1_responses if r.is_spam_actual == (r.user_response == 'true'))
-        phase2_correct = sum(1 for r in phase2_responses if r.is_spam_actual == (r.user_response == 'true'))
-        
-        avg_score = round(sum(r.score for r in phase2_responses if r.score) / len(phase2_responses)) if phase2_responses else 0
-        
+        # Get phase-specific stats (from most recent/complete session)
+        if sessions:
+            latest_session = sessions[-1]  # Most recent session
+            phase1_correct = latest_session['phase1_correct']
+            phase1_total = latest_session['phase1_total']
+            phase2_correct = latest_session['phase2_correct']
+            phase2_total = latest_session['phase2_total']
+            avg_score = round(latest_session['avg_phase2_score']) if latest_session['avg_phase2_score'] else 0
+        else:
+            phase1_correct = phase1_total = phase2_correct = phase2_total = avg_score = 0
+
         return render_template('analysis.html', 
                              username=current_user.name,
                              total_responses=total_responses,
                              correct_responses=correct_responses,
                              accuracy=accuracy,
-                             phase1_total=len(phase1_responses),
+                             phase1_total=phase1_total,
                              phase1_correct=phase1_correct,
-                             phase2_total=len(phase2_responses),
+                             phase2_total=phase2_total,
                              phase2_correct=phase2_correct,
-                             avg_score=avg_score)
+                             avg_score=avg_score,
+                             sessions=sessions)  # Pass sessions for history display
     except Exception as e:
         print(f"[ANALYSIS] Error: {e}")
+        import traceback
+        traceback.print_exc()
         # Return basic template with default values
         return render_template('analysis.html', 
                              username=current_user.name,
@@ -59,7 +68,8 @@ def analysis(current_user):
                              phase1_correct=0,
                              phase2_total=0,
                              phase2_correct=0,
-                             avg_score=0)
+                             avg_score=0,
+                             sessions=[])
 
 @analysis_bp.route('/api_monitor')
 @token_required

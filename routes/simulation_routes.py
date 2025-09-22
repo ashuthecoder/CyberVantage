@@ -37,6 +37,16 @@ def simulate(current_user):
             session.pop('active_phase2_email_id', None)
             session.modified = True
             print(f"[SIMULATE] Initialized new simulation with ID: {session.get('simulation_id')}")
+            
+            # Log simulation start
+            from models.database import log_simulation_event
+            log_simulation_event(
+                current_user.id, 
+                current_user.name, 
+                'started', 
+                session.get('simulation_id'),
+                f"New simulation started - Phase 1"
+            )
 
         # Load predefined emails once (Phase 1)
         if session.get('simulation_phase') == 1:
@@ -74,10 +84,31 @@ def simulate(current_user):
             session.pop('active_phase2_email_id', None)
             session.modified = True
             phase = 2  # continue into Phase 2 logic
+            
+            # Log phase 1 completion
+            from models.database import log_simulation_event
+            log_simulation_event(
+                current_user.id,
+                current_user.name,
+                'phase1_completed',
+                session.get('simulation_id'),
+                "Phase 1 completed, moving to Phase 2"
+            )
 
         # Completion logic (Phase 2 by counter only)
         if phase == 2 and phase2_completed >= 5:
             print("[SIMULATE] Simulation complete")
+            
+            # Log simulation completion
+            from models.database import log_simulation_event
+            log_simulation_event(
+                current_user.id,
+                current_user.name,
+                'completed',
+                session.get('simulation_id'),
+                "Full simulation completed - Phase 1 & 2"
+            )
+            
             return render_template('simulate.html', phase='complete', username=current_user.name)
 
         # Fetch email for current step
@@ -316,6 +347,17 @@ def continue_after_feedback(current_user, email_id):
         # If 5 done, go to results
         if session.get('simulation_phase') == 2 and session.get('phase2_emails_completed', 0) >= 5:
             print(f"[CONTINUE] Phase 2 complete: {session.get('phase2_emails_completed')} emails completed")
+            
+            # Log phase 2 completion
+            from models.database import log_simulation_event
+            log_simulation_event(
+                current_user.id,
+                current_user.name,
+                'phase2_completed',
+                session.get('simulation_id'),
+                f"Phase 2 completed with {session.get('phase2_emails_completed')} emails"
+            )
+            
             return redirect(url_for('simulation.simulation_results'))
 
         return redirect(url_for('simulation.simulate'))
