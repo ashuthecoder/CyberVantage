@@ -13,12 +13,44 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     encrypted_data = db.Column(db.LargeBinary, nullable=True)  # For sensitive info
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)  # Admin flag
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    password_reset_token = db.Column(db.String(255), nullable=True)  # For password reset
+    password_reset_expires = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, password):
         self.password_hash = bcrypt.hash(password)
 
     def check_password(self, password):
         return bcrypt.verify(password, self.password_hash)
+    
+    def is_admin_user(self):
+        """Check if user has admin privileges"""
+        return self.is_admin
+    
+    def generate_reset_token(self):
+        """Generate a secure password reset token"""
+        import secrets
+        import datetime as dt
+        
+        token = secrets.token_urlsafe(32)
+        self.password_reset_token = token
+        self.password_reset_expires = dt.datetime.utcnow() + dt.timedelta(hours=1)
+        return token
+    
+    def verify_reset_token(self, token):
+        """Verify password reset token and check expiration"""
+        import datetime as dt
+        if not self.password_reset_token or not self.password_reset_expires:
+            return False
+        if dt.datetime.utcnow() > self.password_reset_expires:
+            return False
+        return self.password_reset_token == token
+    
+    def clear_reset_token(self):
+        """Clear password reset token after use"""
+        self.password_reset_token = None
+        self.password_reset_expires = None
 
 class SimulationResponse(db.Model):
     id = db.Column(db.Integer, primary_key=True)
