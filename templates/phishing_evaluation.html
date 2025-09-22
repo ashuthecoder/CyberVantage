@@ -2,15 +2,9 @@
 {% block title %}Phishing Email Evaluation | CyberVantage{% endblock %}
 
 {% block content %}
-<div style="background-color: #2a3f54; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <a href="{{ url_for('simulation.simulate') }}" style="color: white; text-decoration: none;">← Back to Simulation</a>
-    <div>
-        <span>Welcome, {{ username }}</span>
-        <a href="{{ url_for('auth.logout') }}" style="background-color: #e74c3c; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; margin-left: 10px;">Logout</a>
-    </div>
+<div style="margin-bottom: 20px;">
+    <a href="{{ url_for('simulation.simulate') }}" style="color: #3498db; text-decoration: none; font-weight: 500;">← Back to Simulation</a>
 </div>
-
-<div style="max-width: 1200px; margin: 2rem auto; padding: 0 2rem;">
     <h1>Phishing Email Creation: Evaluation Results</h1>
     <p>Here's our analysis of the phishing email you created. This feedback will help you understand the techniques that make phishing attempts effective or easy to spot.</p>
     
@@ -57,5 +51,4 @@
         <h4 style="color: #155724; margin-top: 0;">Educational Note</h4>
         <p style="margin-bottom: 0;">Remember that the most effective phishing attempts combine multiple techniques. By understanding these techniques, you're better equipped to protect yourself and others from real phishing attacks.</p>
     </div>
-</div>
 {% endblock %}
