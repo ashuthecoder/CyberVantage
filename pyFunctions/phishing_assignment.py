@@ -134,23 +134,23 @@ def evaluate_phishing_creation_azure(phishing_email, app):
 Student-created phishing email:
 {phishing_email}
 
-Evaluate this phishing email on these criteria and provide scores for each:
+Evaluate this phishing email on these criteria and provide scores for each (out of 10 points total):
 
-1. **Social Engineering Tactics (30 points)**:
+1. **Social Engineering Tactics (3 points max)**:
    - Use of urgency, fear, curiosity, or authority
    - Emotional triggers and psychological pressure
    
-2. **Technical Realism (30 points)**:
+2. **Technical Realism (3 points max)**:
    - Believable sender address/domain
    - Professional formatting and layout
    - Realistic links or attachments mentioned
    
-3. **Psychological Manipulation (20 points)**:
+3. **Psychological Manipulation (2 points max)**:
    - Persuasive language and tone
    - Exploitation of trust or authority
    - Use of social proof or scarcity
    
-4. **Scenario Believability (20 points)**:
+4. **Scenario Believability (2 points max)**:
    - Realistic context and timing
    - Appropriate target audience
    - Credible reason for action
@@ -158,7 +158,7 @@ Evaluate this phishing email on these criteria and provide scores for each:
 For each criterion, assign a specific score and explain your reasoning.
 
 Then provide:
-- Overall score (out of 100)
+- Overall score (out of 10)
 - Effectiveness rating (Low/Medium/High/Very High)
 - Specific strengths in the approach
 - Areas for improvement
@@ -213,23 +213,23 @@ Student-created phishing email:
 {phishing_email}
 ```
 
-Evaluate this phishing email on these criteria and provide scores for each:
+Evaluate this phishing email on these criteria and provide scores for each (out of 10 points total):
 
-1. **Social Engineering Tactics (30 points)**:
+1. **Social Engineering Tactics (3 points max)**:
    - Use of urgency, fear, curiosity, or authority
    - Emotional triggers and psychological pressure
    
-2. **Technical Realism (30 points)**:
+2. **Technical Realism (3 points max)**:
    - Believable sender address/domain
    - Professional formatting and layout
    - Realistic links or attachments mentioned
    
-3. **Psychological Manipulation (20 points)**:
+3. **Psychological Manipulation (2 points max)**:
    - Persuasive language and tone
    - Exploitation of trust or authority
    - Use of social proof or scarcity
    
-4. **Scenario Believability (20 points)**:
+4. **Scenario Believability (2 points max)**:
    - Realistic context and timing
    - Appropriate target audience
    - Credible reason for action
@@ -237,7 +237,7 @@ Evaluate this phishing email on these criteria and provide scores for each:
 For each criterion, assign a specific score and explain your reasoning.
 
 Then provide:
-- Overall score (out of 100)
+- Overall score (out of 10)
 - Effectiveness rating (Low/Medium/High/Very High)
 - Specific strengths in the approach
 - Areas for improvement
@@ -297,7 +297,7 @@ def parse_evaluation_response(feedback_html):
     """
     Parse evaluation response to extract score and effectiveness rating
     """
-    score = 70  # Default score
+    score = 7  # Default score out of 10
     effectiveness_rating = "Medium"
     
     # Extract score using improved heuristics
@@ -306,15 +306,18 @@ def parse_evaluation_response(feedback_html):
             score_text = feedback_html.lower().split("overall score")[1].split(".")[0]
             possible_scores = [int(s) for s in score_text.split() if s.isdigit()]
             if possible_scores:
-                score = min(100, max(0, possible_scores[0]))  # Clamp between 0-100
+                raw_score = min(100, max(0, possible_scores[0]))  # Clamp between 0-100
+                score = round(raw_score / 10)  # Convert to 10-point scale
         except:
             pass
     
-    # Look for score patterns like "Score: 85" or "85/100"
+    # Look for score patterns like "Score: 85" or "85/100" or "8/10"
     score_patterns = [
         r'score[:\s]+(\d+)',
         r'(\d+)/100',
+        r'(\d+)/10',
         r'(\d+)\s*out\s*of\s*100',
+        r'(\d+)\s*out\s*of\s*10',
         r'(\d+)\s*points?'
     ]
     
@@ -324,7 +327,10 @@ def parse_evaluation_response(feedback_html):
             try:
                 potential_score = int(matches[0])
                 if 0 <= potential_score <= 100:
-                    score = potential_score
+                    score = round(potential_score / 10)  # Convert to 10-point scale
+                    break
+                elif 0 <= potential_score <= 10:
+                    score = potential_score  # Already on 10-point scale
                     break
             except:
                 continue
@@ -349,8 +355,8 @@ def get_enhanced_fallback_evaluation(phishing_email):
     # Analyze email content for basic scoring factors
     email_lower = phishing_email.lower()
     
-    # Base score
-    score = 40
+    # Base score out of 10
+    score = 4
     
     # Check for various phishing techniques
     techniques_found = []
@@ -358,43 +364,47 @@ def get_enhanced_fallback_evaluation(phishing_email):
     # Urgency indicators
     urgency_words = ['urgent', 'immediate', 'asap', 'expires', 'deadline', 'limited time', 'act now', 'hurry']
     if any(word in email_lower for word in urgency_words):
-        score += 15
+        score += 1.5
         techniques_found.append("urgency")
     
     # Authority indicators
     authority_words = ['security', 'admin', 'it department', 'management', 'ceo', 'hr', 'support team']
     if any(word in email_lower for word in authority_words):
-        score += 12
+        score += 1.2
         techniques_found.append("authority")
     
     # Fear tactics
     fear_words = ['suspended', 'compromised', 'hack', 'breach', 'virus', 'unauthorized', 'locked', 'terminated']
     if any(word in email_lower for word in fear_words):
-        score += 10
+        score += 1.0
         techniques_found.append("fear")
     
     # Links/actions
     action_words = ['click', 'verify', 'confirm', 'update', 'login', 'download', 'open attachment']
     if any(word in email_lower for word in action_words):
-        score += 8
+        score += 0.8
         techniques_found.append("call-to-action")
     
     # Professional appearance (length and structure)
     if len(phishing_email) > 200:
-        score += 5
+        score += 0.5
     
     if '@' in phishing_email:  # Has email addresses
-        score += 3
+        score += 0.3
     
     if 'http' in phishing_email or 'www' in phishing_email:  # Has links
-        score += 5
+        score += 0.5
+    
+    # Round score to nearest 0.5 and clamp to 0-10
+    score = round(score * 2) / 2
+    score = min(10, max(0, score))
     
     # Determine effectiveness rating based on score
-    if score >= 80:
+    if score >= 8:
         effectiveness_rating = "Very High"
-    elif score >= 65:
+    elif score >= 6.5:
         effectiveness_rating = "High"
-    elif score >= 45:
+    elif score >= 4.5:
         effectiveness_rating = "Medium"
     else:
         effectiveness_rating = "Low"
@@ -456,6 +466,6 @@ def get_enhanced_fallback_evaluation(phishing_email):
     
     return {
         "feedback": feedback,
-        "score": min(100, score),
+        "score": score,  # Already converted to 10-point scale
         "effectiveness_rating": effectiveness_rating
     }
