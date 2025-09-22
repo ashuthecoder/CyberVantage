@@ -203,3 +203,117 @@ def extend_session(current_user):
     session['token'] = token
     
     return jsonify({"success": True, "message": "Session extended"}), 200
+
+def admin_required(f):
+    """Admin required decorator"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        # This should be called after token_required
+        current_user = args[0] if args else None
+        if not current_user or not current_user.is_admin_user():
+            from flask import flash
+            flash("Admin access required.", "error")
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return decorated
+
+@auth_bp.route('/admin/users')
+@token_required
+@admin_required
+def admin_users(current_user):
+    """Admin view to see all registered users"""
+    users = User.query.all()
+    return render_template('admin_users.html', 
+                         users=users, 
+                         username=current_user.name)
+
+@auth_bp.route('/admin/make_admin/<int:user_id>', methods=['POST'])
+@token_required 
+@admin_required
+def make_admin(current_user, user_id):
+    """Make a user an admin"""
+    user = User.query.get_or_404(user_id)
+    user.is_admin = True
+    db.session.commit()
+    
+    from flask import flash
+    flash(f"Successfully made {user.name} an admin.", "success")
+    return redirect(url_for('auth.admin_users'))
+
+@auth_bp.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    """Request password reset"""
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+            
+        user = User.query.filter_by(email=email).first()
+        if user:
+            token = user.generate_reset_token()
+            db.session.commit()
+            
+            # In a real application, you would send an email here
+            # For demo purposes, we'll show the reset link
+            reset_url = url_for('auth.reset_password', token=token, _external=True)
+            
+            # Log the reset request for demo
+            print(f"Password reset requested for {email}")
+            print(f"Reset URL: {reset_url}")
+            
+            from flask import flash
+            flash(f"Password reset instructions have been sent to {email}. Check the console for the reset link.", "info")
+        else:
+            # Don't reveal that email doesn't exist for security
+            from flask import flash
+            flash(f"If an account with {email} exists, password reset instructions have been sent.", "info")
+            
+        return redirect(url_for('auth.login'))
+    
+    return render_template('reset_password_request.html')
+
+@auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Reset password with token"""
+    user = User.query.filter_by(password_reset_token=token).first()
+    
+    if not user or not user.verify_reset_token(token):
+        from flask import flash
+        flash("Invalid or expired password reset token.", "error")
+        return redirect(url_for('auth.login'))
+    
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        
+        # Password validation (same as registration)
+        if not password:
+            return jsonify({"error": "Password is required"}), 400
+            
+        if password != confirm_password:
+            return jsonify({"error": "Passwords do not match"}), 400
+            
+        # Enhanced password strength check
+        if len(password) < 8:
+            return jsonify({"error": "Password must be at least 8 characters long"}), 400
+        
+        if not any(c.isupper() for c in password):
+            return jsonify({"error": "Password must contain at least one uppercase letter"}), 400
+        
+        if not any(c.islower() for c in password):
+            return jsonify({"error": "Password must contain at least one lowercase letter"}), 400
+        
+        if not any(c.isdigit() for c in password):
+            return jsonify({"error": "Password must contain at least one number"}), 400
+        
+        # Update password and clear reset token
+        user.set_password(password)
+        user.clear_reset_token()
+        db.session.commit()
+        
+        from flask import flash
+        flash("Your password has been reset successfully. Please log in.", "success")
+        return redirect(url_for('auth.login'))
+    
+    return render_template('reset_password.html', token=token)
