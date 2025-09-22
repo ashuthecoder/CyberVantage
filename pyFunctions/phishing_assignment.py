@@ -309,7 +309,7 @@ def parse_evaluation_response(feedback_html):
             possible_scores = [int(s) for s in score_text.split() if s.isdigit()]
             if possible_scores:
                 raw_score = min(100, max(0, possible_scores[0]))  # Clamp between 0-100
-                score = round(raw_score / 10)  # Convert to 10-point scale
+                score = max(1, min(10, int(raw_score / 10 + 0.5)))  # Convert to 10-point scale with proper rounding
         except:
             pass
     
@@ -328,7 +328,8 @@ def parse_evaluation_response(feedback_html):
             try:
                 potential_score = int(matches[0])
                 if scale == 100 and 0 <= potential_score <= 100:
-                    score = round(potential_score / 10)  # Convert 100-point to 10-point
+                    # Use proper rounding instead of banker's rounding
+                    score = max(1, min(10, int(potential_score / 10 + 0.5)))  # Convert 100-point to 10-point
                     break
                 elif scale == 10 and 0 <= potential_score <= 10:
                     score = potential_score  # Already on 10-point scale
@@ -352,7 +353,7 @@ def parse_evaluation_response(feedback_html):
                         score = potential_score  # Assume 10-point scale
                         break
                     elif 11 <= potential_score <= 100:
-                        score = round(potential_score / 10)  # Assume 100-point scale, convert
+                        score = max(1, min(10, int(potential_score / 10 + 0.5)))  # Assume 100-point scale, convert
                         break
                 except:
                     continue
