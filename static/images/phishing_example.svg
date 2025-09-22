@@ -1,0 +1,31 @@
+<svg width="600" height="300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="600" height="300" fill="#ffffff" stroke="#e74c3c" stroke-width="3"/>
+  
+  <!-- Email interface mockup -->
+  <rect x="50" y="50" width="500" height="200" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+  
+  <!-- Header bar -->
+  <rect x="50" y="50" width="500" height="30" fill="#e74c3c"/>
+  <text x="70" y="70" font-family="Arial, sans-serif" font-size="14" fill="white" font-weight="bold">⚠️ URGENT: Your Account Will Be Suspended!</text>
+  
+  <!-- Email content -->
+  <text x="70" y="110" font-family="Arial, sans-serif" font-size="12" fill="#333">From: security@yourbank.com (FAKE)</text>
+  <text x="70" y="130" font-family="Arial, sans-serif" font-size="12" fill="#333">Subject: Immediate Action Required</text>
+  
+  <text x="70" y="160" font-family="Arial, sans-serif" font-size="11" fill="#666">Dear Customer,</text>
+  <text x="70" y="180" font-family="Arial, sans-serif" font-size="11" fill="#666">Your account has been compromised. Click link below to verify:</text>
+  
+  <!-- Malicious link -->
+  <rect x="70" y="190" width="200" height="25" fill="#e74c3c" rx="3"/>
+  <text x="170" y="207" font-family="Arial, sans-serif" font-size="11" fill="white" text-anchor="middle" font-weight="bold">VERIFY ACCOUNT NOW</text>
+  
+  <!-- Warning indicators -->
+  <text x="300" y="160" font-family="Arial, sans-serif" font-size="10" fill="#e74c3c" font-weight="bold">🚨 RED FLAGS:</text>
+  <text x="300" y="175" font-family="Arial, sans-serif" font-size="9" fill="#e74c3c">• Urgent language</text>
+  <text x="300" y="190" font-family="Arial, sans-serif" font-size="9" fill="#e74c3c">• Suspicious sender</text>
+  <text x="300" y="205" font-family="Arial, sans-serif" font-size="9" fill="#e74c3c">• Malicious link</text>
+  
+  <!-- Title -->
+  <text x="300" y="30" font-family="Arial, sans-serif" font-size="16" fill="#333" text-anchor="middle" font-weight="bold">Example of a Phishing Email</text>
+</svg>
