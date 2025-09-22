@@ -34,6 +34,68 @@
         </div>
     </div>
     
+    <!-- New Simulation History Section -->
+    <div class="simulation-history">
+        <h2>Simulation History</h2>
+        {% if sessions %}
+            <div class="session-list">
+                {% for session in sessions %}
+                    <div class="session-card {% if session.is_complete %}completed{% else %}incomplete{% endif %}">
+                        <div class="session-header">
+                            <h3>Simulation Attempt #{{ loop.index }}</h3>
+                            <div class="session-date">
+                                Started: {{ session.started_at.strftime('%Y-%m-%d %H:%M') }}
+                                {% if session.completed_at != session.started_at %}
+                                    <br>Completed: {{ session.completed_at.strftime('%Y-%m-%d %H:%M') }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="session-stats">
+                            <div class="stat-group">
+                                <span class="stat-label">Phase 1:</span>
+                                <span class="stat-value {% if session.phase1_correct == session.phase1_total and session.phase1_total == 5 %}perfect{% elif session.phase1_correct >= 3 %}good{% else %}needs-work{% endif %}">
+                                    {{ session.phase1_correct }}/{{ session.phase1_total }}
+                                </span>
+                            </div>
+                            
+                            {% if session.phase2_total > 0 %}
+                                <div class="stat-group">
+                                    <span class="stat-label">Phase 2:</span>
+                                    <span class="stat-value {% if session.phase2_correct == session.phase2_total and session.phase2_total == 5 %}perfect{% elif session.phase2_correct >= 3 %}good{% else %}needs-work{% endif %}">
+                                        {{ session.phase2_correct }}/{{ session.phase2_total }}
+                                    </span>
+                                </div>
+                                
+                                {% if session.avg_phase2_score %}
+                                    <div class="stat-group">
+                                        <span class="stat-label">Avg Analysis Score:</span>
+                                        <span class="stat-value {% if session.avg_phase2_score >= 8 %}perfect{% elif session.avg_phase2_score >= 6 %}good{% else %}needs-work{% endif %}">
+                                            {{ "%.1f"|format(session.avg_phase2_score) }}/10
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                            
+                            <div class="stat-group">
+                                <span class="stat-label">Total Responses:</span>
+                                <span class="stat-value">{{ session.total_responses }}</span>
+                            </div>
+                        </div>
+                        
+                        {% if not session.is_complete %}
+                            <div class="session-status">
+                                <span class="incomplete-badge">Incomplete</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-history">No simulation attempts found. <a href="{{ url_for('simulation.simulate') }}">Start your first simulation</a> to see your progress history here!</p>
+        {% endif %}
+    </div>
+    
     <div class="recommendations">
         <h2>Analysis & Recommendations</h2>
         {% if total_responses == 0 %}
@@ -78,6 +140,194 @@
 .subtitle {
     text-align: center;
     color: #7f8c8d;
+    margin-bottom: 2rem;
+}
+
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+}
+
+.stat-card h3 {
+    margin: 0 0 1rem 0;
+    color: #2a3f54;
+    font-size: 1.1rem;
+}
+
+.score {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2a3f54;
+    margin: 0.5rem 0;
+}
+
+.score span {
+    font-size: 1.5rem;
+    color: #7f8c8d;
+}
+
+/* Simulation History Styles */
+.simulation-history {
+    margin: 2rem 0;
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+}
+
+.simulation-history h2 {
+    color: #2a3f54;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
+}
+
+.session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.session-card {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+}
+
+.session-card.completed {
+    border-left: 4px solid #28a745;
+}
+
+.session-card.incomplete {
+    border-left: 4px solid #ffc107;
+}
+
+.session-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+.session-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.session-header h3 {
+    margin: 0;
+    color: #2a3f54;
+    font-size: 1.1rem;
+}
+
+.session-date {
+    font-size: 0.9rem;
+    color: #6c757d;
+    text-align: right;
+}
+
+.session-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+
+.stat-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stat-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.stat-value {
+    font-weight: bold;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: #e9ecef;
+    color: #495057;
+}
+
+.stat-value.perfect {
+    background: #d4edda;
+    color: #155724;
+}
+
+.stat-value.good {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.stat-value.needs-work {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.session-status {
+    margin-top: 0.5rem;
+}
+
+.incomplete-badge {
+    background: #fff3cd;
+    color: #856404;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.no-history {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 2rem;
+}
+
+.no-history a {
+    color: #2a3f54;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.no-history a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .session-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .session-date {
+        text-align: left;
+    }
+    
+    .session-stats {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
     margin-bottom: 2rem;
 }
 
