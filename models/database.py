@@ -4,7 +4,7 @@ Database models and helper functions
 import datetime
 import sqlite3
 import os
-from passlib.hash import bcrypt
+import bcrypt
 from config.app_config import db
 
 class User(db.Model):
@@ -19,10 +19,13 @@ class User(db.Model):
     password_reset_expires = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, password):
-        self.password_hash = bcrypt.hash(password)
+        # Hash password with bcrypt
+        salt = bcrypt.gensalt()
+        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
     def check_password(self, password):
-        return bcrypt.verify(password, self.password_hash)
+        # Verify password with bcrypt
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
     
     def is_admin_user(self):
         """Check if user has admin privileges"""
