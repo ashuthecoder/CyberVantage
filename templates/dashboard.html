@@ -56,6 +56,10 @@
     background-color: #e67e22;
 }
 
+#admin-section::after {
+    background-color: #dc3545;
+}
+
 .section-card:hover::after {
     height: 10px;
 }
@@ -138,6 +142,16 @@
             <p>Test your knowledge by creating a convincing phishing email and get AI feedback on your work.</p>
         </div>
     </a>
+    
+    {% if current_user and current_user.is_admin_user() %}
+    <a href="{{ url_for('auth.admin_users') }}" class="section-card" id="admin-section">
+        <div class="section-content">
+            <div class="section-icon">👥</div>
+            <h2>Admin Panel</h2>
+            <p>Manage system users, view registration details, and maintain user accounts.</p>
+        </div>
+    </a>
+    {% endif %}
 </div>
 {% endblock %}
 

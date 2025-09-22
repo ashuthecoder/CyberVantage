@@ -38,7 +38,7 @@ def welcome():
 def dashboard(current_user):
     # Make sure database schema is updated
     update_database_schema(app)
-    return render_template('dashboard.html', username=current_user.name)
+    return render_template('dashboard.html', username=current_user.name, current_user=current_user)
 
 if __name__ == '__main__':
     with app.app_context():
