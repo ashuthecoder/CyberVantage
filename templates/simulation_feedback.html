@@ -1,42 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberVantage - Simulation Feedback</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% extends "base.html" %}
+{% block title %}Simulation Feedback | CyberVantage{% endblock %}
+
+{% block extra_styles %}
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f7fa;
-        }
-        header {
-            background-color: #2a3f54;
-            color: white;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-        }
-        .back-btn {
-            color: white;
-            text-decoration: none;
-        }
-        .logout-btn {
-            background-color: #e74c3c;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            text-decoration: none;
-        }
         .result-summary {
             background: white;
             padding: 1.5rem;
@@ -124,24 +90,11 @@
             box-shadow: 0 3px 6px rgba(0,0,0,0.16);
             transition: all 0.3s ease;
         }
-        .continue-btn:hover {
-            background-color: #1f2f3d;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
     </style>
-</head>
-<body>
-    <header>
-        <a href="{{ url_for('dashboard') }}" class="back-btn">← Back to Dashboard</a>
-        <div>
-            <span>Welcome, {{ username }}</span>
-            <a href="{{ url_for('auth.logout') }}" class="logout-btn">Logout</a>
-        </div>
-    </header>
+{% endblock %}
 
-    <div class="container">
-        <h1>AI Feedback on Your Analysis</h1>
+{% block content %}
+    <h1>AI Feedback on Your Analysis</h1>
         
         <div class="result-summary">
             <h2>Your Answer: {{ "Correct" if response.user_response == response.is_spam_actual else "Incorrect" }}</h2>
@@ -167,11 +120,7 @@
             Continue to Next Email →
         </a>
         
-        <div class="actions">
-            <a href="{{ url_for('simulation.restart_simulation') }}" class="btn secondary">Restart Simulation</a>
-        </div>
+    <div class="actions">
+        <a href="{{ url_for('simulation.restart_simulation') }}" class="btn secondary">Restart Simulation</a>
     </div>
-
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-</body>
-</html>
+{% endblock %}
