@@ -2,6 +2,7 @@
 CyberVantage - Main application entry point
 Refactored to use modular structure with focused components
 """
+import os
 from flask import render_template
 from config.app_config import create_app, db
 from config.ai_config import configure_azure_openai
@@ -43,5 +44,12 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         update_database_schema(app)  # Ensure the schema is updated at startup
+    
+    # Check if we're in development mode
+    debug_mode = os.getenv('FLASK_ENV') == 'development'
+    if debug_mode:
+        print("🔧 Running in DEVELOPMENT mode with debugging enabled")
+        print("   Set FLASK_ENV=production for production deployment")
+    
     # Disable the reloader to avoid double-execution side-effects in dev
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=debug_mode, use_reloader=False)

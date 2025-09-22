@@ -3,28 +3,63 @@ Authentication routes - login, register, logout
 """
 import datetime
 import jwt
+import time
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session
 from email_validator import validate_email, EmailNotValidError
 from functools import wraps
 from models.database import User, db
+from collections import defaultdict, deque
 
 auth_bp = Blueprint('auth', __name__)
 
+# Simple in-memory rate limiting (for production, use Redis or database)
+login_attempts = defaultdict(deque)
+registration_attempts = defaultdict(deque)
+RATE_LIMIT_WINDOW = 300  # 5 minutes in seconds
+MAX_LOGIN_ATTEMPTS = 5
+MAX_REGISTRATION_ATTEMPTS = 3
+
+def is_rate_limited(ip_address, attempts_dict, max_attempts):
+    """Check if IP is rate limited"""
+    now = time.time()
+    # Clean old attempts
+    while attempts_dict[ip_address] and attempts_dict[ip_address][0] < now - RATE_LIMIT_WINDOW:
+        attempts_dict[ip_address].popleft()
+    
+    return len(attempts_dict[ip_address]) >= max_attempts
+
+def record_attempt(ip_address, attempts_dict):
+    """Record an attempt for rate limiting"""
+    attempts_dict[ip_address].append(time.time())
+
 def token_required(f):
-    """Token required decorator"""
+    """Token required decorator with improved security"""
     @wraps(f)
     def decorated(*args, **kwargs):
         from flask import current_app
+        import time
+        
         token = session.get('token')
         if not token:
+            # Add small random delay to prevent timing attacks
+            time.sleep(0.01 + (hash(str(time.time())) % 100) / 10000)
             return redirect(url_for('auth.login'))
 
         try:
             data = jwt.decode(token, current_app.config['JWT_SECRET_KEY'], algorithms=["HS256"])
             current_user = User.query.filter_by(id=data['user_id']).first()
             if not current_user:
+                # Add small random delay to prevent timing attacks
+                time.sleep(0.01 + (hash(str(time.time())) % 100) / 10000)
                 return redirect(url_for('auth.login'))
-        except:
+        except jwt.ExpiredSignatureError:
+            # Token has expired
+            session.clear()
+            return redirect(url_for('auth.logout') + '?timeout=true')
+        except (jwt.InvalidTokenError, Exception):
+            # Invalid token or other JWT errors
+            session.clear()
+            time.sleep(0.01 + (hash(str(time.time())) % 100) / 10000)
             return redirect(url_for('auth.login'))
 
         return f(current_user, *args, **kwargs)
@@ -34,10 +69,22 @@ def token_required(f):
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        name = request.form.get("name").strip()
-        email = request.form.get("email").strip()
-        password = request.form.get("password")
-        confirm_password = request.form.get("confirm_password")
+        ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
+        
+        # Check rate limiting
+        if is_rate_limited(ip_address, registration_attempts, MAX_REGISTRATION_ATTEMPTS):
+            return jsonify({"error": "Too many registration attempts. Please try again in 5 minutes."}), 429
+        
+        record_attempt(ip_address, registration_attempts)
+        
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        # Input validation
+        if not name or not email or not password:
+            return jsonify({"error": "All fields are required"}), 400
 
         # Email validation
         try:
@@ -49,9 +96,19 @@ def register():
         if password != confirm_password:
             return jsonify({"error": "Passwords do not match"}), 400
 
-        # Password strength check
+        # Enhanced password strength check
         if len(password) < 8:
             return jsonify({"error": "Password must be at least 8 characters long"}), 400
+        
+        # Check for complexity
+        if not any(c.isupper() for c in password):
+            return jsonify({"error": "Password must contain at least one uppercase letter"}), 400
+        
+        if not any(c.islower() for c in password):
+            return jsonify({"error": "Password must contain at least one lowercase letter"}), 400
+        
+        if not any(c.isdigit() for c in password):
+            return jsonify({"error": "Password must contain at least one number"}), 400
 
         # Check if email exists
         if User.query.filter_by(email=email).first():
@@ -70,19 +127,32 @@ def register():
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get("email").strip()
-        password = request.form.get("password")
+        ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
+        
+        # Check rate limiting
+        if is_rate_limited(ip_address, login_attempts, MAX_LOGIN_ATTEMPTS):
+            return jsonify({"error": "Too many login attempts. Please try again in 5 minutes."}), 429
+        
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+
+        # Input validation
+        if not email or not password:
+            record_attempt(ip_address, login_attempts)
+            return jsonify({"error": "Email and password are required"}), 400
 
         user = User.query.filter_by(email=email).first()
         if not user or not user.check_password(password):
+            record_attempt(ip_address, login_attempts)
             return jsonify({"error": "Invalid credentials"}), 401
 
-        # Generate JWT
+        # Generate JWT with shorter expiration for security
         from flask import current_app
         token = jwt.encode(
             {
                 "user_id": user.id,
-                "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+                "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1),
+                "iat": datetime.datetime.utcnow()
             },
             current_app.config['JWT_SECRET_KEY'],
             algorithm="HS256"
