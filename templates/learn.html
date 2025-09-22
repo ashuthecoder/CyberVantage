@@ -282,6 +282,35 @@
     color: #f44336;
 }
 
+.quiz-controls {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.reset-btn {
+    background-color: #f44336;
+}
+
+.reset-btn:hover {
+    background-color: #d32f2f;
+}
+
+.deselect-btn {
+    background-color: #ff9800;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.deselect-btn:hover {
+    background-color: #f57c00;
+}
+
 @media (max-width: 768px) {
     .module-header {
         flex-direction: column;
@@ -353,9 +382,9 @@
             </div>
             
             <div class="quiz-container">
-                <h3>Quiz: Test Your Knowledge</h3>
-                <div class="quiz-question">
-                    <p>1. What is the primary goal of a phishing attack?</p>
+                <h3>Test Your Knowledge</h3>
+                <div class="quiz-question" data-question-id="1">
+                    <p>1. <span class="question-text">What is the primary goal of a phishing attack?</span></p>
                     <div class="quiz-options">
                         <div class="quiz-option" data-correct="false">To disable your computer</div>
                         <div class="quiz-option" data-correct="false">To install software on your computer</div>
@@ -363,10 +392,11 @@
                         <div class="quiz-option" data-correct="false">To make your computer run slower</div>
                     </div>
                     <div class="quiz-feedback"></div>
+                    <button class="deselect-btn" style="display: none;">Deselect Answer</button>
                 </div>
                 
-                <div class="quiz-question">
-                    <p>2. Which of these is a common warning sign of a phishing email?</p>
+                <div class="quiz-question" data-question-id="2">
+                    <p>2. <span class="question-text">Which of these is a common warning sign of a phishing email?</span></p>
                     <div class="quiz-options">
                         <div class="quiz-option" data-correct="false">Email comes from someone you know</div>
                         <div class="quiz-option" data-correct="true">Urgent action required to prevent negative consequences</div>
@@ -374,9 +404,13 @@
                         <div class="quiz-option" data-correct="false">Email addresses you by your correct name</div>
                     </div>
                     <div class="quiz-feedback"></div>
+                    <button class="deselect-btn" style="display: none;">Deselect Answer</button>
                 </div>
                 
-                <button id="submit-quiz" class="module-btn">Submit Answers</button>
+                <div class="quiz-controls">
+                    <button id="submit-quiz" class="module-btn">Submit Answers</button>
+                    <button id="reset-quiz" class="module-btn reset-btn">Reset Quiz</button>
+                </div>
             </div>
         </div>
     </div>
@@ -461,9 +495,9 @@
             </div>
             
             <div class="quiz-container">
-                <h3>Advanced Quiz: Attack Types</h3>
-                <div class="quiz-question">
-                    <p>1. Which type of phishing attack specifically targets high-profile executives?</p>
+                <h3>Test Your Knowledge</h3>
+                <div class="quiz-question" data-question-id="1">
+                    <p>1. <span class="question-text">Which type of phishing attack specifically targets high-profile executives?</span></p>
                     <div class="quiz-options">
                         <div class="quiz-option" data-correct="false">Email phishing</div>
                         <div class="quiz-option" data-correct="false">Spear phishing</div>
@@ -471,10 +505,11 @@
                         <div class="quiz-option" data-correct="false">Smishing</div>
                     </div>
                     <div class="quiz-feedback"></div>
+                    <button class="deselect-btn" style="display: none;">Deselect Answer</button>
                 </div>
                 
-                <div class="quiz-question">
-                    <p>2. What makes spear phishing more dangerous than regular phishing?</p>
+                <div class="quiz-question" data-question-id="2">
+                    <p>2. <span class="question-text">What makes spear phishing more dangerous than regular phishing?</span></p>
                     <div class="quiz-options">
                         <div class="quiz-option" data-correct="false">It uses more colorful emails</div>
                         <div class="quiz-option" data-correct="true">It uses personalized information to target specific individuals</div>
@@ -482,31 +517,13 @@
                         <div class="quiz-option" data-correct="false">It's sent through social media only</div>
                     </div>
                     <div class="quiz-feedback"></div>
+                    <button class="deselect-btn" style="display: none;">Deselect Answer</button>
                 </div>
                 
-                <div class="quiz-question">
-                    <p>3. RCE (Remote Code Execution) attacks through phishing typically use:</p>
-                    <div class="quiz-options">
-                        <div class="quiz-option" data-correct="true">Malicious email attachments that execute code when opened</div>
-                        <div class="quiz-option" data-correct="false">Colorful images in emails</div>
-                        <div class="quiz-option" data-correct="false">Long email subject lines</div>
-                        <div class="quiz-option" data-correct="false">Multiple recipients in CC</div>
-                    </div>
-                    <div class="quiz-feedback"></div>
+                <div class="quiz-controls">
+                    <button id="module2-submit-quiz" class="module-btn">Submit Answers</button>
+                    <button id="module2-reset-quiz" class="module-btn reset-btn">Reset Quiz</button>
                 </div>
-                
-                <div class="quiz-question">
-                    <p>4. What is 'Smishing'?</p>
-                    <div class="quiz-options">
-                        <div class="quiz-option" data-correct="false">Email-based phishing attacks</div>
-                        <div class="quiz-option" data-correct="true">SMS/text message-based phishing attacks</div>
-                        <div class="quiz-option" data-correct="false">Social media phishing</div>
-                        <div class="quiz-option" data-correct="false">Phone call-based attacks</div>
-                    </div>
-                    <div class="quiz-feedback"></div>
-                </div>
-                
-                <button id="module2-submit-quiz" class="module-btn">Submit Answers</button>
             </div>
         </div>
     </div>
@@ -607,9 +624,9 @@
             </div>
             
             <div class="quiz-container">
-                <h3>Expert-Level Quiz: Protection & Response</h3>
-                <div class="quiz-question">
-                    <p>1. What is the FIRST thing you should do if you receive a suspicious email?</p>
+                <h3>Test Your Knowledge</h3>
+                <div class="quiz-question" data-question-id="1">
+                    <p>1. <span class="question-text">What is the FIRST thing you should do if you receive a suspicious email?</span></p>
                     <div class="quiz-options">
                         <div class="quiz-option" data-correct="false">Click the link to investigate</div>
                         <div class="quiz-option" data-correct="false">Reply to ask if it's legitimate</div>
@@ -617,10 +634,11 @@
                         <div class="quiz-option" data-correct="false">Forward it to all your contacts</div>
                     </div>
                     <div class="quiz-feedback"></div>
+                    <button class="deselect-btn" style="display: none;">Deselect Answer</button>
                 </div>
                 
-                <div class="quiz-question">
-                    <p>2. Two-Factor Authentication (2FA) helps protect against phishing because:</p>
+                <div class="quiz-question" data-question-id="2">
+                    <p>2. <span class="question-text">Two-Factor Authentication (2FA) helps protect against phishing because:</span></p>
                     <div class="quiz-options">
                         <div class="quiz-option" data-correct="false">It makes emails harder to send</div>
                         <div class="quiz-option" data-correct="true">Even if credentials are stolen, attackers need the second factor</div>
@@ -628,42 +646,13 @@
                         <div class="quiz-option" data-correct="false">It makes passwords longer</div>
                     </div>
                     <div class="quiz-feedback"></div>
+                    <button class="deselect-btn" style="display: none;">Deselect Answer</button>
                 </div>
                 
-                <div class="quiz-question">
-                    <p>3. If you accidentally clicked a malicious link, what should you do IMMEDIATELY?</p>
-                    <div class="quiz-options">
-                        <div class="quiz-option" data-correct="true">Disconnect from the internet and run a security scan</div>
-                        <div class="quiz-option" data-correct="false">Keep browsing normally</div>
-                        <div class="quiz-option" data-correct="false">Click more links to see what happens</div>
-                        <div class="quiz-option" data-correct="false">Wait to see if anything bad happens</div>
-                    </div>
-                    <div class="quiz-feedback"></div>
+                <div class="quiz-controls">
+                    <button id="module3-submit-quiz" class="module-btn">Submit Answers</button>
+                    <button id="module3-reset-quiz" class="module-btn reset-btn">Reset Quiz</button>
                 </div>
-                
-                <div class="quiz-question">
-                    <p>4. The most effective defense against phishing is:</p>
-                    <div class="quiz-options">
-                        <div class="quiz-option" data-correct="false">Having the newest computer</div>
-                        <div class="quiz-option" data-correct="false">Using complex passwords only</div>
-                        <div class="quiz-option" data-correct="true">A combination of technology, training, and vigilant behavior</div>
-                        <div class="quiz-option" data-correct="false">Never using email</div>
-                    </div>
-                    <div class="quiz-feedback"></div>
-                </div>
-                
-                <div class="quiz-question">
-                    <p>5. Which of these is a sign of a sophisticated spear phishing attack?</p>
-                    <div class="quiz-options">
-                        <div class="quiz-option" data-correct="false">Generic greeting like "Dear Customer"</div>
-                        <div class="quiz-option" data-correct="false">Poor grammar and spelling</div>
-                        <div class="quiz-option" data-correct="true">Personalized content with specific details about you or your company</div>
-                        <div class="quiz-option" data-correct="false">Bright colors and flashy graphics</div>
-                    </div>
-                    <div class="quiz-feedback"></div>
-                </div>
-                
-                <button id="module3-submit-quiz" class="module-btn">Submit Answers</button>
             </div>
         </div>
     </div>
@@ -697,6 +686,126 @@
                 nextModule: null
             }
         };
+
+        // Question bank for randomization
+        const questionBanks = {
+            1: [
+                {
+                    question: "What is the primary goal of a phishing attack?",
+                    options: ["To disable your computer", "To install software on your computer", "To steal sensitive information like passwords", "To make your computer run slower"],
+                    correct: 2
+                },
+                {
+                    question: "Which of these is a common warning sign of a phishing email?",
+                    options: ["Email comes from someone you know", "Urgent action required to prevent negative consequences", "Email has proper grammar and spelling", "Email addresses you by your correct name"],
+                    correct: 1
+                },
+                {
+                    question: "What does phishing typically attempt to steal?",
+                    options: ["Computer processing power", "Personal information and passwords", "Software licenses", "Internet bandwidth"],
+                    correct: 1
+                },
+                {
+                    question: "Which email characteristic is most suspicious?",
+                    options: ["Professional formatting", "Requests for personal information", "Proper company branding", "Clear contact information"],
+                    correct: 1
+                }
+            ],
+            2: [
+                {
+                    question: "Which type of phishing attack specifically targets high-profile executives?",
+                    options: ["Email phishing", "Spear phishing", "Whaling", "Smishing"],
+                    correct: 2
+                },
+                {
+                    question: "What makes spear phishing more dangerous than regular phishing?",
+                    options: ["It uses more colorful emails", "It uses personalized information to target specific individuals", "It only targets mobile devices", "It's sent through social media only"],
+                    correct: 1
+                },
+                {
+                    question: "What is 'Smishing'?",
+                    options: ["Email-based phishing attacks", "SMS/text message-based phishing attacks", "Social media phishing", "Phone call-based attacks"],
+                    correct: 1
+                },
+                {
+                    question: "RCE (Remote Code Execution) attacks through phishing typically use:",
+                    options: ["Malicious email attachments that execute code when opened", "Colorful images in emails", "Long email subject lines", "Multiple recipients in CC"],
+                    correct: 0
+                }
+            ],
+            3: [
+                {
+                    question: "What is the FIRST thing you should do if you receive a suspicious email?",
+                    options: ["Click the link to investigate", "Reply to ask if it's legitimate", "Don't click anything and verify through official channels", "Forward it to all your contacts"],
+                    correct: 2
+                },
+                {
+                    question: "Two-Factor Authentication (2FA) helps protect against phishing because:",
+                    options: ["It makes emails harder to send", "Even if credentials are stolen, attackers need the second factor", "It automatically deletes phishing emails", "It makes passwords longer"],
+                    correct: 1
+                },
+                {
+                    question: "If you accidentally clicked a malicious link, what should you do IMMEDIATELY?",
+                    options: ["Disconnect from the internet and run a security scan", "Keep browsing normally", "Click more links to see what happens", "Wait to see if anything bad happens"],
+                    correct: 0
+                },
+                {
+                    question: "The most effective defense against phishing is:",
+                    options: ["Having the newest computer", "Using complex passwords only", "A combination of technology, training, and vigilant behavior", "Never using email"],
+                    correct: 2
+                }
+            ]
+        };
+
+        // Function to shuffle array
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Function to populate quiz with random questions
+        function populateQuiz(moduleNum) {
+            const moduleCard = document.getElementById(`module${moduleNum}`) || document.querySelector('.module-card');
+            if (!moduleCard) return;
+
+            const questions = shuffleArray(questionBanks[moduleNum]).slice(0, 2);
+            const quizQuestions = moduleCard.querySelectorAll('.quiz-question');
+
+            questions.forEach((questionData, index) => {
+                if (quizQuestions[index]) {
+                    const questionElement = quizQuestions[index];
+                    const questionText = questionElement.querySelector('.question-text');
+                    const options = questionElement.querySelectorAll('.quiz-option');
+
+                    if (questionText) {
+                        questionText.textContent = questionData.question;
+                    }
+
+                    options.forEach((option, optionIndex) => {
+                        option.textContent = questionData.options[optionIndex];
+                        option.setAttribute('data-correct', optionIndex === questionData.correct ? 'true' : 'false');
+                        option.classList.remove('selected', 'correct', 'incorrect');
+                    });
+
+                    // Reset feedback
+                    const feedback = questionElement.querySelector('.quiz-feedback');
+                    if (feedback) {
+                        feedback.style.display = 'none';
+                        feedback.textContent = '';
+                    }
+
+                    // Hide deselect button
+                    const deselectBtn = questionElement.querySelector('.deselect-btn');
+                    if (deselectBtn) {
+                        deselectBtn.style.display = 'none';
+                    }
+                }
+            });
+        }
 
         // Initialize module states
         function initializeModules() {
@@ -825,15 +934,50 @@
             
             if (!moduleCard) return;
             
+            // Populate quiz with random questions
+            populateQuiz(moduleNum);
+            
             // Quiz option selection
             const quizOptions = moduleCard.querySelectorAll('.quiz-option');
             quizOptions.forEach(option => {
                 if (!option.hasAttribute('data-listener-added')) {
                     option.setAttribute('data-listener-added', 'true');
                     option.addEventListener('click', function() {
+                        const question = this.closest('.quiz-question');
                         const siblings = this.parentElement.querySelectorAll('.quiz-option');
+                        const deselectBtn = question.querySelector('.deselect-btn');
+                        
                         siblings.forEach(sib => sib.classList.remove('selected'));
                         this.classList.add('selected');
+                        
+                        // Show deselect button
+                        if (deselectBtn) {
+                            deselectBtn.style.display = 'inline-block';
+                        }
+                    });
+                }
+            });
+            
+            // Deselect button functionality
+            const deselectBtns = moduleCard.querySelectorAll('.deselect-btn');
+            deselectBtns.forEach(btn => {
+                if (!btn.hasAttribute('data-listener-added')) {
+                    btn.setAttribute('data-listener-added', 'true');
+                    btn.addEventListener('click', function() {
+                        const question = this.closest('.quiz-question');
+                        const options = question.querySelectorAll('.quiz-option');
+                        const feedback = question.querySelector('.quiz-feedback');
+                        
+                        // Remove selection and feedback
+                        options.forEach(opt => {
+                            opt.classList.remove('selected', 'correct', 'incorrect');
+                        });
+                        
+                        feedback.style.display = 'none';
+                        feedback.textContent = '';
+                        
+                        // Hide deselect button
+                        this.style.display = 'none';
                     });
                 }
             });
@@ -894,6 +1038,38 @@
                         updateModuleProgress(moduleNum);
                     } else {
                         alert(`You got ${correct} out of ${questions.length} questions correct. Review the incorrect answers and try again!`);
+                    }
+                });
+            }
+            
+            // Quiz reset functionality
+            const resetBtn = document.getElementById(`${prefix}reset-quiz`) || 
+                            document.getElementById('reset-quiz');
+            if (resetBtn && !resetBtn.hasAttribute('data-listener-added')) {
+                resetBtn.setAttribute('data-listener-added', 'true');
+                resetBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to reset the quiz? This will generate new questions and clear your answers.')) {
+                        // Reset all selections and feedback
+                        const questions = moduleCard.querySelectorAll('.quiz-question');
+                        questions.forEach(question => {
+                            const options = question.querySelectorAll('.quiz-option');
+                            const feedback = question.querySelector('.quiz-feedback');
+                            const deselectBtn = question.querySelector('.deselect-btn');
+                            
+                            options.forEach(opt => {
+                                opt.classList.remove('selected', 'correct', 'incorrect');
+                            });
+                            
+                            feedback.style.display = 'none';
+                            feedback.textContent = '';
+                            
+                            if (deselectBtn) {
+                                deselectBtn.style.display = 'none';
+                            }
+                        });
+                        
+                        // Generate new questions
+                        populateQuiz(moduleNum);
                     }
                 });
             }
