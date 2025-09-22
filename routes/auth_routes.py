@@ -225,7 +225,8 @@ def admin_users(current_user):
     users = User.query.all()
     return render_template('admin_users.html', 
                          users=users, 
-                         username=current_user.name)
+                         username=current_user.name,
+                         current_user=current_user)
 
 @auth_bp.route('/admin/make_admin/<int:user_id>', methods=['POST'])
 @token_required 
@@ -317,3 +318,82 @@ def reset_password(token):
         return redirect(url_for('auth.login'))
     
     return render_template('reset_password.html', token=token)
+
+@auth_bp.route('/admin/reset_password/<int:user_id>', methods=['POST'])
+@token_required
+@admin_required
+def admin_reset_password(current_user, user_id):
+    """Admin function to reset any user's password"""
+    user = User.query.get_or_404(user_id)
+    
+    new_password = request.form.get('new_password', '')
+    confirm_password = request.form.get('confirm_password', '')
+    
+    # Validation
+    if not new_password or not confirm_password:
+        from flask import flash
+        flash("Both password fields are required.", "error")
+        return redirect(url_for('auth.admin_users'))
+    
+    if new_password != confirm_password:
+        from flask import flash
+        flash("Passwords do not match.", "error")
+        return redirect(url_for('auth.admin_users'))
+    
+    # Enhanced password strength check
+    if len(new_password) < 8:
+        from flask import flash
+        flash("Password must be at least 8 characters long.", "error")
+        return redirect(url_for('auth.admin_users'))
+    
+    if not any(c.isupper() for c in new_password):
+        from flask import flash
+        flash("Password must contain at least one uppercase letter.", "error")
+        return redirect(url_for('auth.admin_users'))
+    
+    if not any(c.islower() for c in new_password):
+        from flask import flash
+        flash("Password must contain at least one lowercase letter.", "error")
+        return redirect(url_for('auth.admin_users'))
+    
+    if not any(c.isdigit() for c in new_password):
+        from flask import flash
+        flash("Password must contain at least one number.", "error")
+        return redirect(url_for('auth.admin_users'))
+    
+    # Update password
+    user.set_password(new_password)
+    db.session.commit()
+    
+    from flask import flash
+    flash(f"Password successfully reset for {user.name}.", "success")
+    return redirect(url_for('auth.admin_users'))
+
+@auth_bp.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+@token_required
+@admin_required 
+def delete_user(current_user, user_id):
+    """Admin function to delete a user account"""
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent admin from deleting themselves
+    if user.id == current_user.id:
+        from flask import flash
+        flash("You cannot delete your own account.", "error")
+        return redirect(url_for('auth.admin_users'))
+    
+    # Store user name for confirmation message
+    user_name = user.name
+    
+    # Delete related records first (to maintain referential integrity)
+    from models.database import SimulationResponse, SimulationSession
+    SimulationResponse.query.filter_by(user_id=user.id).delete()
+    SimulationSession.query.filter_by(user_id=user.id).delete()
+    
+    # Delete the user
+    db.session.delete(user)
+    db.session.commit()
+    
+    from flask import flash
+    flash(f"User {user_name} has been successfully deleted.", "success")
+    return redirect(url_for('auth.admin_users'))

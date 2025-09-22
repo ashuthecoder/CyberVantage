@@ -97,6 +97,12 @@ def update_database_schema(app):
     try:
         # Connect directly to the SQLite database
         db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
+        
+        # Check if database file exists
+        if not os.path.exists(db_path):
+            print("[DB] Database file does not exist yet. Skipping schema update.")
+            return True
+            
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
@@ -104,7 +110,7 @@ def update_database_schema(app):
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='simulation_email'")
         table = cursor.fetchone()
         if not table:
-            print("[DB] simulation_email table does not exist yet. Skipping ALTER until db.create_all() runs.")
+            # Table doesn't exist yet, but database file exists - this means tables haven't been created
             conn.close()
             return True
 
@@ -117,9 +123,8 @@ def update_database_schema(app):
             cursor.execute("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT")
             conn.commit()
             print("[DB] Column added successfully")
-        else:
-            print("[DB] simulation_id column already exists")
-
+        # Remove the "already exists" message to reduce console noise
+        
         conn.close()
         return True
     except Exception as e:
