@@ -20,3 +20,8 @@ wheels/
 .installed.cfg
 *.egg
 logs/
+
+# Database files
+*.db
+instance/
+flask.log
