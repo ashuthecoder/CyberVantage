@@ -6,11 +6,12 @@ import os
 from flask import render_template
 from config.app_config import create_app, db
 from config.ai_config import configure_azure_openai
-from models.database import update_database_schema
+from models.database import update_database_schema, populate_sample_schemes
 from routes.auth_routes import auth_bp, token_required
 from routes.simulation_routes import simulation_bp
 from routes.analysis_routes import analysis_bp
 from routes.threat_routes import threat_bp
+from routes.schemes_routes import schemes_bp
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -27,6 +28,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(simulation_bp)
 app.register_blueprint(analysis_bp)
 app.register_blueprint(threat_bp)
+app.register_blueprint(schemes_bp)
 
 # Main routes that don't fit into specific categories
 @app.route('/')
@@ -44,6 +46,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         update_database_schema(app)  # Ensure the schema is updated at startup
+        populate_sample_schemes()  # Add sample government schemes data
     
     # Check if we're in development mode
     debug_mode = os.getenv('FLASK_ENV') == 'development'

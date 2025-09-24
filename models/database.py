@@ -17,6 +17,9 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     password_reset_token = db.Column(db.String(255), nullable=True)  # For password reset
     password_reset_expires = db.Column(db.DateTime, nullable=True)
+    # New fields for government schemes personalization
+    location = db.Column(db.String(100), nullable=True)  # User's location (e.g., "Delhi", "Mumbai")
+    role = db.Column(db.String(50), nullable=True)  # User's role (e.g., "student", "farmer", "entrepreneur")
 
     def set_password(self, password):
         # Hash password with bcrypt
@@ -94,9 +97,26 @@ class SimulationSession(db.Model):
     
     user = db.relationship('User', backref=db.backref('simulation_sessions', lazy=True))
 
+class GovernmentScheme(db.Model):
+    """Model to store government schemes information"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(50), nullable=False)  # education, employment, business, agriculture, etc.
+    target_audience = db.Column(db.String(100), nullable=False)  # student, farmer, entrepreneur, women, etc.
+    location = db.Column(db.String(100), nullable=True)  # Specific state/city or "all" for national schemes
+    eligibility = db.Column(db.Text, nullable=True)
+    benefits = db.Column(db.Text, nullable=True)
+    how_to_apply = db.Column(db.Text, nullable=True)
+    official_url = db.Column(db.String(500), nullable=True)
+    source_website = db.Column(db.String(200), nullable=True)  # e.g., "myscheme.gov.in"
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
 # Database helper functions
 def update_database_schema(app):
-    """Add the simulation_id column to the SimulationEmail table if it exists and the column is missing."""
+    """Add missing columns to existing tables."""
     try:
         # Connect directly to the SQLite database
         db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
@@ -109,24 +129,37 @@ def update_database_schema(app):
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        # Ensure the table exists before attempting to alter it
+        # Update simulation_email table
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='simulation_email'")
         table = cursor.fetchone()
-        if not table:
-            # Table doesn't exist yet, but database file exists - this means tables haven't been created
-            conn.close()
-            return True
+        if table:
+            # Check existing columns
+            cursor.execute("PRAGMA table_info(simulation_email)")
+            columns = [col[1] for col in cursor.fetchall()]
 
-        # Check existing columns
-        cursor.execute("PRAGMA table_info(simulation_email)")
-        columns = [col[1] for col in cursor.fetchall()]
+            if 'simulation_id' not in columns:
+                print("[DB] Adding simulation_id column to SimulationEmail table")
+                cursor.execute("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT")
+                conn.commit()
+                print("[DB] Column added successfully")
 
-        if 'simulation_id' not in columns:
-            print("[DB] Adding simulation_id column to SimulationEmail table")
-            cursor.execute("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT")
-            conn.commit()
-            print("[DB] Column added successfully")
-        # Remove the "already exists" message to reduce console noise
+        # Update user table for government schemes
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='user'")
+        user_table = cursor.fetchone()
+        if user_table:
+            cursor.execute("PRAGMA table_info(user)")
+            user_columns = [col[1] for col in cursor.fetchall()]
+            
+            if 'location' not in user_columns:
+                print("[DB] Adding location column to User table")
+                cursor.execute("ALTER TABLE user ADD COLUMN location VARCHAR(100)")
+                conn.commit()
+                
+            if 'role' not in user_columns:
+                print("[DB] Adding role column to User table")
+                cursor.execute("ALTER TABLE user ADD COLUMN role VARCHAR(50)")
+                conn.commit()
+                print("[DB] User table columns added successfully")
         
         conn.close()
         return True
@@ -359,3 +392,148 @@ predefined_emails = [
         "is_spam": False
     }
 ]
+
+def populate_sample_schemes():
+    """Populate the database with sample government schemes data"""
+    try:
+        # Check if schemes already exist
+        existing_schemes = GovernmentScheme.query.first()
+        if existing_schemes:
+            print("[DB] Sample schemes already exist, skipping population")
+            return True
+            
+        sample_schemes = [
+            {
+                "title": "PM Scholarship Scheme for Central Armed Police Forces and Assam Rifles",
+                "description": "The Prime Minister's Scholarship Scheme provides financial assistance to the wards/widows of Central Armed Police Forces and Assam Rifles personnel for pursuing higher education.",
+                "category": "education",
+                "target_audience": "student",
+                "location": "all",
+                "eligibility": "Children/widows of CAPF and Assam Rifles personnel who have died/disabled in line of duty. Must have scored 60% or more in 12th standard.",
+                "benefits": "Up to ₹3,000 per month for boys and ₹3,600 per month for girls for graduation and post-graduation courses.",
+                "how_to_apply": "Apply online through National Scholarship Portal (scholarships.gov.in). Required documents include death/disability certificate, mark sheets, income certificate.",
+                "official_url": "https://scholarships.gov.in/",
+                "source_website": "scholarships.gov.in"
+            },
+            {
+                "title": "Delhi Student Scholarship Scheme",
+                "description": "Scholarship scheme by Government of Delhi for meritorious students from economically weaker sections to pursue higher education.",
+                "category": "education",
+                "target_audience": "student",
+                "location": "Delhi",
+                "eligibility": "Delhi domicile, family income less than ₹6 lakh per annum, minimum 60% marks in previous qualifying examination.",
+                "benefits": "₹5,000 to ₹12,000 per annum depending on course and category.",
+                "how_to_apply": "Apply through Delhi government education portal. Submit income certificate, domicile certificate, and academic records.",
+                "official_url": "https://www.edudel.nic.in/",
+                "source_website": "edudel.nic.in"
+            },
+            {
+                "title": "Pradhan Mantri Mudra Yojana (PMMY)",
+                "description": "Credit facility for micro and small enterprises and individuals to set up their business activities.",
+                "category": "business",
+                "target_audience": "entrepreneur",
+                "location": "all",
+                "eligibility": "Any citizen of India who has a business plan for non-farm sector income generating activity such as manufacturing, trading or service sector.",
+                "benefits": "Loans up to ₹10 lakh without any guarantee or collateral. Three categories: Shishu (up to ₹50,000), Kishore (₹50,001 to ₹5 lakh), Tarun (₹5,00,001 to ₹10 lakh).",
+                "how_to_apply": "Apply through any bank, NBFC, or MFI. Submit business plan, identity proof, address proof, category certificate if applicable.",
+                "official_url": "https://www.mudra.org.in/",
+                "source_website": "mudra.org.in"
+            },
+            {
+                "title": "Pradhan Mantri Kaushal Vikas Yojana (PMKVY)",
+                "description": "Skill development scheme to provide training and certification to youth for employment and entrepreneurship.",
+                "category": "employment",
+                "target_audience": "job-seeker",
+                "location": "all",
+                "eligibility": "Indian citizen between 18-35 years, preference to school/college dropouts, unemployed youth.",
+                "benefits": "Free skill training with monetary reward up to ₹8,000 on successful completion. Placement assistance provided.",
+                "how_to_apply": "Register through PMKVY portal or visit nearest training center. Documents required: Aadhaar card, bank account details.",
+                "official_url": "https://www.pmkvyofficial.org/",
+                "source_website": "pmkvyofficial.org"
+            },
+            {
+                "title": "Stand Up India Scheme",
+                "description": "Facilitate bank loans between ₹10 lakh and ₹1 crore to SC/ST and women entrepreneurs for setting up new enterprises.",
+                "category": "business",
+                "target_audience": "women",
+                "location": "all",
+                "eligibility": "SC/ST and/or Women entrepreneur, above 18 years, loan for greenfield project in manufacturing, services or trading sector.",
+                "benefits": "Bank loan between ₹10 lakh to ₹1 crore with repayment period up to 7 years. Handholding support for project preparation and approvals.",
+                "how_to_apply": "Apply through Stand-Up India portal or visit scheduled commercial bank branch. Business plan and required documents to be submitted.",
+                "official_url": "https://www.standupmitra.in/",
+                "source_website": "standupmitra.in"
+            },
+            {
+                "title": "PM-KISAN Scheme",
+                "description": "Direct income support of ₹6,000 per year to small and marginal farmer families across India.",
+                "category": "agriculture",
+                "target_audience": "farmer",
+                "location": "all",
+                "eligibility": "Small and marginal farmer families owning cultivable land up to 2 hectares.",
+                "benefits": "₹6,000 per year in three equal installments of ₹2,000 each, directly transferred to farmer's bank account.",
+                "how_to_apply": "Register through PM-KISAN portal or Common Service Centers. Land records, Aadhaar card, and bank account details required.",
+                "official_url": "https://pmkisan.gov.in/",
+                "source_website": "pmkisan.gov.in"
+            },
+            {
+                "title": "Delhi Mukhyamantri Mahila Samman Yojana",
+                "description": "Monthly financial assistance to women in Delhi to promote women empowerment and economic independence.",
+                "category": "women",
+                "target_audience": "women", 
+                "location": "Delhi",
+                "eligibility": "Women residents of Delhi, age 18-60 years, family income less than ₹3 lakh per annum.",
+                "benefits": "₹1,000 per month direct cash transfer to women's bank accounts.",
+                "how_to_apply": "Apply through Delhi government portal or designated centers. Submit identity proof, address proof, income certificate.",
+                "official_url": "https://edistrict.delhigovt.nic.in/",
+                "source_website": "delhi.gov.in"
+            },
+            {
+                "title": "Startup India Scheme",
+                "description": "Initiative to build a strong ecosystem for nurturing innovation and startups in the country.",
+                "category": "business",
+                "target_audience": "entrepreneur",
+                "location": "all",
+                "eligibility": "Entity should be incorporated as a private limited company or registered as a partnership firm or LLP. Should be up to 10 years old and annual turnover should not exceed ₹100 crore.",
+                "benefits": "Self-certification, tax exemptions for 3 years, faster patent examination, access to government tenders, networking opportunities.",
+                "how_to_apply": "Register on Startup India portal, get recognition certificate. Submit required documents including incorporation certificate, business plan.",
+                "official_url": "https://www.startupindia.gov.in/",
+                "source_website": "startupindia.gov.in"
+            },
+            {
+                "title": "National Education Policy Implementation - Delhi",
+                "description": "Implementation of NEP 2020 in Delhi schools with focus on foundational literacy, numeracy and skill development.",
+                "category": "education",
+                "target_audience": "student",
+                "location": "Delhi",
+                "eligibility": "Students enrolled in Delhi government schools and their parents/guardians.",
+                "benefits": "Enhanced curriculum, vocational training, digital learning resources, teacher training programs.",
+                "how_to_apply": "Automatic enrollment for government school students. Private school students can apply through education department.",
+                "official_url": "https://www.edudel.nic.in/",
+                "source_website": "edudel.nic.in"
+            },
+            {
+                "title": "Ayushman Bharat - Health and Wellness Centres",
+                "description": "Comprehensive primary healthcare services including preventive, curative, rehabilitative, and wellness services.",
+                "category": "health",
+                "target_audience": "all",
+                "location": "all",
+                "eligibility": "All citizens of India, with priority to economically vulnerable populations.",
+                "benefits": "Free primary healthcare services, health screenings, basic medicines, referral services to higher facilities.",
+                "how_to_apply": "Visit nearest Health and Wellness Centre. Aadhaar card recommended for registration.",
+                "official_url": "https://ab-hwc.nhp.gov.in/",
+                "source_website": "nhp.gov.in"
+            }
+        ]
+        
+        for scheme_data in sample_schemes:
+            scheme = GovernmentScheme(**scheme_data)
+            db.session.add(scheme)
+        
+        db.session.commit()
+        print(f"[DB] Successfully populated {len(sample_schemes)} sample government schemes")
+        return True
+        
+    except Exception as e:
+        print(f"[DB] Error populating sample schemes: {str(e)}")
+        db.session.rollback()
+        return False

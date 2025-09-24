@@ -1,0 +1,541 @@
+{% extends "base.html" %}
+{% block title %}Government Schemes - CyberVantage{% endblock %}
+
+{% block extra_styles %}
+.search-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.search-form {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 300px;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.search-btn {
+    padding: 0.75rem 1.5rem;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.search-btn:hover {
+    background: #2980b9;
+}
+
+.category-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.category-filter {
+    padding: 0.5rem 1rem;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.category-filter:hover,
+.category-filter.active {
+    background: #3498db;
+    color: white;
+    border-color: #3498db;
+}
+
+.profile-section {
+    background: #e8f4fd;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border-left: 4px solid #3498db;
+}
+
+.profile-form {
+    display: flex;
+    gap: 1rem;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+}
+
+.form-group label {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.form-group select,
+.form-group input {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.update-profile-btn {
+    padding: 0.5rem 1rem;
+    background: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.update-profile-btn:hover {
+    background: #27ae60;
+}
+
+.results-section {
+    margin-top: 2rem;
+}
+
+.section-header {
+    background: #2c3e50;
+    color: white;
+    padding: 1rem;
+    border-radius: 8px 8px 0 0;
+    margin: 0;
+}
+
+.schemes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.scheme-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.scheme-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.scheme-card.personalized {
+    border-left: 5px solid #e74c3c;
+    background: #fdf2f2;
+}
+
+.scheme-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+}
+
+.scheme-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.scheme-category {
+    background: #3498db;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.scheme-audience {
+    background: #95a5a6;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.scheme-description {
+    color: #7f8c8d;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+}
+
+.scheme-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.scheme-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+.no-results {
+    text-align: center;
+    padding: 3rem;
+    color: #7f8c8d;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+}
+
+.personalized-badge {
+    background: #e74c3c;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+}
+
+.suggestions {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.suggestions h4 {
+    margin-top: 0;
+    color: #856404;
+}
+
+.suggestions ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.suggestions li {
+    margin-bottom: 0.3rem;
+    color: #856404;
+}
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <h1>🏛️ Government Schemes Search</h1>
+    <p>Find government schemes and programs that match your profile and needs.</p>
+    
+    <div class="search-form">
+        <input type="text" class="search-input" id="searchQuery" placeholder="Search for schemes (e.g., 'student schemes', 'business loans', 'employment')">
+        <button class="search-btn" onclick="searchSchemes()">🔍 Search</button>
+    </div>
+    
+    <div class="category-filters">
+        <span class="category-filter active" data-category="">All Categories</span>
+        <span class="category-filter" data-category="education">Education</span>
+        <span class="category-filter" data-category="employment">Employment</span>
+        <span class="category-filter" data-category="business">Business</span>
+        <span class="category-filter" data-category="agriculture">Agriculture</span>
+        <span class="category-filter" data-category="women">Women</span>
+        <span class="category-filter" data-category="health">Health</span>
+        <span class="category-filter" data-category="social">Social Welfare</span>
+    </div>
+</div>
+
+<div class="profile-section">
+    <h3>📍 Your Profile for Personalized Results</h3>
+    <p>Update your location and role to get better, personalized scheme recommendations.</p>
+    
+    <div class="profile-form">
+        <div class="form-group">
+            <label>Your Location:</label>
+            <select id="locationSelect">
+                <option value="">Select Location</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="Bangalore">Bangalore</option>
+                <option value="Chennai">Chennai</option>
+                <option value="Kolkata">Kolkata</option>
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Pune">Pune</option>
+                <option value="Ahmedabad">Ahmedabad</option>
+                <option value="Jaipur">Jaipur</option>
+                <option value="Lucknow">Lucknow</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Your Role:</label>
+            <select id="roleSelect">
+                <option value="">Select Role</option>
+                <option value="student">Student</option>
+                <option value="farmer">Farmer</option>
+                <option value="entrepreneur">Entrepreneur</option>
+                <option value="job-seeker">Job Seeker</option>
+                <option value="women">Women</option>
+                <option value="senior-citizen">Senior Citizen</option>
+                <option value="differently-abled">Differently Abled</option>
+                <option value="minority">Minority</option>
+            </select>
+        </div>
+        
+        <button class="update-profile-btn" onclick="updateProfile()">Update Profile</button>
+    </div>
+    
+    <div id="profileStatus" style="margin-top: 1rem;"></div>
+</div>
+
+<div class="results-section" id="resultsSection" style="display: none;">
+    <!-- Personalized Results -->
+    <div id="personalizedSection" style="display: none;">
+        <h2 class="section-header">🎯 Personalized Schemes for You</h2>
+        <div class="schemes-grid" id="personalizedResults"></div>
+    </div>
+    
+    <!-- General Results -->
+    <div id="generalSection" style="display: none;">
+        <h2 class="section-header">📋 All Available Schemes</h2>
+        <div class="schemes-grid" id="generalResults"></div>
+    </div>
+    
+    <!-- No Results -->
+    <div id="noResults" class="no-results" style="display: none;">
+        <h3>No schemes found</h3>
+        <p>Try different search terms or update your profile for better recommendations.</p>
+        
+        <div class="suggestions">
+            <h4>💡 Search Suggestions:</h4>
+            <ul>
+                <li>Try searching for "student schemes" if you're a student</li>
+                <li>Search for "business loans" or "startup schemes" for entrepreneurship</li>
+                <li>Look for "employment opportunities" or "skill development"</li>
+                <li>Search by your location: "delhi government schemes"</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="loading" id="loadingIndicator" style="display: none;">
+    <p>🔍 Searching for schemes...</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentCategory = '';
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Load current user profile
+    loadUserProfile();
+    
+    // Setup category filter listeners
+    const categoryFilters = document.querySelectorAll('.category-filter');
+    categoryFilters.forEach(filter => {
+        filter.addEventListener('click', function() {
+            // Remove active from all
+            categoryFilters.forEach(f => f.classList.remove('active'));
+            // Add active to clicked
+            this.classList.add('active');
+            currentCategory = this.dataset.category;
+            searchSchemes();
+        });
+    });
+    
+    // Search on Enter key
+    document.getElementById('searchQuery').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchSchemes();
+        }
+    });
+    
+    // Load initial results
+    searchSchemes();
+});
+
+function loadUserProfile() {
+    // Set current values if available
+    const locationSelect = document.getElementById('locationSelect');
+    const roleSelect = document.getElementById('roleSelect');
+    
+    {% if current_user.location %}
+        locationSelect.value = '{{ current_user.location }}';
+    {% endif %}
+    
+    {% if current_user.role %}
+        roleSelect.value = '{{ current_user.role }}';
+    {% endif %}
+}
+
+function updateProfile() {
+    const location = document.getElementById('locationSelect').value;
+    const role = document.getElementById('roleSelect').value;
+    
+    const formData = new FormData();
+    formData.append('location', location);
+    formData.append('role', role);
+    
+    fetch('/profile/update', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const statusDiv = document.getElementById('profileStatus');
+        if (data.success) {
+            statusDiv.innerHTML = '<span style="color: green;">✅ Profile updated successfully!</span>';
+            // Refresh search results
+            setTimeout(() => {
+                searchSchemes();
+            }, 1000);
+        } else {
+            statusDiv.innerHTML = '<span style="color: red;">❌ Error: ' + data.message + '</span>';
+        }
+        
+        // Clear status after 3 seconds
+        setTimeout(() => {
+            statusDiv.innerHTML = '';
+        }, 3000);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('profileStatus').innerHTML = '<span style="color: red;">❌ Network error occurred</span>';
+    });
+}
+
+function searchSchemes() {
+    const query = document.getElementById('searchQuery').value;
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const resultsSection = document.getElementById('resultsSection');
+    
+    // Show loading
+    loadingIndicator.style.display = 'block';
+    resultsSection.style.display = 'none';
+    
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (query) params.append('query', query);
+    if (currentCategory) params.append('category', currentCategory);
+    
+    fetch('/api/schemes/search?' + params.toString())
+        .then(response => response.json())
+        .then(data => {
+            displayResults(data);
+            loadingIndicator.style.display = 'none';
+            resultsSection.style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadingIndicator.style.display = 'none';
+            document.getElementById('noResults').style.display = 'block';
+            resultsSection.style.display = 'block';
+        });
+}
+
+function displayResults(data) {
+    const personalizedSection = document.getElementById('personalizedSection');
+    const generalSection = document.getElementById('generalSection');
+    const noResults = document.getElementById('noResults');
+    const personalizedResults = document.getElementById('personalizedResults');
+    const generalResults = document.getElementById('generalResults');
+    
+    // Clear previous results
+    personalizedResults.innerHTML = '';
+    generalResults.innerHTML = '';
+    
+    // Hide all sections initially
+    personalizedSection.style.display = 'none';
+    generalSection.style.display = 'none';
+    noResults.style.display = 'none';
+    
+    if (data.total_results === 0) {
+        noResults.style.display = 'block';
+        return;
+    }
+    
+    // Show personalized results if any
+    if (data.personalized_schemes.length > 0) {
+        personalizedSection.style.display = 'block';
+        data.personalized_schemes.forEach(scheme => {
+            personalizedResults.appendChild(createSchemeCard(scheme, true));
+        });
+    }
+    
+    // Show general results if any
+    if (data.general_schemes.length > 0) {
+        generalSection.style.display = 'block';
+        data.general_schemes.forEach(scheme => {
+            generalResults.appendChild(createSchemeCard(scheme, false));
+        });
+    }
+}
+
+function createSchemeCard(scheme, isPersonalized) {
+    const card = document.createElement('div');
+    card.className = 'scheme-card' + (isPersonalized ? ' personalized' : '');
+    
+    card.innerHTML = `
+        <div class="scheme-title">
+            ${scheme.title}
+            ${isPersonalized ? '<span class="personalized-badge">For You</span>' : ''}
+        </div>
+        <div class="scheme-meta">
+            <span class="scheme-category">${scheme.category}</span>
+            <span class="scheme-audience">${scheme.target_audience}</span>
+            ${scheme.location ? `<span style="font-size: 0.8rem; color: #7f8c8d;">📍 ${scheme.location}</span>` : ''}
+        </div>
+        <div class="scheme-description">
+            ${scheme.description.length > 200 ? scheme.description.substring(0, 200) + '...' : scheme.description}
+        </div>
+        <div class="scheme-actions">
+            <a href="/schemes/${scheme.id}" class="scheme-btn btn-primary">View Details</a>
+            ${scheme.official_url ? `<a href="${scheme.official_url}" target="_blank" class="scheme-btn btn-secondary">Official Link</a>` : ''}
+        </div>
+    `;
+    
+    return card;
+}
+</script>
+{% endblock %}

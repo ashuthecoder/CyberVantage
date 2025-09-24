@@ -56,6 +56,10 @@
     background-color: #e67e22;
 }
 
+#schemes-section::after {
+    background-color: #f39c12;
+}
+
 #admin-section::after {
     background-color: #dc3545;
 }
@@ -140,6 +144,14 @@
             <div class="section-icon">✏️</div>
             <h2>Assignment</h2>
             <p>Test your knowledge by creating a convincing phishing email and get AI feedback on your work.</p>
+        </div>
+    </a>
+    
+    <a href="{{ url_for('schemes.schemes_search') }}" class="section-card" id="schemes-section">
+        <div class="section-content">
+            <div class="section-icon">🏛️</div>
+            <h2>Government Schemes</h2>
+            <p>Find personalized government schemes and programs based on your location and profile.</p>
         </div>
     </a>
     
