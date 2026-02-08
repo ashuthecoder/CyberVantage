@@ -63,7 +63,7 @@ except ImportError:
 # =============================================================================
 
 # Set the default Azure OpenAI model/deployment
-DEFAULT_AZURE_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4.1-nano")
+DEFAULT_AZURE_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4.1")
 DEFAULT_MAX_TOKENS = 512
 LOG_FILE_PATH = 'logs/azure_openai_requests.log'
 
