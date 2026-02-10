@@ -15,8 +15,16 @@ csrf = CSRFProtect()
 
 def create_app():
     """Create and configure Flask app"""
-    # Ensure logs directory exists
-    os.makedirs('logs', exist_ok=True)
+    # Ensure logs directory exists (fallback to /tmp on serverless)
+    try:
+        os.makedirs('logs', exist_ok=True)
+        app_log_dir = 'logs'
+    except Exception:
+        try:
+            os.makedirs('/tmp/logs', exist_ok=True)
+            app_log_dir = '/tmp/logs'
+        except Exception:
+            app_log_dir = None
     
     # Load environment variables
     load_dotenv()

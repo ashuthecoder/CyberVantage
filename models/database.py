@@ -202,11 +202,16 @@ def log_simulation_event(user_id, username, event_type, session_id=None, details
     Log simulation events to a dedicated log file.
     event_type: 'started', 'completed', 'phase1_completed', 'phase2_completed'
     """
-    log_dir = 'logs'
+    log_dir = os.getenv("LOG_DIR", "logs")
     log_file = os.path.join(log_dir, 'simulation_activity.log')
     
     try:
-        os.makedirs(log_dir, exist_ok=True)
+        try:
+            os.makedirs(log_dir, exist_ok=True)
+        except Exception:
+            log_dir = '/tmp/logs'
+            log_file = os.path.join(log_dir, 'simulation_activity.log')
+            os.makedirs(log_dir, exist_ok=True)
         
         timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
         log_entry = f"[{timestamp}] USER:{username}(ID:{user_id}) SESSION:{session_id} EVENT:{event_type}"

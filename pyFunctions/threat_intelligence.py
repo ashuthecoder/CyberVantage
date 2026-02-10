@@ -15,14 +15,35 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+def _get_log_file_path():
+    candidates = []
+    env_dir = os.getenv("LOG_DIR")
+    if env_dir:
+        candidates.append(env_dir)
+    candidates.extend(["logs", "/tmp/logs"])
+
+    for log_dir in candidates:
+        try:
+            os.makedirs(log_dir, exist_ok=True)
+            test_path = os.path.join(log_dir, ".write_test")
+            with open(test_path, "a", encoding="utf-8"):
+                pass
+            os.remove(test_path)
+            return os.path.join(log_dir, "threat_intelligence.log")
+        except Exception:
+            continue
+    return None
+
+log_handlers = [logging.StreamHandler()]
+log_file_path = _get_log_file_path()
+if log_file_path:
+    log_handlers.insert(0, logging.FileHandler(log_file_path))
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
-    handlers=[
-        logging.FileHandler('logs/threat_intelligence.log'),
-        logging.StreamHandler()
-    ]
+    handlers=log_handlers
 )
 logger = logging.getLogger('threat_intelligence')
 

@@ -20,13 +20,14 @@ import time
 
 # Import API logging functions with fallback
 try:
-    from .api_logging import log_api_request, check_rate_limit, get_cached_or_generate, create_cache_key
+    from .api_logging import log_api_request, check_rate_limit, get_cached_or_generate, create_cache_key, get_log_dir
 except ImportError:
     # Create dummy functions if import fails
     def log_api_request(*args, **kwargs): pass
     def check_rate_limit(): return True
     def get_cached_or_generate(key, func, *args, **kwargs): return func(*args, **kwargs)
     def create_cache_key(prefix, content): return f"{prefix}_{hash(content)}"
+    def get_log_dir(): return None
 
 # Import Azure OpenAI helper functions with fallback
 try:
@@ -54,8 +55,8 @@ except ImportError:
             "is_spam": False
         }
 
-# Ensure logs directory exists
-os.makedirs('logs', exist_ok=True)
+# Determine writable log directory (may be None on serverless)
+LOG_DIR = get_log_dir()
 
 # =============================================================================
 # HELPER FUNCTIONS
@@ -77,10 +78,12 @@ def log_api_key_info(app, call_count):
         
         print(f"[GENERATE] Azure OpenAI API key status: {azure_status}")
         
-        # Log status to debug file
-        with open('logs/api_key_debug.log', 'a') as f:
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"{timestamp} - Call #{call_count} - Azure: {azure_status}\n")
+        # Log status to debug file if available
+        if LOG_DIR:
+            log_path = os.path.join(LOG_DIR, 'api_key_debug.log')
+            with open(log_path, 'a', encoding='utf-8') as f:
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                f.write(f"{timestamp} - Call #{call_count} - Azure: {azure_status}\n")
             
     except Exception as e:
         print(f"[GENERATE] Error logging API key info: {e}")

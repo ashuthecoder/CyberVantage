@@ -6,14 +6,37 @@ import json
 # Global variables for tracking
 api_request_log = []
 MAX_LOG_SIZE = 100  # Keep last 100 requests in memory
-LOG_FILE_PATH = 'logs/api_requests.log'  # Path to save log file
+LOG_FILE_PATH = None  # Path to save log file
 API_REQUESTS_PER_MINUTE = 0
 LAST_REQUEST_RESET = datetime.datetime.now()
 MAX_REQUESTS_PER_MINUTE = 10  # Adjust based on API limits
 request_cache = {}  # For caching responses
 
-# Ensure log directory exists
-os.makedirs(os.path.dirname(LOG_FILE_PATH), exist_ok=True)
+def _get_writable_log_dir():
+    candidates = []
+    env_dir = os.getenv("LOG_DIR")
+    if env_dir:
+        candidates.append(env_dir)
+    candidates.extend(["logs", "/tmp/logs"])
+
+    for log_dir in candidates:
+        try:
+            os.makedirs(log_dir, exist_ok=True)
+            test_path = os.path.join(log_dir, ".write_test")
+            with open(test_path, "a", encoding="utf-8"):
+                pass
+            os.remove(test_path)
+            return log_dir
+        except Exception:
+            continue
+    return None
+
+LOG_DIR = _get_writable_log_dir()
+if LOG_DIR:
+    LOG_FILE_PATH = os.path.join(LOG_DIR, "api_requests.log")
+
+def get_log_dir():
+    return LOG_DIR
 
 def log_api_request(function_name, prompt_length, success, response_length=0, error=None, fallback_reason=None, model_used=None, api_source=None, **kwargs):
     """
@@ -66,18 +89,21 @@ def log_api_request(function_name, prompt_length, success, response_length=0, er
     if fallback_reason:
         log_entry += f"\n  FALLBACK_REASON: {fallback_reason}"
     
-    # Write to log file
-    try:
-        with open(LOG_FILE_PATH, 'a', encoding='utf-8') as log_file:
-            log_file.write(log_entry + "\n")
-    except Exception as e:
-        # Fall back to console if file writing fails
-        print(f"[LOG_ERROR] Failed to write to log file: {e}")
+    # Write to log file if available
+    if LOG_FILE_PATH:
+        try:
+            with open(LOG_FILE_PATH, 'a', encoding='utf-8') as log_file:
+                log_file.write(log_entry + "\n")
+        except Exception as e:
+            # Fall back to console if file writing fails
+            print(f"[LOG_ERROR] Failed to write to log file: {e}")
+            print(log_entry)
+    else:
         print(log_entry)
         
     # Rotate log file if too large (> 5MB)
     try:
-        if os.path.exists(LOG_FILE_PATH) and os.path.getsize(LOG_FILE_PATH) > 5 * 1024 * 1024:
+        if LOG_FILE_PATH and os.path.exists(LOG_FILE_PATH) and os.path.getsize(LOG_FILE_PATH) > 5 * 1024 * 1024:
             # Rename current log file with timestamp
             backup_timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
             backup_file = f"{LOG_FILE_PATH}.{backup_timestamp}"
