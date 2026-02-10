@@ -1,0 +1,37 @@
+# Development files
+.env
+.git
+.gitignore
+*.log
+*.db
+
+# Folders
+extras/
+instance/
+logs/
+.venv/
+venv/
+env/
+
+# Documentation
+*.md
+SECURITY.md
+ADMIN_DOCUMENTATION.md
+DATABASE_DOCUMENTATION.md
+IMPLEMENTATION_SUMMARY.md
+SECURITY_GUIDE.md
+readme.md
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.py[cod]
+*$py.class
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/

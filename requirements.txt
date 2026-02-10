@@ -1,39 +1,26 @@
 # --- Web Framework & Templates ---
-flask
-jinja2
-flask-cors
-werkzeug
+flask==3.0.0
+jinja2==3.1.2
+flask-cors==4.0.0
+werkzeug==3.0.1
 
 # --- Authentication & Security ---
-pyjwt
-passlib
-bcrypt
+pyjwt==2.8.0
+passlib==1.7.4
+bcrypt==4.1.2
 
 # --- HTML & Web Scraping ---
-beautifulsoup4
-lxml
-requests
-markdown
+beautifulsoup4==4.12.2
+lxml==5.1.0
+requests==2.31.0
+markdown==3.5.1
 
-# --- AI & Machine Learning ---
-numpy
-pandas
-scikit-learn
-torch
-transformers
-openai
+# --- AI Services (Azure OpenAI only) ---
+openai==1.6.1
 
-# --- Data Visualization ---
-matplotlib
-seaborn
-plotly
-
-# --- Database ORM & Migrations ---
-sqlalchemy
-flask-sqlalchemy
-alembic
+# --- Database ORM ---
+sqlalchemy==2.0.23
+flask-sqlalchemy==3.1.1
 
 # --- Misc Utilities ---
-python-dotenv
-tqdm
-openai
+python-dotenv==1.0.0
