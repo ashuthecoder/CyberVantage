@@ -11,7 +11,7 @@ cryptography==41.0.7
 email-validator==2.1.0
 
 # --- Web Requests ---
-requests==2.31.0
+requests==2.32.4
 markdown==3.5.1
 
 # --- AI Services (Azure OpenAI only) ---
