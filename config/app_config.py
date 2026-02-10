@@ -63,7 +63,25 @@ def create_app():
     
     app.config['SECRET_KEY'] = flask_secret
     app.config['JWT_SECRET_KEY'] = jwt_secret
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "sqlite:///users.db")
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        database_url = (
+            os.getenv("POSTGRES_URL")
+            or os.getenv("POSTGRES_PRISMA_URL")
+            or os.getenv("POSTGRES_URL_NON_POOLING")
+            or os.getenv("DATABASE_URL_UNPOOLED")
+            or os.getenv("DATABASE_URL")
+        )
+    if not database_url:
+        database_url = "sqlite:///users.db"
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif database_url.startswith("postgresql://"):
+        database_url = database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    if database_url.startswith("postgresql+psycopg2://") and "sslmode=" not in database_url:
+        separator = "&" if "?" in database_url else "?"
+        database_url = f"{database_url}{separator}sslmode=require"
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['WTF_CSRF_SECRET_KEY'] = csrf_secret
     
