@@ -1,244 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CyberVantage{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@300;500;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
-        }
-        
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        header {
-            background-color: #2a3f54;
-            color: white;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-        }
-        
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: white;
-            text-decoration: none;
-        }
-        
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-        
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            transition: color 0.3s;
-            font-weight: 500;
-        }
-        
-        .nav-links a:hover {
-            color: #3498db;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .logout-btn {
-            background-color: #e74c3c;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background-color 0.3s;
-        }
-        
-        .logout-btn:hover {
-            background-color: #c0392b;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-            flex: 1;
-        }
-        
-        button, .btn {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: background-color 0.3s;
-        }
-        
-        button:hover, .btn:hover {
-            background-color: #45a049;
-        }
-        
-        footer {
-            text-align: center;
-            padding: 1.5rem;
-            background-color: #2a3f54;
-            color: white;
-            margin-top: auto;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        input {
-            padding: 8px;
-            width: 100%;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        
-        .password-container {
-            position: relative;
-        }
-        
-        .password-toggle {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #666;
-        }
 
-        /* Message alerts */
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        
-        .alert-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        
-        .alert-info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-                flex-direction: column;
-                position: absolute;
-                top: 60px;
-                right: 0;
-                background-color: #2a3f54;
-                width: 100%;
-                z-index: 999;
-            }
-            
-            .nav-links.active {
-                display: flex;
-            }
-            
-            .hamburger {
-                display: block;
-                cursor: pointer;
-            }
-            
-            .nav-links a {
-                padding: 15px;
-                width: 100%;
-                text-align: center;
-            }
-        }
-        
-        /* Additional styles can be added here */
-        {% block extra_styles %}{% endblock %}
-    </style>
-    {% block head %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='modern_styles.css') }}">
+    {% block extra_styles %}{% endblock %}
 </head>
+
 <body>
-    <header>
-        <nav>
-            <a href="{{ url_for('dashboard') if session.get('token') else url_for('welcome') }}" class="logo">CyberVantage</a>
-            
-            <div class="nav-links">
-                {% if session.get('token') %}
-                    <!-- Links visible only to logged-in users -->
-                    <a href="{{ url_for('dashboard') }}">Dashboard</a>
-                    <a href="{{ url_for('analysis.learn') }}">Learn</a>
-                    <a href="{{ url_for('threat.get_phishing_assignment') }}">Assignment</a>
-                    <a href="{{ url_for('simulation.simulate') }}">Simulate</a>
-                    <a href="{{ url_for('analysis.analysis') }}">Analysis</a>
-                    <a href="{{ url_for('threat.check_threats') }}">Check Threats</a>
-                {% else %}
-                    <!-- Links visible to non-logged-in users -->
-                    <a href="{{ url_for('welcome') }}">Home</a>
-                    <a href="{{ url_for('auth.login') }}">Login</a>
-                    <a href="{{ url_for('auth.register') }}">Register</a>
-                {% endif %}
-            </div>
-            
+    <div class="cursor-glow"></div>
+    <div class="noise-overlay"></div>
+
+    <!-- SVG Filter for Gooey Effect -->
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+        <defs>
+            <filter id="goo">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur" />
+                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -10"
+                    result="goo" />
+                <feBlend in="SourceGraphic" in2="goo" />
+            </filter>
+        </defs>
+    </svg>
+
+    <nav class="glass-nav">
+        <a href="{{ url_for('dashboard') if session.get('token') else url_for('welcome') }}"
+            class="logo">CyberVantage</a>
+
+        <div class="nav-links">
             {% if session.get('token') %}
-            <div class="user-info">
-                <span id="username">{{ session.get('user_name', 'User') }}</span>
-                <a href="{{ url_for('auth.logout') }}" class="logout-btn">Logout</a>
-            </div>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('analysis.learn') }}">Learn</a>
+            <a href="{{ url_for('threat.get_phishing_assignment') }}">Assignment</a>
+            <a href="{{ url_for('simulation.simulate') }}">Simulate</a>
+            <a href="{{ url_for('analysis.analysis') }}">Analysis</a>
+            <a href="{{ url_for('threat.check_threats') }}">Check Threats</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn-primary" style="margin-left: 2rem;">Logout</a>
+            {% else %}
+            <a href="{{ url_for('welcome') }}">Home</a>
+            <a href="{{ url_for('auth.login') }}">Login</a>
+            <a href="{{ url_for('auth.register') }}" class="btn-primary">Get Started</a>
             {% endif %}
-        </nav>
-    </header>
+        </div>
+    </nav>
 
     <div class="container">
         {% block content %}{% endblock %}
     </div>
 
     <footer>
-        <p>&copy; 2025 CyberVantage. All rights reserved.</p>
+        <p>&copy; 2026 CyberVantage. All rights reserved.</p>
     </footer>
 
-    <script>
-        // Common JavaScript functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            // Any common JavaScript can go here
-        });
-    </script>
+    <script src="{{ url_for('static', filename='modern_script.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
+
 </html>

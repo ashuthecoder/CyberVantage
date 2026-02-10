@@ -2,19 +2,19 @@
 {% block title %}Login - CyberVantage{% endblock %}
 
 {% block content %}
-<div class="login-container" style="max-width: 450px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+<div class="glass-container">
     <h2 style="margin-bottom: 20px; text-align: center;">🔐 Login to CyberVantage</h2>
 
     {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
-                <ul style="margin: 0; padding-left: 20px;">
-                    {% for message in messages %}
-                        <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
+    {% if messages %}
+    <div class="alert alert-danger">
+        <ul style="margin: 0; padding-left: 20px;">
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
     {% endwith %}
 
     <form method="POST" action="{{ url_for('auth.login') }}" autocomplete="off" novalidate>
@@ -23,34 +23,36 @@
 
         <div class="form-group">
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required
-                pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+            <input type="email" id="email" name="email" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                 autocomplete="username" placeholder="Enter your email">
         </div>
 
         <div class="form-group">
             <label for="password">Password:</label>
-            <div class="password-container">
+            <div class="password-container" style="position: relative;">
                 <input type="password" id="password" name="password" required minlength="8"
                     autocomplete="current-password" placeholder="Enter your password">
-                <span class="password-toggle" onclick="togglePassword('password')">
+                <span class="password-toggle" onclick="togglePassword('password')"
+                    style="position: absolute; right: 10px; top: 38%; cursor: pointer; color: rgba(255,255,255,0.7);">
                     <i class="fas fa-eye" id="eye-icon"></i>
                 </span>
             </div>
         </div>
 
         <div style="margin-top: 20px;">
-            <button type="submit" style="width: 100%;">Login</button>
+            <button type="submit" class="btn-primary" style="width: 100%;">Login</button>
         </div>
     </form>
-    
+
     <div style="margin-top: 15px; text-align: center;">
-        <a href="{{ url_for('auth.reset_password_request') }}" style="color: #666; text-decoration: none; font-size: 0.9em;">
+        <a href="{{ url_for('auth.reset_password_request') }}"
+            style="color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.9em;">
             <i class="fas fa-key"></i> Forgot your password?
         </a>
     </div>
 
-    <p style="margin-top: 20px; text-align: center;">Don't have an account? <a href="{{ url_for('auth.register') }}" style="color: #3498db;">Register here</a></p>
+    <p style="margin-top: 20px; text-align: center; color: rgba(255,255,255,0.8);">Don't have an account? <a
+            href="{{ url_for('auth.register') }}" style="color: var(--accent-color);">Register here</a></p>
 </div>
 {% endblock %}
 
@@ -59,7 +61,7 @@
     function togglePassword(fieldId) {
         const passwordField = document.getElementById(fieldId);
         const eyeIcon = document.getElementById('eye-icon');
-        
+
         if (passwordField.type === 'password') {
             passwordField.type = 'text';
             eyeIcon.classList.remove('fa-eye');

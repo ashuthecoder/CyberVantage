@@ -2,152 +2,102 @@
 {% block title %}Dashboard - CyberVantage{% endblock %}
 
 {% block extra_styles %}
-.sections-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-}
+<style>
+    .welcome-banner {
+        /* Glass styling reused or inherited, but let's make it specific if needed */
+        margin-bottom: 2rem;
+        text-align: center;
+    }
 
-.section-card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    overflow: hidden;
-    transition: transform 0.3s, box-shadow 0.3s;
-    text-decoration: none;
-    color: inherit;
-    position: relative;
-    height: 280px;
-}
+    .sections-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
 
-.section-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-}
+    .section-card {
+        text-decoration: none;
+        color: inherit;
+        height: 100%;
+        display: block;
+    }
 
-.section-card::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 5px;
-    transition: height 0.3s;
-}
+    .section-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        height: 100%;
+    }
 
-#learn-section::after {
-    background-color: #3498db;
-}
+    .section-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
 
-#simulate-section::after {
-    background-color: #e74c3c;
-}
-
-#analysis-section::after {
-    background-color: #2ecc71;
-}
-
-#threats-section::after {
-    background-color: #9b59b6;
-}
-
-#assignment-section::after {
-    background-color: #e67e22;
-}
-
-#admin-section::after {
-    background-color: #dc3545;
-}
-
-.section-card:hover::after {
-    height: 10px;
-}
-
-.section-content {
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    height: 100%;
-}
-
-.section-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
-.current-time {
-    text-align: center;
-    margin: 1rem 0;
-    color: #7f8c8d;
-    font-size: 0.9rem;
-}
-
-.welcome-banner {
-    background-color: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
-    text-align: center;
-}
+    .current-time {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="welcome-banner">
+<div class="glass-container welcome-banner" style="max-width: 100%;">
     <h1>Welcome to Your Dashboard</h1>
-    <p class="subtitle">Choose a path to enhance your cybersecurity knowledge</p>
-    <p class="current-time" id="current-time">Current Date and Time: Loading...</p>
+    <p class="subtitle" style="color: rgba(255,255,255,0.7);">Choose a path to enhance your cybersecurity knowledge</p>
+    <p class="current-time" id="current-time">Loading...</p>
 </div>
 
 <div class="sections-container">
-    <a href="{{ url_for('analysis.learn') }}" class="section-card" id="learn-section">
-        <div class="section-content">
+    <a href="{{ url_for('analysis.learn') }}" class="section-card">
+        <div class="glass-panel section-content">
             <div class="section-icon">📚</div>
-            <h2>Learn</h2>
-            <p>Access educational resources, tutorials, and courses on cybersecurity fundamentals and advanced topics.</p>
+            <h3>Learn</h3>
+            <p>Access educational resources, tutorials, and courses on cybersecurity fundamentals and advanced topics.
+            </p>
         </div>
     </a>
 
-    <a href="{{ url_for('simulation.simulate') }}" class="section-card" id="simulate-section">
-        <div class="section-content">
+    <a href="{{ url_for('simulation.simulate') }}" class="section-card">
+        <div class="glass-panel section-content">
             <div class="section-icon">🛡️</div>
-            <h2>Simulate</h2>
+            <h3>Simulate</h3>
             <p>Practice with real-world cybersecurity scenarios in a safe, controlled environment.</p>
         </div>
     </a>
 
-    <a href="{{ url_for('analysis.analysis') }}" class="section-card" id="analysis-section">
-        <div class="section-content">
+    <a href="{{ url_for('analysis.analysis') }}" class="section-card">
+        <div class="glass-panel section-content">
             <div class="section-icon">📊</div>
-            <h2>Analysis</h2>
+            <h3>Analysis</h3>
             <p>Review your performance metrics, progress tracking, and personalized recommendations.</p>
         </div>
     </a>
-    
-    <a href="{{ url_for('threat.check_threats') }}" class="section-card" id="threats-section">
-        <div class="section-content">
+
+    <a href="{{ url_for('threat.check_threats') }}" class="section-card">
+        <div class="glass-panel section-content">
             <div class="section-icon">🔍</div>
-            <h2>Check Threats</h2>
+            <h3>Check Threats</h3>
             <p>Scan files, URLs, and IPs to identify potential malware and security threats.</p>
         </div>
     </a>
-    
-    <a href="{{ url_for('threat.get_phishing_assignment') }}" class="section-card" id="assignment-section">
-        <div class="section-content">
+
+    <a href="{{ url_for('threat.get_phishing_assignment') }}" class="section-card">
+        <div class="glass-panel section-content">
             <div class="section-icon">✏️</div>
-            <h2>Assignment</h2>
+            <h3>Assignment</h3>
             <p>Test your knowledge by creating a convincing phishing email and get AI feedback on your work.</p>
         </div>
     </a>
-    
+
     {% if current_user and current_user.is_admin_user() %}
-    <a href="{{ url_for('auth.admin_users') }}" class="section-card" id="admin-section">
-        <div class="section-content">
+    <a href="{{ url_for('auth.admin_users') }}" class="section-card">
+        <div class="glass-panel section-content">
             <div class="section-icon">👥</div>
-            <h2>Admin Panel</h2>
+            <h3>Admin Panel</h3>
             <p>Manage system users, view registration details, and maintain user accounts.</p>
         </div>
     </a>
@@ -157,29 +107,17 @@
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Update current time
         function updateTime() {
             const now = new Date();
-            const formattedDate = now.toISOString().slice(0, 19).replace('T', ' ');
-            document.getElementById('current-time').textContent = `Current Date and Time: ${formattedDate}`;
+            const formattedDate = now.toLocaleString();
+            const timeEl = document.getElementById('current-time');
+            if (timeEl) timeEl.textContent = `${formattedDate}`;
         }
-        
+
         updateTime();
         setInterval(updateTime, 60000); // Update every minute
-        
-        // Add active state for buttons when pressed
-        const sectionCards = document.querySelectorAll('.section-card');
-        
-        sectionCards.forEach(card => {
-            card.addEventListener('mousedown', function() {
-                this.style.transform = 'scale(0.98)';
-            });
-            
-            card.addEventListener('mouseup', function() {
-                this.style.transform = '';
-            });
-        });
     });
 </script>
 {% endblock %}
