@@ -40,6 +40,14 @@ def dashboard(current_user):
     update_database_schema(app)
     return render_template('dashboard.html', username=current_user.name, current_user=current_user)
 
+# Initialize database for serverless environments
+with app.app_context():
+    try:
+        db.create_all()
+        update_database_schema(app)
+    except Exception as e:
+        print(f"Database initialization warning: {e}")
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
