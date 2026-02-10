@@ -9,6 +9,7 @@ pyjwt==2.8.0
 passlib==1.7.4
 bcrypt==4.1.2
 cryptography==41.0.7
+flask-wtf==1.2.1
 
 # --- HTML & Web Scraping ---
 beautifulsoup4==4.12.2
