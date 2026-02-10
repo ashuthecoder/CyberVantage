@@ -2,9 +2,9 @@
 Database models and helper functions
 """
 import datetime
-import sqlite3
 import os
 import bcrypt
+from sqlalchemy import inspect, text
 from config.app_config import db
 
 class User(db.Model):
@@ -98,38 +98,24 @@ class SimulationSession(db.Model):
 def update_database_schema(app):
     """Add the simulation_id column to the SimulationEmail table if it exists and the column is missing."""
     try:
-        # Connect directly to the SQLite database
-        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
-        
-        # Check if database file exists
-        if not os.path.exists(db_path):
-            print("[DB] Database file does not exist yet. Skipping schema update.")
-            return True
+        with app.app_context():
+            inspector = inspect(db.engine)
             
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-
-        # Ensure the table exists before attempting to alter it
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='simulation_email'")
-        table = cursor.fetchone()
-        if not table:
-            # Table doesn't exist yet, but database file exists - this means tables haven't been created
-            conn.close()
+            # Check if table exists
+            if not inspector.has_table('simulation_email'):
+                print("[DB] simulation_email table does not exist yet. Skipping schema update.")
+                return True
+            
+            # Check existing columns
+            columns = [col['name'] for col in inspector.get_columns('simulation_email')]
+            
+            if 'simulation_id' not in columns:
+                print("[DB] Adding simulation_id column to SimulationEmail table")
+                with db.engine.begin() as conn:
+                    conn.execute(text("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT"))
+                print("[DB] Column added successfully")
+            
             return True
-
-        # Check existing columns
-        cursor.execute("PRAGMA table_info(simulation_email)")
-        columns = [col[1] for col in cursor.fetchall()]
-
-        if 'simulation_id' not in columns:
-            print("[DB] Adding simulation_id column to SimulationEmail table")
-            cursor.execute("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT")
-            conn.commit()
-            print("[DB] Column added successfully")
-        # Remove the "already exists" message to reduce console noise
-        
-        conn.close()
-        return True
     except Exception as e:
         print(f"[DB] Error updating database schema: {str(e)}")
         return False
@@ -230,18 +216,16 @@ def log_simulation_event(user_id, username, event_type, session_id=None, details
 def get_simulation_id_for_email(email_id, app):
     """Get the simulation ID for a specific email"""
     try:
-        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("PRAGMA table_info(simulation_email)")
-        columns = [col[1] for col in cursor.fetchall()]
-        if 'simulation_id' in columns:
-            cursor.execute("SELECT simulation_id FROM simulation_email WHERE id=?", (email_id,))
-            result = cursor.fetchone()
-            conn.close()
-            return result[0] if result and result[0] else None
-        conn.close()
-        return None
+        with app.app_context():
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('simulation_email')]
+            if 'simulation_id' in columns:
+                result = db.session.execute(
+                    text("SELECT simulation_id FROM simulation_email WHERE id=:eid"),
+                    {"eid": email_id}
+                ).fetchone()
+                return result[0] if result and result[0] else None
+            return None
     except Exception as e:
         print(f"[DB] Error getting simulation_id: {str(e)}")
         return None
@@ -249,18 +233,17 @@ def get_simulation_id_for_email(email_id, app):
 def set_simulation_id_for_email(email_id, simulation_id, app):
     """Set the simulation ID for a specific email"""
     try:
-        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("PRAGMA table_info(simulation_email)")
-        columns = [col[1] for col in cursor.fetchall()]
-        if 'simulation_id' in columns:
-            cursor.execute("UPDATE simulation_email SET simulation_id=? WHERE id=?", (simulation_id, email_id))
-            conn.commit()
-            conn.close()
-            return True
-        conn.close()
-        return False
+        with app.app_context():
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('simulation_email')]
+            if 'simulation_id' in columns:
+                db.session.execute(
+                    text("UPDATE simulation_email SET simulation_id=:sid WHERE id=:eid"),
+                    {"sid": simulation_id, "eid": email_id}
+                )
+                db.session.commit()
+                return True
+            return False
     except Exception as e:
         print(f"[DB] Error setting simulation_id: {str(e)}")
         return False
@@ -268,18 +251,16 @@ def set_simulation_id_for_email(email_id, simulation_id, app):
 def get_emails_for_simulation(simulation_id, app):
     """Get all emails for a specific simulation"""
     try:
-        db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("PRAGMA table_info(simulation_email)")
-        columns = [col[1] for col in cursor.fetchall()]
-        if 'simulation_id' in columns:
-            cursor.execute("SELECT id FROM simulation_email WHERE simulation_id=?", (simulation_id,))
-            emails = cursor.fetchall()
-            conn.close()
-            return [email[0] for email in emails]
-        conn.close()
-        return []
+        with app.app_context():
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('simulation_email')]
+            if 'simulation_id' in columns:
+                result = db.session.execute(
+                    text("SELECT id FROM simulation_email WHERE simulation_id=:sid"),
+                    {"sid": simulation_id}
+                ).fetchall()
+                return [row[0] for row in result]
+            return []
     except Exception as e:
         print(f"[DB] Error getting emails for simulation: {str(e)}")
         return []

@@ -3,7 +3,7 @@ Analysis and monitoring routes
 """
 import os
 import datetime
-import sqlite3
+from sqlalchemy import inspect
 from flask import Blueprint, render_template, jsonify, request
 from routes.auth_routes import token_required
 from models.database import User, SimulationEmail, SimulationResponse, get_simulation_id_for_email
@@ -185,14 +185,11 @@ def debug_simulation(current_user):
     }
 
     try:
-        db_path = current_app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("PRAGMA table_info(simulation_email)")
-        columns = [col[1] for col in cursor.fetchall()]
+        from config.app_config import db as _db
+        insp = inspect(_db.engine)
+        columns = [col['name'] for col in insp.get_columns('simulation_email')]
         db_schema["has_simulation_id_column"] = 'simulation_id' in columns
         db_schema["all_columns"] = columns
-        conn.close()
     except Exception as e:
         db_schema["error"] = str(e)
 
