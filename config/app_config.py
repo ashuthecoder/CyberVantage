@@ -35,9 +35,17 @@ def create_app():
     templates_path = os.path.join(project_root, 'templates')
     static_path = os.path.join(project_root, 'static')
     
+    instance_path = os.getenv("FLASK_INSTANCE_PATH", "/tmp/instance")
+    try:
+        os.makedirs(instance_path, exist_ok=True)
+    except Exception:
+        instance_path = None
+
     app = Flask('main', 
                 template_folder=templates_path, 
-                static_folder=static_path)
+                static_folder=static_path,
+                instance_path=instance_path if instance_path else None,
+                instance_relative_config=True)
     
     # Config - Security hardened
     # Generate secure random secrets if not provided via environment
