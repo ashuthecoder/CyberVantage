@@ -2,125 +2,151 @@
 {% block title %}Simulation Feedback | CyberVantage{% endblock %}
 
 {% block extra_styles %}
-    <style>
-        .result-summary {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin: 2rem 0;
-        }
-        .highlight {
-            font-weight: bold;
-            color: #2a3f54;
-        }
-        .ai-feedback {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin: 2rem 0;
-        }
-        .feedback-content {
-            background: #f9f9f9;
-            padding: 1rem;
-            border-radius: 4px;
-            border-left: 4px solid #2a3f54;
-            margin-top: 1rem;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            max-width: 100%;
-        }
-        /* Add styles for the markdown-generated content */
-        .feedback-content h3 {
-            margin-top: 1.5rem;
-            margin-bottom: 0.75rem;
-            color: #2a3f54;
-        }
-        .feedback-content ul, .feedback-content ol {
-            margin-left: 1.5rem;
-            padding-left: 1rem;
-        }
-        .feedback-content strong {
-            color: #2a3f54;
-        }
-        .feedback-content p {
-            margin-bottom: 1rem;
-            line-height: 1.6;
-        }
-        .feedback-content li {
-            margin-bottom: 0.5rem;
-        }
-        .actions {
-            margin: 2rem 0;
-            display: flex;
-            gap: 1rem;
-        }
-        .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            text-decoration: none;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .primary {
-            background-color: #2a3f54;
-            color: white;
-        }
-        .secondary {
-            background-color: #7f8c8d;
-            color: white;
-        }
-        .score {
-            margin-top: 1rem;
-            font-size: 1.1rem;
-        }
-        .continue-btn {
-            display: block;
-            width: 250px;
-            margin: 30px auto;
-            background-color: #2a3f54;
-            color: white;
-            text-align: center;
-            padding: 12px 20px;
-            text-decoration: none;
-            font-size: 18px;
-            border-radius: 5px;
-            font-weight: bold;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
-            transition: all 0.3s ease;
-        }
-    </style>
+<style>
+    .result-summary {
+        background: var(--glass-bg);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(var(--glass-blur));
+        margin: 2rem 0;
+    }
+    .result-summary h2 {
+        color: var(--accent-color);
+    }
+    .highlight {
+        font-weight: bold;
+        color: var(--accent-color);
+    }
+    .ai-feedback {
+        background: var(--glass-bg);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(var(--glass-blur));
+        margin: 2rem 0;
+    }
+    .ai-feedback h3 {
+        color: var(--accent-color);
+    }
+    .feedback-content {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 1.25rem;
+        border-radius: 8px;
+        border-left: 4px solid var(--accent-color);
+        margin-top: 1rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        max-width: 100%;
+        color: rgba(255, 255, 255, 0.85);
+    }
+    .feedback-content h3 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: var(--accent-color);
+    }
+    .feedback-content ul, .feedback-content ol {
+        margin-left: 1.5rem;
+        padding-left: 1rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    .feedback-content strong {
+        color: var(--accent-color);
+    }
+    .feedback-content p {
+        margin-bottom: 1rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    .feedback-content li {
+        margin-bottom: 0.5rem;
+    }
+    .actions {
+        margin: 2rem 0;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .btn-act {
+        padding: 0.6rem 1.5rem;
+        border-radius: 50px;
+        text-decoration: none;
+        cursor: pointer;
+        font-weight: 500;
+        display: inline-block;
+        transition: all 0.3s;
+        border: none;
+    }
+    .btn-act:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    .btn-act.primary {
+        background: linear-gradient(135deg, var(--accent-secondary), var(--accent-color));
+        color: white;
+    }
+    .btn-act.secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .score {
+        margin-top: 1rem;
+        font-size: 1.1rem;
+    }
+    .continue-btn {
+        display: block;
+        width: 280px;
+        margin: 30px auto;
+        background: linear-gradient(135deg, var(--accent-secondary), var(--accent-color));
+        color: white;
+        text-align: center;
+        padding: 14px 24px;
+        text-decoration: none;
+        font-size: 18px;
+        border-radius: 50px;
+        font-weight: bold;
+        box-shadow: 0 5px 20px rgba(0, 242, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+    .continue-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 242, 255, 0.3);
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-    <h1>AI Feedback on Your Analysis</h1>
+<div style="max-width: 900px; margin: 0 auto;">
+    <h1><i class="fas fa-robot"></i> AI Feedback on Your Analysis</h1>
         
-        <div class="result-summary">
-            <h2>Your Answer: {{ "Correct" if response.user_response == response.is_spam_actual else "Incorrect" }}</h2>
-            <p>You said this email {{ "is" if response.user_response else "is not" }} a phishing/spam email.</p>
-            <p>The correct answer is: This email {{ "is" if response.is_spam_actual else "is not" }} a phishing/spam email.</p>
-            
-            {% if response.score %}
-                <div class="score">
-                    <p>Your analysis score: <span class="highlight">{{ response.score }}/10</span></p>
-                </div>
-            {% endif %}
-        </div>
+    <div class="result-summary">
+        <h2>Your Answer: {{ "Correct" if response.user_response == response.is_spam_actual else "Incorrect" }}</h2>
+        <p>You said this email {{ "is" if response.user_response else "is not" }} a phishing/spam email.</p>
+        <p>The correct answer is: This email {{ "is" if response.is_spam_actual else "is not" }} a phishing/spam email.</p>
         
-        <div class="ai-feedback">
-            <h3>AI Evaluation of Your Analysis:</h3>
-            <div class="feedback-content">
-                {{ response.ai_feedback|safe }}
+        {% if response.score %}
+            <div class="score">
+                <p>Your analysis score: <span class="highlight">{{ response.score }}/10</span></p>
             </div>
-        </div>
-        
-        <!-- Use the new continue_after_feedback route -->
-        <a href="{{ url_for('simulation.continue_after_feedback', email_id=response.email_id) }}" class="continue-btn">
-            Continue to Next Email →
-        </a>
-        
-    <div class="actions">
-        <a href="{{ url_for('simulation.restart_simulation') }}" class="btn secondary">Restart Simulation</a>
+        {% endif %}
     </div>
+    
+    <div class="ai-feedback">
+        <h3><i class="fas fa-brain"></i> AI Evaluation of Your Analysis:</h3>
+        <div class="feedback-content">
+            {{ response.ai_feedback|safe }}
+        </div>
+    </div>
+    
+    <a href="{{ url_for('simulation.continue_after_feedback', email_id=response.email_id) }}" class="continue-btn">
+        Continue to Next Email <i class="fas fa-arrow-right"></i>
+    </a>
+    
+    <div class="actions">
+        <a href="{{ url_for('simulation.restart_simulation') }}" class="btn-act secondary">
+            <i class="fas fa-redo"></i> Restart Simulation
+        </a>
+    </div>
+</div>
 {% endblock %}

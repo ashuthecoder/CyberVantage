@@ -1,81 +1,58 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberVantage - {{ title }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f7fa;
-        }
-        header {
-            background-color: #2a3f54;
-            color: white;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .container {
-            max-width: 800px;
-            margin: 4rem auto;
-            padding: 2rem;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .message {
-            margin: 2rem 0;
-            padding: 1.5rem;
-            background-color: #f9f9f9;
-            border-radius: 4px;
-        }
-        .btn {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            margin-top: 1.5rem;
-            background-color: #2a3f54;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        .back-btn {
-            color: white;
-            text-decoration: none;
-        }
-        .logout-btn {
-            background-color: #e74c3c;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            text-decoration: none;
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <a href="{{ url_for('dashboard') }}" class="back-btn">← Back to Dashboard</a>
-        <div>
-            <span>Welcome, {{ username }}</span>
-            <a href="{{ url_for('auth.logout') }}" class="logout-btn">Logout</a>
-        </div>
-    </header>
+{% extends "base.html" %}
+{% block title %}{{ title }} - CyberVantage{% endblock %}
 
-    <div class="container">
+{% block extra_styles %}
+<style>
+    .message-container {
+        max-width: 700px;
+        margin: 3rem auto;
+        text-align: center;
+    }
+    .message-box {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(var(--glass-blur));
+        border-radius: 16px;
+        padding: 3rem 2rem;
+    }
+    .message-box h1 {
+        color: var(--accent-color);
+        margin-bottom: 1.5rem;
+    }
+    .message-text {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.6;
+    }
+    .message-action {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.75rem 2rem;
+        background: linear-gradient(135deg, var(--accent-secondary), var(--accent-color));
+        color: white;
+        text-decoration: none;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .message-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 242, 255, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="message-container">
+    <div class="message-box">
         <h1>{{ title }}</h1>
-        
-        <div class="message">
+        <div class="message-text">
             <p>{{ message }}</p>
         </div>
-        
-        <a href="{{ action_url }}" class="btn">{{ action_text }}</a>
+        <a href="{{ action_url }}" class="message-action">{{ action_text }}</a>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

@@ -2,15 +2,72 @@
 
 {% block title %}Deep Search Analysis - CyberVantage{% endblock %}
 
+{% block extra_styles %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    /* Dark theme overrides for Bootstrap */
+    body { background: transparent !important; }
+    .container.py-4 { color: var(--text-color, #fff); }
+    .card { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.85); }
+    .card-header { border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
+    .card-body { color: rgba(255,255,255,0.85); }
+    .card.bg-light, .card .bg-light { background: rgba(255,255,255,0.05) !important; color: rgba(255,255,255,0.85) !important; }
+    .list-group-item { background: rgba(255,255,255,0.03) !important; border-color: rgba(255,255,255,0.08) !important; color: rgba(255,255,255,0.85) !important; }
+    .list-group-item:hover { background: rgba(255,255,255,0.07) !important; }
+    .list-group-item h5 { color: var(--accent-color, #00f2ff) !important; }
+    .text-muted { color: rgba(255,255,255,0.5) !important; }
+    .text-danger { color: #ff6b6b !important; }
+    .text-dark { color: rgba(255,255,255,0.85) !important; }
+    .badge.bg-light { background: rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.85) !important; }
+    .form-control { background: rgba(255,255,255,0.05) !important; border-color: rgba(255,255,255,0.15) !important; color: #fff !important; }
+    .form-control::placeholder { color: rgba(255,255,255,0.4) !important; }
+    .form-control:focus { border-color: var(--accent-color, #00f2ff) !important; box-shadow: 0 0 10px rgba(0,242,255,0.2) !important; }
+    .form-label { color: rgba(255,255,255,0.8) !important; }
+    .input-group-text { background: rgba(255,255,255,0.05) !important; border-color: rgba(255,255,255,0.15) !important; color: rgba(255,255,255,0.5) !important; }
+    .alert-info { background: rgba(0,242,255,0.08) !important; border: 1px solid rgba(0,242,255,0.2) !important; color: rgba(255,255,255,0.85) !important; }
+    .btn-success { background: rgba(40,167,69,0.4) !important; border-color: rgba(40,167,69,0.6) !important; color: #5ddc7e !important; }
+    .btn-success:hover { background: rgba(40,167,69,0.6) !important; }
+    .btn-outline-primary { color: var(--accent-color, #00f2ff) !important; border-color: var(--accent-color, #00f2ff) !important; }
+    .btn-outline-primary:hover { background: rgba(0,242,255,0.15) !important; }
+    .table { color: rgba(255,255,255,0.85) !important; }
+    .table-striped > tbody > tr:nth-of-type(odd) { background: rgba(255,255,255,0.03) !important; }
+    .table thead th { background: rgba(255,255,255,0.06) !important; color: var(--accent-color, #00f2ff) !important; border-bottom-color: rgba(255,255,255,0.1) !important; }
+    .table td { border-bottom-color: rgba(255,255,255,0.06) !important; }
+    p, li { color: rgba(255,255,255,0.8); }
+    h1, h2, h3, h4, h5 { color: var(--text-color, #fff); }
+    a { color: var(--accent-color, #00f2ff); }
+
+    .hero-section {
+        background: linear-gradient(135deg, var(--accent-secondary, #7000ff) 0%, var(--accent-color, #00f2ff) 100%) !important;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+    .card { border-radius: 15px !important; overflow: hidden; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.4) !important; }
+    .card-header { border: none; padding: 1.25rem 1.5rem; }
+    .btn { border-radius: 8px; font-weight: 500; transition: all 0.3s ease; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .loading-indicator { text-align: center; padding: 2rem; color: rgba(255,255,255,0.5); }
+    .spinner-border { color: var(--accent-color, #00f2ff) !important; }
+    .alert-danger { background: rgba(220,53,69,0.15) !important; border: 1px solid rgba(220,53,69,0.3) !important; color: #ff6b6b !important; }
+    .alert-success { background: rgba(40,167,69,0.15) !important; border: 1px solid rgba(40,167,69,0.3) !important; color: #5ddc7e !important; }
+    .btn-secondary { background: rgba(255,255,255,0.1) !important; border-color: rgba(255,255,255,0.2) !important; color: rgba(255,255,255,0.8) !important; }
+    .btn-primary { background: rgba(0,242,255,0.2) !important; border-color: rgba(0,242,255,0.5) !important; color: var(--accent-color, #00f2ff) !important; }
+    .card-header.bg-success { background: linear-gradient(135deg, #059669, #10b981) !important; }
+    .card-header.bg-primary { background: linear-gradient(135deg, var(--accent-secondary, #7000ff), var(--accent-color, #00f2ff)) !important; }
+    .card-header.bg-dark { background: rgba(255,255,255,0.08) !important; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
     <div class="row mb-5">
         <div class="col-12 text-center">
-            <div class="hero-section p-4 rounded" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <div class="hero-section p-4 rounded" style="color: white;">
                 <h1 class="display-5 mb-3 fw-bold">
                     <i class="fas fa-microscope me-3"></i>Advanced Threat Analysis
                 </h1>
-                <p class="lead mb-4">
+                <p class="lead mb-4" style="color: rgba(255,255,255,0.9);">
                     Our Deep Look feature provides comprehensive threat analysis beyond basic scanning capabilities.
                     Utilizing advanced heuristics and behavioral analysis to detect sophisticated threats.
                 </p>
@@ -23,7 +80,7 @@
 
     <div class="card mb-4">
         <div class="card-header bg-success text-white">
-            <h4 class="mb-0">Multi-Hop Link Analysis</h4>
+            <h4 class="mb-0" style="color: white;">Multi-Hop Link Analysis</h4>
         </div>
         <div class="card-body">
             <div class="row">
@@ -46,7 +103,7 @@
                     </p>
                 </div>
                 <div class="col-md-4">
-                    <div class="card bg-light">
+                    <div class="card">
                         <div class="card-body">
                             <h5>Example Chain</h5>
                             <ol>
@@ -68,7 +125,7 @@
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Advanced Analysis Features</h4>
+                    <h4 class="mb-0" style="color: white;">Advanced Analysis Features</h4>
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
@@ -90,26 +147,26 @@
         </div>
         
         <div class="col-md-6">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, var(--accent-secondary, #7000ff), var(--accent-color, #00f2ff)) !important;">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-microscope me-2"></i>
-                        <h4 class="mb-0">Try Deep Analysis</h4>
+                        <h4 class="mb-0" style="color: white;">Try Deep Analysis</h4>
                     </div>
                 </div>
                 <div class="card-body p-4">
                     <div class="alert alert-info border-0 mb-4">
                         <div class="d-flex align-items-center">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>Beta Feature:</strong> Deep analysis functionality is currently being enhanced.
+                            <strong>Beta Feature:</strong>&nbsp;Deep analysis functionality is currently being enhanced.
                         </div>
                     </div>
                     <form id="deepScanForm" class="mb-4">
                         <div class="mb-3">
                             <label for="deepScanInput" class="form-label fw-semibold">Enter URL for deep analysis:</label>
                             <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0">
-                                    <i class="fas fa-link text-muted"></i>
+                                <span class="input-group-text border-end-0">
+                                    <i class="fas fa-link"></i>
                                 </span>
                                 <input type="text" class="form-control border-start-0 ps-0" id="deepScanInput" required 
                                        placeholder="https://example.com">
@@ -132,7 +189,7 @@
     <div id="deepScanResultsContainer" style="display: none;">
         <div class="card">
             <div class="card-header bg-dark text-white">
-                <h4 class="mb-0">Deep Scan Results</h4>
+                <h4 class="mb-0" style="color: white;">Deep Scan Results</h4>
             </div>
             <div class="card-body" id="deepScanResults">
                 <!-- Results will be loaded here -->
@@ -140,100 +197,6 @@
         </div>
     </div>
 </div>
-
-{% block extra_styles %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-    /* Enhanced styles for the deep search page */
-    .hero-section {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-    
-    .card {
-        border: none;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        margin-bottom: 1.5rem;
-        border-radius: 15px;
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-    
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-    }
-    
-    .card-header {
-        font-weight: 600;
-        border: none;
-        padding: 1.25rem 1.5rem;
-        background-size: 200% 200%;
-        animation: gradientShift 6s ease infinite;
-    }
-    
-    @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    
-    .btn {
-        border-radius: 8px;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-    
-    .btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    .input-group-text {
-        border: 1px solid #ced4da;
-        background-color: #f8f9fa;
-    }
-    
-    .form-control:focus {
-        border-color: #f5576c;
-        box-shadow: 0 0 0 0.2rem rgba(245, 87, 108, 0.25);
-    }
-    
-    .list-group-item {
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-        margin-bottom: 0.5rem;
-        background-color: #fff;
-        transition: all 0.3s ease;
-    }
-    
-    .list-group-item:hover {
-        background-color: #f8f9fa;
-        transform: translateX(5px);
-    }
-    
-    .list-group-item h5 {
-        color: #2a3f54;
-    }
-    
-    .alert {
-        border: none;
-        border-radius: 10px;
-    }
-    
-    .loading-indicator {
-        text-align: center;
-        padding: 2rem;
-        color: #6c757d;
-    }
-    
-    .loading-indicator .spinner-border {
-        width: 2rem;
-        height: 2rem;
-        color: #f5576c;
-    }
-</style>
 {% endblock %}
 
 {% block scripts %}
@@ -249,7 +212,6 @@
             
             const scanInput = document.getElementById('deepScanInput').value.trim();
             
-            // Show loading indicator
             deepScanResultsContainer.style.display = 'block';
             deepScanResults.innerHTML = `
                 <div class="text-center">
@@ -259,15 +221,10 @@
                 </div>
             `;
             
-            // Make API request to backend for deep scanning
             fetch('/api/deep_scan', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    url: scanInput
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: scanInput })
             })
             .then(response => response.json())
             .then(data => {
@@ -279,7 +236,6 @@
                         </div>
                     `;
                 } else {
-                    // Display deep scan results
                     displayDeepScanResults(data);
                 }
             })
@@ -294,8 +250,6 @@
         });
         
         function displayDeepScanResults(data) {
-            // This is a placeholder for displaying deep scan results
-            // In a real implementation, this would show detailed analysis of the multi-hop chain
             deepScanResults.innerHTML = `
                 <div class="alert alert-${data.malicious ? 'danger' : 'success'}">
                     <h5>${data.malicious ? '⚠️ Threats Detected' : '✅ No Threats Detected'}</h5>
@@ -306,13 +260,7 @@
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>URL</th>
-                                <th>Status</th>
-                                <th>Redirect Type</th>
-                                <th>Verdict</th>
-                            </tr>
+                            <tr><th>#</th><th>URL</th><th>Status</th><th>Redirect Type</th><th>Verdict</th></tr>
                         </thead>
                         <tbody>
                             ${data.redirects.map((redirect, index) => `
@@ -321,11 +269,7 @@
                                     <td>${redirect.url}</td>
                                     <td>${redirect.status_code}</td>
                                     <td>${redirect.redirect_type}</td>
-                                    <td>
-                                        <span class="badge bg-${redirect.is_malicious ? 'danger' : 'success'}">
-                                            ${redirect.is_malicious ? 'Suspicious' : 'Clean'}
-                                        </span>
-                                    </td>
+                                    <td><span class="badge bg-${redirect.is_malicious ? 'danger' : 'success'}">${redirect.is_malicious ? 'Suspicious' : 'Clean'}</span></td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -338,13 +282,7 @@
                         <p>${data.javascript_analysis.summary}</p>
                         ${data.javascript_analysis.findings.length > 0 ? `
                             <h6>Findings:</h6>
-                            <ul>
-                                ${data.javascript_analysis.findings.map(finding => `
-                                    <li class="text-${finding.severity === 'high' ? 'danger' : finding.severity === 'medium' ? 'warning' : 'info'}">
-                                        ${finding.description}
-                                    </li>
-                                `).join('')}
-                            </ul>
+                            <ul>${data.javascript_analysis.findings.map(f => `<li class="text-${f.severity === 'high' ? 'danger' : f.severity === 'medium' ? 'warning' : 'info'}">${f.description}</li>`).join('')}</ul>
                         ` : '<p>No suspicious JavaScript found.</p>'}
                     </div>
                 </div>
@@ -357,5 +295,4 @@
         }
     });
 </script>
-{% endblock %}
 {% endblock %}

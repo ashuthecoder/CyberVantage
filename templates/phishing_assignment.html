@@ -1,39 +1,125 @@
 {% extends "base.html" %}
 {% block title %}Phishing Email Creation Assignment | CyberVantage{% endblock %}
 
+{% block extra_styles %}
+<style>
+    .assignment-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(var(--glass-blur));
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    .assignment-header {
+        background: linear-gradient(135deg, var(--accent-secondary), var(--accent-color));
+        color: white;
+        padding: 1rem 1.5rem;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    .assignment-body {
+        padding: 1.5rem;
+        color: rgba(255, 255, 255, 0.85);
+    }
+    .assignment-body h4 {
+        color: var(--accent-color);
+        margin-top: 1rem;
+    }
+    .assignment-body ul {
+        color: rgba(255, 255, 255, 0.8);
+        padding-left: 1.5rem;
+    }
+    .assignment-body li {
+        margin-bottom: 8px;
+    }
+    .warning-box {
+        background: rgba(255, 193, 7, 0.08);
+        border-left: 4px solid #ffc107;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0 8px 8px 0;
+    }
+    .warning-box h4 {
+        margin-top: 0;
+        color: #ffd93d;
+    }
+    .warning-box p {
+        color: rgba(255, 255, 255, 0.75);
+        margin-bottom: 0;
+    }
+    .email-textarea {
+        width: 100%;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        font-family: var(--font-body, 'Inter', sans-serif);
+        color: white;
+        resize: vertical;
+    }
+    .email-textarea::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+    }
+    .email-textarea:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+    }
+    .submit-btn {
+        margin-top: 20px;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #059669, #10b981);
+        border: none;
+        color: white;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
-    <h1>Final Challenge: Create a Phishing Email</h1>
-    <p>Now it's time to apply everything you've learned about phishing detection by creating your own phishing email.</p>
+<div style="max-width: 1200px; margin: 0 auto;">
+    <h1><i class="fas fa-fish"></i> Final Challenge: Create a Phishing Email</h1>
+    <p style="color: rgba(255,255,255,0.7); margin-bottom: 1.5rem;">Now it's time to apply everything you've learned about phishing detection by creating your own phishing email.</p>
     
-    <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 2rem; overflow: hidden;">
-        <div style="background-color: #2a3f54; color: white; padding: 1rem 1.5rem; font-size: 1.2rem; font-weight: bold;">
-            Assignment Instructions
+    <div class="assignment-card">
+        <div class="assignment-header">
+            <i class="fas fa-clipboard-list"></i> Assignment Instructions
         </div>
-        <div style="padding: 1.5rem;">
+        <div class="assignment-body">
             {{ instructions|safe }}
             
             <div style="margin-top: 20px;">
-                <h4 style="color: #2a3f54;">Evaluation Criteria:</h4>
+                <h4>Evaluation Criteria:</h4>
                 <ul>
                     {% for criterion in rubric %}
-                    <li style="margin-bottom: 8px;">{{ criterion }}</li>
+                    <li>{{ criterion }}</li>
                     {% endfor %}
                 </ul>
             </div>
             
-            <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin: 1rem 0;">
-                <h4 style="margin-top: 0;">⚠️ Educational Purpose Only</h4>
+            <div class="warning-box">
+                <h4>⚠️ Educational Purpose Only</h4>
                 <p>This exercise is for educational purposes only. The skills learned here should be used responsibly to enhance your ability to identify and avoid phishing attacks, not to create them.</p>
             </div>
             
             <form action="{{ url_for('threat.evaluate_user_phishing') }}" method="post">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div style="margin-top: 20px;">
-                    <label for="phishing-email" style="display: block; margin-bottom: 8px; font-weight: bold;">Your Phishing Email:</label>
-                    <textarea id="phishing-email" name="phishing_email" rows="12" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: Arial, sans-serif;" placeholder="Write your phishing email here..." required></textarea>
+                    <label for="phishing-email" style="display: block; margin-bottom: 8px; font-weight: bold; color: rgba(255,255,255,0.9);">Your Phishing Email:</label>
+                    <textarea id="phishing-email" name="phishing_email" rows="12" class="email-textarea" placeholder="Write your phishing email here..." required></textarea>
                 </div>
-                <button type="submit" style="margin-top: 20px; padding: 10px 20px; background-color: #4CAF50; border: none; color: white; border-radius: 5px; cursor: pointer; font-size: 16px;">Submit for Evaluation</button>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i> Submit for Evaluation
+                </button>
             </form>
         </div>
     </div>
