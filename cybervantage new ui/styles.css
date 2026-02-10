@@ -216,9 +216,18 @@ h3 {
 
 .hero-subtitle {
     font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 1rem;
+    max-width: 600px;
+    line-height: 1.6;
+}
+
+.hero-description {
+    font-size: 1rem;
     color: rgba(255, 255, 255, 0.7);
     margin-bottom: 2rem;
-    max-width: 500px;
+    max-width: 600px;
+    line-height: 1.6;
 }
 
 @keyframes revealChar {
@@ -377,6 +386,80 @@ h3 {
     color: var(--accent-color);
 }
 
+/* About Section */
+.about-section {
+    padding: 5rem 10%;
+    text-align: center;
+}
+
+.about-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.section-title {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.section-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Phases Section */
+.phases-section {
+    padding: 5rem 10%;
+    text-align: center;
+}
+
+.phases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.phase-card {
+    position: relative;
+    padding: 2.5rem 2rem;
+    text-align: left;
+    transition: all 0.4s ease;
+}
+
+.phase-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    border-color: var(--accent-color);
+    box-shadow: 0 10px 40px rgba(0, 242, 255, 0.2);
+}
+
+.phase-number {
+    font-size: 3rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.1);
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-family: var(--font-heading);
+}
+
+.phase-card h3 {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.phase-card p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.75);
+}
+
 /* Responsive Design */
 @media (max-width: 900px) {
     .glass-nav {
@@ -405,8 +488,9 @@ h3 {
         align-items: center;
     }
 
-    .hero-subtitle {
-        margin: 0 auto 2rem auto;
+    .hero-subtitle,
+    .hero-description {
+        margin: 0 auto 1rem auto;
     }
 
     .liquid-container {
@@ -419,6 +503,19 @@ h3 {
     .glass-card-mockup {
         width: 100%;
         max-width: 350px;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+    }
+
+    .phases-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .about-section,
+    .phases-section {
+        padding: 3rem 5%;
     }
 }
 
@@ -437,5 +534,15 @@ h3 {
         display: flex;
         flex-direction: column;
         align-items: center;
+    }
+
+    .section-title {
+        font-size: 2rem;
+    }
+
+    .about-section,
+    .phases-section,
+    .features {
+        padding: 2rem 5%;
     }
 }
