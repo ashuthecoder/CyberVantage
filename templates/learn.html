@@ -2,6 +2,7 @@
 {% block title %}Learn - CyberVantage{% endblock %}
 
 {% block extra_styles %}
+<style>
 .learning-content {
     display: flex;
     flex-direction: column;
@@ -9,21 +10,23 @@
 }
 
 .module-card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    backdrop-filter: blur(var(--glass-blur));
     overflow: hidden;
 }
 
 .module-header {
-    background-color: #3498db;
+    background: linear-gradient(135deg, rgba(112, 0, 255, 0.4), rgba(0, 242, 255, 0.2));
     color: white;
-    padding: 1rem;
-    font-size: 1.2rem;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
     font-weight: 500;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid var(--glass-border);
 }
 
 .module-content {
@@ -36,18 +39,18 @@
 
 .quiz-container {
     margin-top: 1.5rem;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--glass-border);
     padding-top: 1.5rem;
-    display: none; /* Hide quiz initially */
+    display: none;
 }
 
 .quiz-container.available {
-    display: block; /* Show quiz when available */
+    display: block;
 }
 
 .progress-bar {
     height: 10px;
-    background-color: #ecf0f1;
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 5px;
     margin-bottom: 10px;
     overflow: hidden;
@@ -55,7 +58,7 @@
 
 .progress-fill {
     height: 100%;
-    background-color: #2ecc71;
+    background: linear-gradient(90deg, var(--accent-color), var(--accent-secondary));
     border-radius: 5px;
     width: 0%;
     transition: width 0.5s;
@@ -68,22 +71,28 @@
 }
 
 .module-btn {
-    background-color: #3498db;
-    color: white;
+    background: var(--accent-color);
+    color: #000;
     padding: 0.5rem 1rem;
     border: none;
-    border-radius: 4px;
+    border-radius: 50px;
     cursor: pointer;
     text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
 }
 
 .module-btn:hover {
-    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
 }
 
 .module-btn:disabled {
-    background-color: #bdc3c7;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.3);
     cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
 
 /* Quiz styling */
@@ -98,47 +107,54 @@
 }
 
 .quiz-option {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    padding: 12px 15px;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .quiz-option:hover {
-    background-color: #f9f9f9;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .quiz-option.selected {
-    border-color: #3498db;
-    background-color: rgba(52, 152, 219, 0.1);
+    border-color: var(--accent-color);
+    background: rgba(0, 242, 255, 0.08);
 }
 
 .quiz-option.correct {
-    border-color: #2ecc71;
-    background-color: rgba(46, 204, 113, 0.1);
+    border-color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+    color: #5ddc7e;
 }
 
 .quiz-option.incorrect {
-    border-color: #e74c3c;
-    background-color: rgba(231, 76, 60, 0.1);
+    border-color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+    color: #ff6b6b;
 }
 
 .quiz-feedback {
     margin-top: 1rem;
     padding: 1rem;
-    border-radius: 5px;
+    border-radius: 8px;
     display: none;
 }
 
 .feedback-correct {
-    background-color: rgba(46, 204, 113, 0.1);
-    color: #2ecc71;
+    background: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    color: #5ddc7e;
 }
 
 .feedback-incorrect {
-    background-color: rgba(231, 76, 60, 0.1);
-    color: #e74c3c;
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    color: #ff6b6b;
 }
 
 .slide {
@@ -149,6 +165,15 @@
     display: block;
 }
 
+.slide h3 {
+    color: var(--accent-color);
+    margin-bottom: 0.75rem;
+}
+
+.slide p, .slide li {
+    color: rgba(255, 255, 255, 0.8);
+}
+
 .slide-controls {
     display: flex;
     justify-content: space-between;
@@ -156,21 +181,27 @@
 }
 
 .slide-btn {
-    background-color: #3498db;
-    color: white;
-    padding: 0.5rem 1rem;
+    background: var(--accent-color);
+    color: #000;
+    padding: 0.5rem 1.2rem;
     border: none;
-    border-radius: 4px;
+    border-radius: 50px;
     cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
 }
 
 .slide-btn:hover {
-    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
 }
 
 .slide-btn:disabled {
-    background-color: #bdc3c7;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.3);
     cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
 
 .slide-indicators {
@@ -184,29 +215,31 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: #bdc3c7;
+    background: rgba(255, 255, 255, 0.15);
     cursor: pointer;
+    transition: all 0.3s;
 }
 
 .slide-indicator.active {
-    background-color: #3498db;
+    background: var(--accent-color);
+    box-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
 }
 
 /* Enhanced module styling */
 .example-box {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
     padding: 1rem;
     margin: 1rem 0;
 }
 
 .danger-warning {
-    background-color: #fff3cd;
-    border: 1px solid #ffeaa7;
-    color: #856404;
-    padding: 0.5rem;
-    border-radius: 4px;
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    color: #ffd93d;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
     margin-top: 0.5rem;
     font-weight: 500;
 }
@@ -214,32 +247,34 @@
 .video-example {
     margin: 1rem 0;
     padding: 0.75rem;
-    background-color: #e3f2fd;
-    border-radius: 5px;
+    background: rgba(0, 242, 255, 0.05);
+    border: 1px solid rgba(0, 242, 255, 0.1);
+    border-radius: 8px;
 }
 
 .demo-link {
-    color: #1976d2;
+    color: var(--accent-color);
     font-weight: 500;
     text-decoration: none;
 }
 
 .demo-link:hover {
     text-decoration: underline;
+    color: #66f7ff;
 }
 
 .tip-box, .emergency-box {
-    background-color: #e8f5e8;
-    border: 1px solid #4caf50;
-    border-radius: 5px;
+    background: rgba(40, 167, 69, 0.08);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    border-radius: 8px;
     padding: 1rem;
     margin: 1rem 0;
 }
 
 .emergency-box {
-    background-color: #ffebee;
-    border-color: #f44336;
-    color: #c62828;
+    background: rgba(220, 53, 69, 0.08);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #ff6b6b;
 }
 
 .security-measures {
@@ -250,10 +285,10 @@
 }
 
 .measure {
-    background-color: #f5f5f5;
+    background: rgba(255, 255, 255, 0.03);
     padding: 1rem;
-    border-radius: 5px;
-    border-left: 4px solid #2196f3;
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-color);
 }
 
 .awareness-tips {
@@ -264,14 +299,14 @@
 }
 
 .tip {
-    background-color: #fff8e1;
+    background: rgba(255, 193, 7, 0.05);
     padding: 1rem;
-    border-radius: 5px;
-    border-left: 4px solid #ff9800;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
 }
 
 .module-card.locked .module-content {
-    opacity: 0.6;
+    opacity: 0.4;
     pointer-events: none;
 }
 
@@ -280,11 +315,11 @@
 }
 
 .module-status.unlocked {
-    color: #4caf50;
+    color: #5ddc7e;
 }
 
 .module-status.locked {
-    color: #f44336;
+    color: #ff6b6b;
 }
 
 .quiz-controls {
@@ -294,26 +329,29 @@
 }
 
 .reset-btn {
-    background-color: #f44336;
+    background: rgba(220, 53, 69, 0.3) !important;
+    color: #ff6b6b !important;
+    border: 1px solid rgba(220, 53, 69, 0.5) !important;
 }
 
 .reset-btn:hover {
-    background-color: #d32f2f;
+    background: rgba(220, 53, 69, 0.5) !important;
 }
 
 .deselect-btn {
-    background-color: #ff9800;
-    color: white;
+    background: rgba(255, 193, 7, 0.25);
+    color: #ffd93d;
     padding: 0.25rem 0.5rem;
-    border: none;
-    border-radius: 4px;
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    border-radius: 50px;
     cursor: pointer;
     font-size: 0.8rem;
     margin-top: 0.5rem;
+    transition: all 0.3s;
 }
 
 .deselect-btn:hover {
-    background-color: #f57c00;
+    background: rgba(255, 193, 7, 0.4);
 }
 
 @media (max-width: 768px) {
@@ -326,11 +364,12 @@
         grid-template-columns: 1fr;
     }
 }
+</style>
 {% endblock %}
 
 {% block content %}
 <h1 style="text-align: center;">Learn About Cyber Safety</h1>
-<p style="text-align: center; color: #7f8c8d; margin-bottom: 2rem;">Master the skills to identify and avoid spam emails</p>
+<p style="text-align: center; color: rgba(255,255,255,0.6); margin-bottom: 2rem;">Master the skills to identify and avoid spam emails</p>
 
 <div class="learning-content">
     <!-- Module 1 -->
@@ -348,7 +387,7 @@
                 <div class="slide active" id="slide1">
                     <h3>What is Phishing?</h3>
                     <p>Phishing is a cybercrime in which targets are contacted by email, telephone or text message by someone posing as a legitimate institution to lure individuals into providing sensitive data.</p>
-                    <img src="{{ url_for('static', filename='images/phishing_example.svg') }}" alt="Phishing Example" style="max-width: 100%; margin-top: 1rem;">
+                    <img src="{{ url_for('static', filename='images/phishing_example.svg') }}" alt="Phishing Example" style="max-width: 100%; margin-top: 1rem; border-radius: 8px; opacity: 0.9;">
                 </div>
                 
                 <div class="slide" id="slide2">
@@ -439,7 +478,7 @@
                         <h4>Example Attack Vector:</h4>
                         <p><strong>Scenario:</strong> Fake bank email requesting immediate account verification</p>
                         <p><strong>Payload:</strong> Malicious link leading to credential harvesting site</p>
-                        <div class="danger-warning">⚠️ This could lead to account takeover and financial theft!</div>
+                        <div class="danger-warning">&#9888;&#65039; This could lead to account takeover and financial theft!</div>
                     </div>
                     <div class="video-example">
                         <p><strong>Interactive Demo:</strong> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="demo-link">See how attackers craft convincing emails</a></p>
@@ -454,7 +493,7 @@
                         <p><strong>Target:</strong> Company executives or IT administrators</p>
                         <p><strong>Technique:</strong> Social engineering with research-backed personal details</p>
                         <p><strong>RCE Risk:</strong> Malicious attachments that execute code when opened</p>
-                        <div class="danger-warning">🔥 Could result in complete system compromise and data breaches!</div>
+                        <div class="danger-warning">&#128293; Could result in complete system compromise and data breaches!</div>
                     </div>
                     <div class="video-example">
                         <p><strong>Learn More:</strong> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="demo-link">Advanced spear phishing techniques</a></p>
@@ -468,7 +507,7 @@
                         <h4>High-Impact Attack:</h4>
                         <p><strong>Method:</strong> Impersonating C-level executives to authorize fraudulent transactions</p>
                         <p><strong>Impact:</strong> Financial losses in millions, reputation damage</p>
-                        <div class="danger-warning">💰 Average loss per successful whaling attack: $130,000+</div>
+                        <div class="danger-warning">&#128176; Average loss per successful whaling attack: $130,000+</div>
                     </div>
                 </div>
                 
@@ -479,7 +518,7 @@
                         <h4>Mobile-First Attacks:</h4>
                         <p><strong>Smishing:</strong> Fake SMS from "banks" with malicious links</p>
                         <p><strong>Vishing:</strong> Fake phone calls requesting sensitive information</p>
-                        <div class="danger-warning">📱 Mobile users are 3x more likely to fall for phishing attacks!</div>
+                        <div class="danger-warning">&#128241; Mobile users are 3x more likely to fall for phishing attacks!</div>
                     </div>
                     <div class="video-example">
                         <p><strong>Real Examples:</strong> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="demo-link">Mobile phishing in action</a></p>
@@ -554,7 +593,7 @@
                         <li><strong>Use 2FA:</strong> Enable two-factor authentication on all accounts</li>
                     </ul>
                     <div class="tip-box">
-                        <h4>💡 Pro Tip:</h4>
+                        <h4>&#128161; Pro Tip:</h4>
                         <p>When in doubt, contact the organization directly through official channels!</p>
                     </div>
                 </div>
@@ -563,15 +602,15 @@
                     <h3>Technical Security Measures</h3>
                     <div class="security-measures">
                         <div class="measure">
-                            <h4>🛡️ Endpoint Protection</h4>
+                            <h4>&#128737;&#65039; Endpoint Protection</h4>
                             <p>Use reliable antivirus and anti-malware solutions that can detect malicious attachments.</p>
                         </div>
                         <div class="measure">
-                            <h4>🔒 Email Filtering</h4>
+                            <h4>&#128274; Email Filtering</h4>
                             <p>Implement advanced email security solutions that can detect and block phishing attempts.</p>
                         </div>
                         <div class="measure">
-                            <h4>🌐 Browser Security</h4>
+                            <h4>&#127760; Browser Security</h4>
                             <p>Keep browsers updated and use extensions that warn about malicious websites.</p>
                         </div>
                     </div>
@@ -588,7 +627,7 @@
                         <li><strong>Monitor accounts</strong> - Watch for unauthorized activity</li>
                     </ol>
                     <div class="emergency-box">
-                        <h4>🚨 If You Already Clicked:</h4>
+                        <h4>&#128680; If You Already Clicked:</h4>
                         <p>Immediately disconnect from the internet, run a full system scan, and contact your IT department!</p>
                     </div>
                 </div>
@@ -598,15 +637,15 @@
                     <p>Building a security-conscious mindset:</p>
                     <div class="awareness-tips">
                         <div class="tip">
-                            <h4>📚 Continuous Learning</h4>
+                            <h4>&#128218; Continuous Learning</h4>
                             <p>Stay updated on the latest phishing techniques and security threats.</p>
                         </div>
                         <div class="tip">
-                            <h4>👥 Share Knowledge</h4>
+                            <h4>&#128101; Share Knowledge</h4>
                             <p>Help educate friends and colleagues about cybersecurity best practices.</p>
                         </div>
                         <div class="tip">
-                            <h4>🧠 Think Before You Click</h4>
+                            <h4>&#129504; Think Before You Click</h4>
                             <p>Always pause and analyze emails, especially urgent requests or too-good-to-be-true offers.</p>
                         </div>
                     </div>
@@ -667,102 +706,33 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Enhanced multi-module learning system
         const modules = {
-            1: { 
-                currentSlide: 1, 
-                totalSlides: 3, 
-                completed: false,
-                prefix: '',
-                nextModule: 2
-            },
-            2: { 
-                currentSlide: 1, 
-                totalSlides: 4, 
-                completed: false,
-                prefix: 'module2-',
-                nextModule: 3
-            },
-            3: { 
-                currentSlide: 1, 
-                totalSlides: 4, 
-                completed: false,
-                prefix: 'module3-',
-                nextModule: null
-            }
+            1: { currentSlide: 1, totalSlides: 3, completed: false, prefix: '', nextModule: 2 },
+            2: { currentSlide: 1, totalSlides: 4, completed: false, prefix: 'module2-', nextModule: 3 },
+            3: { currentSlide: 1, totalSlides: 4, completed: false, prefix: 'module3-', nextModule: null }
         };
 
-        // Question bank for randomization
         const questionBanks = {
             1: [
-                {
-                    question: "What is the primary goal of a phishing attack?",
-                    options: ["To disable your computer", "To install software on your computer", "To steal sensitive information like passwords", "To make your computer run slower"],
-                    correct: 2
-                },
-                {
-                    question: "Which of these is a common warning sign of a phishing email?",
-                    options: ["Email comes from someone you know", "Urgent action required to prevent negative consequences", "Email has proper grammar and spelling", "Email addresses you by your correct name"],
-                    correct: 1
-                },
-                {
-                    question: "What does phishing typically attempt to steal?",
-                    options: ["Computer processing power", "Personal information and passwords", "Software licenses", "Internet bandwidth"],
-                    correct: 1
-                },
-                {
-                    question: "Which email characteristic is most suspicious?",
-                    options: ["Professional formatting", "Requests for personal information", "Proper company branding", "Clear contact information"],
-                    correct: 1
-                }
+                { question: "What is the primary goal of a phishing attack?", options: ["To disable your computer", "To install software on your computer", "To steal sensitive information like passwords", "To make your computer run slower"], correct: 2 },
+                { question: "Which of these is a common warning sign of a phishing email?", options: ["Email comes from someone you know", "Urgent action required to prevent negative consequences", "Email has proper grammar and spelling", "Email addresses you by your correct name"], correct: 1 },
+                { question: "What does phishing typically attempt to steal?", options: ["Computer processing power", "Personal information and passwords", "Software licenses", "Internet bandwidth"], correct: 1 },
+                { question: "Which email characteristic is most suspicious?", options: ["Professional formatting", "Requests for personal information", "Proper company branding", "Clear contact information"], correct: 1 }
             ],
             2: [
-                {
-                    question: "Which type of phishing attack specifically targets high-profile executives?",
-                    options: ["Email phishing", "Spear phishing", "Whaling", "Smishing"],
-                    correct: 2
-                },
-                {
-                    question: "What makes spear phishing more dangerous than regular phishing?",
-                    options: ["It uses more colorful emails", "It uses personalized information to target specific individuals", "It only targets mobile devices", "It's sent through social media only"],
-                    correct: 1
-                },
-                {
-                    question: "What is 'Smishing'?",
-                    options: ["Email-based phishing attacks", "SMS/text message-based phishing attacks", "Social media phishing", "Phone call-based attacks"],
-                    correct: 1
-                },
-                {
-                    question: "RCE (Remote Code Execution) attacks through phishing typically use:",
-                    options: ["Malicious email attachments that execute code when opened", "Colorful images in emails", "Long email subject lines", "Multiple recipients in CC"],
-                    correct: 0
-                }
+                { question: "Which type of phishing attack specifically targets high-profile executives?", options: ["Email phishing", "Spear phishing", "Whaling", "Smishing"], correct: 2 },
+                { question: "What makes spear phishing more dangerous than regular phishing?", options: ["It uses more colorful emails", "It uses personalized information to target specific individuals", "It only targets mobile devices", "It's sent through social media only"], correct: 1 },
+                { question: "What is 'Smishing'?", options: ["Email-based phishing attacks", "SMS/text message-based phishing attacks", "Social media phishing", "Phone call-based attacks"], correct: 1 },
+                { question: "RCE attacks through phishing typically use:", options: ["Malicious email attachments that execute code when opened", "Colorful images in emails", "Long email subject lines", "Multiple recipients in CC"], correct: 0 }
             ],
             3: [
-                {
-                    question: "What is the FIRST thing you should do if you receive a suspicious email?",
-                    options: ["Click the link to investigate", "Reply to ask if it's legitimate", "Don't click anything and verify through official channels", "Forward it to all your contacts"],
-                    correct: 2
-                },
-                {
-                    question: "Two-Factor Authentication (2FA) helps protect against phishing because:",
-                    options: ["It makes emails harder to send", "Even if credentials are stolen, attackers need the second factor", "It automatically deletes phishing emails", "It makes passwords longer"],
-                    correct: 1
-                },
-                {
-                    question: "If you accidentally clicked a malicious link, what should you do IMMEDIATELY?",
-                    options: ["Disconnect from the internet and run a security scan", "Keep browsing normally", "Click more links to see what happens", "Wait to see if anything bad happens"],
-                    correct: 0
-                },
-                {
-                    question: "The most effective defense against phishing is:",
-                    options: ["Having the newest computer", "Using complex passwords only", "A combination of technology, training, and vigilant behavior", "Never using email"],
-                    correct: 2
-                }
+                { question: "What is the FIRST thing you should do if you receive a suspicious email?", options: ["Click the link to investigate", "Reply to ask if it's legitimate", "Don't click anything and verify through official channels", "Forward it to all your contacts"], correct: 2 },
+                { question: "Two-Factor Authentication (2FA) helps protect against phishing because:", options: ["It makes emails harder to send", "Even if credentials are stolen, attackers need the second factor", "It automatically deletes phishing emails", "It makes passwords longer"], correct: 1 },
+                { question: "If you accidentally clicked a malicious link, what should you do IMMEDIATELY?", options: ["Disconnect from the internet and run a security scan", "Keep browsing normally", "Click more links to see what happens", "Wait to see if anything bad happens"], correct: 0 },
+                { question: "The most effective defense against phishing is:", options: ["Having the newest computer", "Using complex passwords only", "A combination of technology, training, and vigilant behavior", "Never using email"], correct: 2 }
             ]
         };
 
-        // Function to shuffle array
         function shuffleArray(array) {
             const shuffled = [...array];
             for (let i = shuffled.length - 1; i > 0; i--) {
@@ -772,197 +742,94 @@
             return shuffled;
         }
 
-        // Function to populate quiz with random questions
         function populateQuiz(moduleNum) {
             const moduleCard = document.getElementById(`module${moduleNum}`) || document.querySelector('.module-card');
             if (!moduleCard) return;
-
             const questions = shuffleArray(questionBanks[moduleNum]).slice(0, 2);
             const quizQuestions = moduleCard.querySelectorAll('.quiz-question');
-
             questions.forEach((questionData, index) => {
                 if (quizQuestions[index]) {
                     const questionElement = quizQuestions[index];
                     const questionText = questionElement.querySelector('.question-text');
                     const options = questionElement.querySelectorAll('.quiz-option');
-
-                    if (questionText) {
-                        questionText.textContent = questionData.question;
-                    }
-
+                    if (questionText) questionText.textContent = questionData.question;
                     options.forEach((option, optionIndex) => {
                         option.textContent = questionData.options[optionIndex];
                         option.setAttribute('data-correct', optionIndex === questionData.correct ? 'true' : 'false');
                         option.classList.remove('selected', 'correct', 'incorrect');
                     });
-
-                    // Reset feedback
                     const feedback = questionElement.querySelector('.quiz-feedback');
-                    if (feedback) {
-                        feedback.style.display = 'none';
-                        feedback.textContent = '';
-                    }
-
-                    // Hide deselect button
+                    if (feedback) { feedback.style.display = 'none'; feedback.textContent = ''; }
                     const deselectBtn = questionElement.querySelector('.deselect-btn');
-                    if (deselectBtn) {
-                        deselectBtn.style.display = 'none';
-                    }
+                    if (deselectBtn) deselectBtn.style.display = 'none';
                 }
             });
         }
 
-        // Initialize module states
         function initializeModules() {
-            // Check localStorage for completion status and show quizzes for completed modules
             for (let i = 1; i <= 3; i++) {
                 if (localStorage.getItem(`module${i}-quiz-completed`) === 'true') {
                     modules[i].completed = true;
                     if (i < 3) unlockModule(i + 1);
-                    
-                    // Show quiz for completed modules
                     const moduleCard = document.getElementById(`module${i}`) || (i === 1 ? document.querySelector('.module-card') : null);
                     const quizContainer = moduleCard ? moduleCard.querySelector('.quiz-container') : null;
-                    if (quizContainer) {
-                        quizContainer.classList.add('available');
-                    }
+                    if (quizContainer) quizContainer.classList.add('available');
                 }
             }
-            
             updateAllProgress();
         }
 
         function unlockModule(moduleNum) {
             const moduleCard = document.getElementById(`module${moduleNum}`);
             const moduleStatus = moduleCard ? moduleCard.querySelector('.module-status') : null;
-            
             if (moduleCard) {
                 moduleCard.classList.remove('locked');
-                if (moduleStatus) {
-                    moduleStatus.textContent = 'Unlocked';
-                    moduleStatus.classList.add('unlocked');
-                    moduleStatus.classList.remove('locked');
-                }
+                if (moduleStatus) { moduleStatus.textContent = 'Unlocked'; moduleStatus.classList.add('unlocked'); moduleStatus.classList.remove('locked'); }
             }
         }
 
         function setupSlideNavigation(moduleNum) {
             const module = modules[moduleNum];
             const prefix = module.prefix;
-            
             function updateSlide() {
-                // Hide all slides for this module
-                const moduleContainer = document.getElementById(`module${moduleNum}-slides`) || 
-                                       document.querySelector('#module1 .slides-container');
+                const moduleContainer = document.getElementById(`module${moduleNum}-slides`) || document.querySelector('#module1 .slides-container');
                 if (!moduleContainer) return;
-                
                 const slides = moduleContainer.querySelectorAll('.slide');
                 slides.forEach(slide => slide.classList.remove('active'));
-                
-                // Show current slide
-                const currentSlideEl = document.getElementById(`${prefix}slide${module.currentSlide}`) ||
-                                     document.getElementById(`slide${module.currentSlide}`);
-                if (currentSlideEl) {
-                    currentSlideEl.classList.add('active');
-                }
-                
-                // Update indicators
+                const currentSlideEl = document.getElementById(`${prefix}slide${module.currentSlide}`) || document.getElementById(`slide${module.currentSlide}`);
+                if (currentSlideEl) currentSlideEl.classList.add('active');
                 const indicators = moduleContainer.querySelectorAll('.slide-indicator');
-                indicators.forEach((indicator, index) => {
-                    if (index + 1 === module.currentSlide) {
-                        indicator.classList.add('active');
-                    } else {
-                        indicator.classList.remove('active');
-                    }
-                });
-                
-                // Update buttons
+                indicators.forEach((indicator, index) => { indicator.classList.toggle('active', index + 1 === module.currentSlide); });
                 const nextBtnId = prefix ? `${prefix}next-slide` : 'next-slide';
                 const prevBtnId = prefix ? `${prefix}prev-slide` : 'prev-slide';
                 const prevBtn = document.getElementById(prevBtnId);
                 const nextBtn = document.getElementById(nextBtnId);
-                
                 if (prevBtn) prevBtn.disabled = module.currentSlide === 1;
                 if (nextBtn) nextBtn.disabled = module.currentSlide === module.totalSlides;
-                
-                // Show quiz when user reaches the last slide
                 const moduleCard = document.getElementById(`module${moduleNum}`) || document.querySelector('.module-card');
                 const quizContainer = moduleCard ? moduleCard.querySelector('.quiz-container') : null;
-                
                 if (quizContainer && module.currentSlide === module.totalSlides) {
                     quizContainer.classList.add('available');
-                    // Add a visual indicator that quiz is now available
                     if (!quizContainer.querySelector('.quiz-available-notice')) {
                         const notice = document.createElement('div');
                         notice.className = 'quiz-available-notice';
-                        notice.innerHTML = '<p style="color: #27ae60; font-weight: bold; margin-bottom: 1rem;">📚 Great! You\'ve completed the learning material. Now test your knowledge below:</p>';
+                        notice.innerHTML = '<p style="color: #5ddc7e; font-weight: bold; margin-bottom: 1rem;">&#128218; Great! You\'ve completed the learning material. Now test your knowledge below:</p>';
                         quizContainer.insertBefore(notice, quizContainer.firstChild);
                     }
                 }
-                
                 updateModuleProgress(moduleNum);
             }
-            
-            // Button setup - use consistent naming pattern
             const nextBtnId = prefix ? `${prefix}next-slide` : 'next-slide';
             const prevBtnId = prefix ? `${prefix}prev-slide` : 'prev-slide';
-            
             const nextBtn = document.getElementById(nextBtnId);
             const prevBtn = document.getElementById(prevBtnId);
-            
-            if (nextBtn) {
-                // Clone and preserve all attributes including ID
-                const newNextBtn = nextBtn.cloneNode(true);
-                
-                // Add fresh event listener
-                newNextBtn.addEventListener('click', function() {
-                    if (module.currentSlide < module.totalSlides) {
-                        module.currentSlide++;
-                        updateSlide();
-                    }
-                });
-                
-                // Replace the original button with the clone
-                nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-            }
-            
-            if (prevBtn) {
-                // Clone and preserve all attributes including ID
-                const newPrevBtn = prevBtn.cloneNode(true);
-                
-                // Add fresh event listener
-                newPrevBtn.addEventListener('click', function() {
-                    if (module.currentSlide > 1) {
-                        module.currentSlide--;
-                        updateSlide();
-                    }
-                });
-                
-                // Replace the original button with the clone
-                prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
-            }
-            
-            // Slide indicators
-            const moduleContainer = document.getElementById(`module${moduleNum}-slides`) || 
-                                   document.querySelector('#module1 .slides-container');
+            if (nextBtn) { const newBtn = nextBtn.cloneNode(true); newBtn.addEventListener('click', function() { if (module.currentSlide < module.totalSlides) { module.currentSlide++; updateSlide(); } }); nextBtn.parentNode.replaceChild(newBtn, nextBtn); }
+            if (prevBtn) { const newBtn = prevBtn.cloneNode(true); newBtn.addEventListener('click', function() { if (module.currentSlide > 1) { module.currentSlide--; updateSlide(); } }); prevBtn.parentNode.replaceChild(newBtn, prevBtn); }
+            const moduleContainer = document.getElementById(`module${moduleNum}-slides`) || document.querySelector('#module1 .slides-container');
             if (moduleContainer) {
                 const indicators = moduleContainer.querySelectorAll('.slide-indicator');
-                indicators.forEach(indicator => {
-                    // Clone and preserve all attributes
-                    const newIndicator = indicator.cloneNode(true);
-                    
-                    // Add fresh event listener
-                    newIndicator.addEventListener('click', function() {
-                        module.currentSlide = parseInt(this.getAttribute('data-slide'));
-                        updateSlide();
-                    });
-                    
-                    // Replace the original indicator with the clone
-                    indicator.parentNode.replaceChild(newIndicator, indicator);
-                });
+                indicators.forEach(indicator => { const newInd = indicator.cloneNode(true); newInd.addEventListener('click', function() { module.currentSlide = parseInt(this.getAttribute('data-slide')); updateSlide(); }); indicator.parentNode.replaceChild(newInd, indicator); });
             }
-            
-            // Initialize
             updateSlide();
         }
 
@@ -970,217 +837,88 @@
             const module = modules[moduleNum];
             const prefix = module.prefix;
             const moduleCard = document.getElementById(`module${moduleNum}`) || document.querySelector('.module-card');
-            
             if (!moduleCard) return;
-            
-            // Populate quiz with random questions
             populateQuiz(moduleNum);
-            
-            // Quiz option selection
             const quizOptions = moduleCard.querySelectorAll('.quiz-option');
             quizOptions.forEach(option => {
-                // Clone and preserve all attributes
                 const newOption = option.cloneNode(true);
-                
-                // Add fresh event listener
                 newOption.addEventListener('click', function() {
                     const question = this.closest('.quiz-question');
-                    const siblings = this.parentElement.querySelectorAll('.quiz-option');
-                    const deselectBtn = question.querySelector('.deselect-btn');
-                    
-                    siblings.forEach(sib => sib.classList.remove('selected'));
+                    this.parentElement.querySelectorAll('.quiz-option').forEach(sib => sib.classList.remove('selected'));
                     this.classList.add('selected');
-                    
-                    // Show deselect button
-                    if (deselectBtn) {
-                        deselectBtn.style.display = 'inline-block';
-                    }
+                    const deselectBtn = question.querySelector('.deselect-btn');
+                    if (deselectBtn) deselectBtn.style.display = 'inline-block';
                 });
-                
-                // Replace the original option with the clone
                 option.parentNode.replaceChild(newOption, option);
             });
-            
-            // Deselect button functionality
             const deselectBtns = moduleCard.querySelectorAll('.deselect-btn');
             deselectBtns.forEach(btn => {
-                // Clone and preserve all attributes
                 const newBtn = btn.cloneNode(true);
-                
-                // Add fresh event listener
                 newBtn.addEventListener('click', function() {
                     const question = this.closest('.quiz-question');
-                    const options = question.querySelectorAll('.quiz-option');
+                    question.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected', 'correct', 'incorrect'));
                     const feedback = question.querySelector('.quiz-feedback');
-                    
-                    // Remove selection and feedback
-                    options.forEach(opt => {
-                        opt.classList.remove('selected', 'correct', 'incorrect');
-                    });
-                    
-                    feedback.style.display = 'none';
-                    feedback.textContent = '';
-                    
-                    // Hide deselect button
+                    feedback.style.display = 'none'; feedback.textContent = '';
                     this.style.display = 'none';
                 });
-                
-                // Replace the original button with the clone
                 btn.parentNode.replaceChild(newBtn, btn);
             });
-            
-            // Quiz submission
-            const submitBtn = document.getElementById(`${prefix}submit-quiz`) || 
-                             document.getElementById('submit-quiz');
+            const submitBtn = document.getElementById(`${prefix}submit-quiz`) || document.getElementById('submit-quiz');
             if (submitBtn) {
-                // Clone and preserve all attributes
                 const newSubmitBtn = submitBtn.cloneNode(true);
-                
-                // Add fresh event listener
                 newSubmitBtn.addEventListener('click', function() {
                     let correct = 0;
                     const questions = moduleCard.querySelectorAll('.quiz-question');
-                    
                     questions.forEach(question => {
                         const selected = question.querySelector('.quiz-option.selected');
                         const feedback = question.querySelector('.quiz-feedback');
-                        
-                        if (!selected) {
-                            feedback.textContent = 'Please select an answer.';
-                            feedback.className = 'quiz-feedback feedback-incorrect';
-                            feedback.style.display = 'block';
-                            return;
-                        }
-                        
-                        const options = question.querySelectorAll('.quiz-option');
-                        options.forEach(opt => {
-                            opt.classList.remove('correct', 'incorrect');
-                        });
-                        
-                        if (selected.getAttribute('data-correct') === 'true') {
-                            selected.classList.add('correct');
-                            feedback.textContent = 'Correct!';
-                            feedback.className = 'quiz-feedback feedback-correct';
-                            correct++;
-                        } else {
-                            selected.classList.add('incorrect');
-                            question.querySelector('.quiz-option[data-correct="true"]').classList.add('correct');
-                            feedback.textContent = 'Incorrect. The correct answer is highlighted.';
-                            feedback.className = 'quiz-feedback feedback-incorrect';
-                        }
-                        
+                        if (!selected) { feedback.textContent = 'Please select an answer.'; feedback.className = 'quiz-feedback feedback-incorrect'; feedback.style.display = 'block'; return; }
+                        question.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('correct', 'incorrect'));
+                        if (selected.getAttribute('data-correct') === 'true') { selected.classList.add('correct'); feedback.textContent = 'Correct!'; feedback.className = 'quiz-feedback feedback-correct'; correct++; }
+                        else { selected.classList.add('incorrect'); question.querySelector('.quiz-option[data-correct="true"]').classList.add('correct'); feedback.textContent = 'Incorrect. The correct answer is highlighted.'; feedback.className = 'quiz-feedback feedback-incorrect'; }
                         feedback.style.display = 'block';
                     });
-                    
-                    // Check if quiz is completed successfully
-                    if (correct === questions.length) {
-                        localStorage.setItem(`module${moduleNum}-quiz-completed`, 'true');
-                        modules[moduleNum].completed = true;
-                        
-                        // Show success message
-                        alert(`Congratulations! You've completed Module ${moduleNum} with a perfect score!`);
-                        
-                        // Unlock next module
-                        if (module.nextModule) {
-                            unlockModule(module.nextModule);
-                        }
-                        
-                        updateModuleProgress(moduleNum);
-                    } else {
-                        alert(`You got ${correct} out of ${questions.length} questions correct. Review the incorrect answers and try again!`);
-                    }
+                    if (correct === questions.length) { localStorage.setItem(`module${moduleNum}-quiz-completed`, 'true'); modules[moduleNum].completed = true; alert(`Congratulations! You've completed Module ${moduleNum} with a perfect score!`); if (module.nextModule) unlockModule(module.nextModule); updateModuleProgress(moduleNum); }
+                    else { alert(`You got ${correct} out of ${questions.length} questions correct. Review the incorrect answers and try again!`); }
                 });
-                
-                // Replace the original button with the clone
                 submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
             }
-            
-            // Quiz reset functionality
-            const resetBtn = document.getElementById(`${prefix}reset-quiz`) || 
-                            document.getElementById('reset-quiz');
+            const resetBtn = document.getElementById(`${prefix}reset-quiz`) || document.getElementById('reset-quiz');
             if (resetBtn) {
-                // Clone and preserve all attributes
                 const newResetBtn = resetBtn.cloneNode(true);
-                
-                // Add fresh event listener
                 newResetBtn.addEventListener('click', function() {
                     if (confirm('Are you sure you want to reset the quiz? This will generate new questions and clear your answers.')) {
-                        // Reset all selections and feedback
-                        const questions = moduleCard.querySelectorAll('.quiz-question');
-                        questions.forEach(question => {
-                            const options = question.querySelectorAll('.quiz-option');
-                            const feedback = question.querySelector('.quiz-feedback');
-                            const deselectBtn = question.querySelector('.deselect-btn');
-                            
-                            options.forEach(opt => {
-                                opt.classList.remove('selected', 'correct', 'incorrect');
-                            });
-                            
-                            feedback.style.display = 'none';
-                            feedback.textContent = '';
-                            
-                            if (deselectBtn) {
-                                deselectBtn.style.display = 'none';
-                            }
+                        moduleCard.querySelectorAll('.quiz-question').forEach(question => {
+                            question.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected', 'correct', 'incorrect'));
+                            const feedback = question.querySelector('.quiz-feedback'); feedback.style.display = 'none'; feedback.textContent = '';
+                            const deselectBtn = question.querySelector('.deselect-btn'); if (deselectBtn) deselectBtn.style.display = 'none';
                         });
-                        
-                        // Generate new questions
                         populateQuiz(moduleNum);
                     }
                 });
-                
-                // Replace the original button with the clone
                 resetBtn.parentNode.replaceChild(newResetBtn, resetBtn);
             }
         }
 
         function updateModuleProgress(moduleNum) {
             const module = modules[moduleNum];
-            let progress = 0;
-            
-            // Slides viewed (50% for viewing all slides)
-            progress += (module.currentSlide / module.totalSlides) * 50;
-            
-            // Quiz completed (50% for completing quiz)
-            if (localStorage.getItem(`module${moduleNum}-quiz-completed`) === 'true') {
-                progress += 50;
-            }
-            
+            let progress = (module.currentSlide / module.totalSlides) * 50;
+            if (localStorage.getItem(`module${moduleNum}-quiz-completed`) === 'true') progress += 50;
             progress = Math.min(Math.round(progress), 100);
-            
             const progressText = document.getElementById(`module${moduleNum}-progress`);
             const progressBar = document.getElementById(`module${moduleNum}-progress-bar`);
-            
             if (progressText) progressText.textContent = `${progress}%`;
             if (progressBar) progressBar.style.width = `${progress}%`;
-            
             return progress;
         }
 
-        function updateAllProgress() {
-            for (let i = 1; i <= 3; i++) {
-                updateModuleProgress(i);
-            }
-        }
+        function updateAllProgress() { for (let i = 1; i <= 3; i++) updateModuleProgress(i); }
 
-        // Initialize all modules
         initializeModules();
-        
-        // Setup functionality for each module
-        for (let i = 1; i <= 3; i++) {
-            setupSlideNavigation(i);
-            setupQuizFunctionality(i);
-        }
-
-        // Add some visual feedback for locked modules
+        for (let i = 1; i <= 3; i++) { setupSlideNavigation(i); setupQuizFunctionality(i); }
         document.querySelectorAll('.module-card').forEach((card, index) => {
             const moduleNum = index + 1;
-            if (moduleNum > 1) {
-                const prevModuleCompleted = localStorage.getItem(`module${moduleNum-1}-quiz-completed`) === 'true';
-                if (!prevModuleCompleted && moduleNum > 1) {
-                    card.classList.add('locked');
-                }
-            }
+            if (moduleNum > 1 && localStorage.getItem(`module${moduleNum-1}-quiz-completed`) !== 'true') card.classList.add('locked');
         });
     });
 </script>

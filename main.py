@@ -30,8 +30,9 @@ app.register_blueprint(threat_bp)
 
 # Main routes that don't fit into specific categories
 @app.route('/')
-def welcome():
-    return render_template("welcome.html")
+def index():
+    """Landing page with detailed CyberVantage information"""
+    return render_template("index.html")
 
 @app.route('/dashboard')
 @token_required

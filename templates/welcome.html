@@ -1,18 +1,56 @@
 {% extends "base.html" %}
-{% block title %}Welcome to CyberVantage{% endblock %}
+{% block title %}Welcome - CyberVantage{% endblock %}
 
 {% block content %}
-<div style="text-align: center; padding: 40px 20px;">
-    <h1 style="margin-bottom: 20px;">👋 Welcome to CyberVantage</h1>
-    <p style="font-size: 1.2rem; margin-bottom: 30px;">Your fun and safe way to learn about spam emails, phishing, and cyber safety.</p>
-
-    <div style="display: flex; gap: 20px; justify-content: center; margin-top: 30px;">
-        {% if not session.get('token') %}
-            <a href="{{ url_for('auth.login') }}"><button>🔐 Login</button></a>
-            <a href="{{ url_for('auth.register') }}"><button>📝 Register</button></a>
-        {% else %}
-            <a href="{{ url_for('dashboard') }}"><button>🔐 Go to Dashboard</button></a>
-        {% endif %}
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            <span class="reveal-text">The Future</span>
+            <span class="reveal-text">Is Transparent.</span>
+        </h1>
+        <p class="hero-subtitle reveal-text-delayed">Experience the next generation of cyber intelligence and education.
+        </p>
+        <div class="cta-group reveal-text-delayed">
+            {% if not session.get('token') %}
+            <a href="{{ url_for('auth.register') }}"><button class="btn-glass">Get Started</button></a>
+            <a href="{{ url_for('auth.login') }}"><button class="btn-outline">Login</button></a>
+            {% else %}
+            <a href="{{ url_for('dashboard') }}"><button class="btn-glass">Go to Dashboard</button></a>
+            {% endif %}
+        </div>
     </div>
-</div>
+    <div class="hero-visual">
+        <div class="liquid-container">
+            <div class="liquid-orb orb-1"></div>
+            <div class="liquid-orb orb-2"></div>
+        </div>
+        <div class="glass-card-mockup">
+            <div class="card-header">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+            </div>
+            <div class="card-body">
+                <div class="line w-75"></div>
+                <div class="line w-50"></div>
+                <div class="line w-90"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="features">
+    <div class="glass-panel">
+        <h3>Real-time Analytics</h3>
+        <p>Monitor your data with zero latency.</p>
+    </div>
+    <div class="glass-panel">
+        <h3>AI-Powered</h3>
+        <p>Predictive algorithms at your fingertips.</p>
+    </div>
+    <div class="glass-panel">
+        <h3>Quantum Secure</h3>
+        <p>Encryption that defies tomorrow's threats.</p>
+    </div>
+</section>
 {% endblock %}
