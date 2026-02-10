@@ -1,6 +1,6 @@
 # --- Web Framework & Templates ---
 flask==3.0.0
-jinja2==3.1.2
+jinja2==3.1.6
 werkzeug==3.0.1
 flask-wtf==1.2.1
 
