@@ -217,34 +217,6 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated
 
-@auth_bp.route('/demographics', methods=['GET', 'POST'])
-@token_required
-def demographics(current_user):
-    if request.method == 'POST':
-        current_user.tech_confidence = request.form.get('tech_confidence', '').strip()
-        current_user.cybersecurity_experience = request.form.get('cybersecurity_experience', '').strip()
-        current_user.age_group = request.form.get('age_group', '').strip()
-        current_user.industry = request.form.get('industry', '').strip()
-        current_user.demographics_completed = True
-        db.session.commit()
-        return redirect(url_for('analysis.learn'))
-    return render_template('demographics.html', username=current_user.name, user=current_user)
-
-@auth_bp.route('/profile', methods=['GET', 'POST'])
-@token_required
-def profile(current_user):
-    if request.method == 'POST':
-        current_user.tech_confidence = request.form.get('tech_confidence', '').strip()
-        current_user.cybersecurity_experience = request.form.get('cybersecurity_experience', '').strip()
-        current_user.age_group = request.form.get('age_group', '').strip()
-        current_user.industry = request.form.get('industry', '').strip()
-        current_user.demographics_completed = True
-        db.session.commit()
-        from flask import flash
-        flash("Profile updated successfully.", "success")
-        return redirect(url_for('auth.profile'))
-    return render_template('profile.html', username=current_user.name, user=current_user)
-
 @auth_bp.route('/admin/users')
 @token_required
 @admin_required
