@@ -44,6 +44,7 @@ The project is divided into **four phases**:
 
 ## 🛡 Security Features
 
+- **Access Code System** for selective platform access control (NEW)
 - **JWT Authentication** for secure, stateless user sessions
 - **Password hashing** with bcrypt and salting for secure credential storage
 - **Input sanitization** for all forms to prevent injection attacks
@@ -51,7 +52,11 @@ The project is divided into **four phases**:
 - **Email validation** using `email-validator` library
 - **Encrypted database** using AES-256 for sensitive data storage
 - **HTML sanitization** using `bleach` for any rich text input
+- **Rate limiting** on authentication attempts to prevent brute force attacks
+- **Australian Essential 8** compliance framework implementation
 - All simulated phishing links are safely contained within the platform
+
+See `SECURITY.md` for comprehensive security documentation and Essential 8 compliance mapping.
 
 ---
 
