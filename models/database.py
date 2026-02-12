@@ -17,6 +17,12 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     password_reset_token = db.Column(db.String(255), nullable=True)  # For password reset
     password_reset_expires = db.Column(db.DateTime, nullable=True)
+    # User demographics for personalized learning
+    tech_confidence = db.Column(db.String(20), nullable=True)  # beginner, intermediate, advanced
+    cybersecurity_experience = db.Column(db.String(20), nullable=True)  # none, some, experienced
+    age_group = db.Column(db.String(20), nullable=True)  # 18-24, 25-34, 35-44, 45-54, 55+
+    industry = db.Column(db.String(100), nullable=True)
+    demographics_completed = db.Column(db.Boolean, default=False, nullable=False)
 
     def set_password(self, password):
         # Hash password with bcrypt

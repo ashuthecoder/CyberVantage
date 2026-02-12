@@ -13,7 +13,28 @@ analysis_bp = Blueprint('analysis', __name__)
 @analysis_bp.route('/learn')
 @token_required
 def learn(current_user):
-    return render_template('learn.html', username=current_user.name)
+    if not current_user.demographics_completed:
+        return redirect(url_for('auth.demographics'))
+    return render_template('learn.html', username=current_user.name, user=current_user)
+
+@analysis_bp.route('/learn/phishing')
+@token_required
+def learn_phishing(current_user):
+    if not current_user.demographics_completed:
+        return redirect(url_for('auth.demographics'))
+    difficulty = 'easy'
+    if current_user.tech_confidence == 'advanced' or current_user.cybersecurity_experience == 'experienced':
+        difficulty = 'hard'
+    elif current_user.tech_confidence == 'intermediate' or current_user.cybersecurity_experience == 'some':
+        difficulty = 'medium'
+    return render_template('learn_phishing.html', username=current_user.name, user=current_user, difficulty=difficulty)
+
+@analysis_bp.route('/learn/compliances')
+@token_required
+def learn_compliances(current_user):
+    if not current_user.demographics_completed:
+        return redirect(url_for('auth.demographics'))
+    return render_template('learn_compliances.html', username=current_user.name, user=current_user)
 
 @analysis_bp.route('/analysis')
 @token_required

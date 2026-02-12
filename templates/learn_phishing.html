@@ -1,0 +1,977 @@
+{% extends "base.html" %}
+{% block title %}Learn Phishing - CyberVantage{% endblock %}
+
+{% block extra_styles %}
+<style>
+.learning-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.module-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    backdrop-filter: blur(var(--glass-blur));
+    overflow: hidden;
+}
+
+.module-header {
+    background: linear-gradient(135deg, rgba(112, 0, 255, 0.4), rgba(0, 242, 255, 0.2));
+    color: white;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.module-content {
+    padding: 1.5rem;
+}
+
+.slides-container {
+    margin-bottom: 1.5rem;
+}
+
+.quiz-container {
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--glass-border);
+    padding-top: 1.5rem;
+    display: none;
+}
+
+.quiz-container.available {
+    display: block;
+}
+
+.progress-bar {
+    height: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-color), var(--accent-secondary));
+    border-radius: 5px;
+    width: 0%;
+    transition: width 0.5s;
+}
+
+.module-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+}
+
+.module-btn {
+    background: var(--accent-color);
+    color: #000;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.module-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+}
+
+.module-btn:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.3);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Quiz styling */
+.quiz-question {
+    margin-bottom: 1.5rem;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.quiz-option {
+    padding: 12px 15px;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.quiz-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.quiz-option.selected {
+    border-color: var(--accent-color);
+    background: rgba(0, 242, 255, 0.08);
+}
+
+.quiz-option.correct {
+    border-color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+    color: #5ddc7e;
+}
+
+.quiz-option.incorrect {
+    border-color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+    color: #ff6b6b;
+}
+
+.quiz-feedback {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    display: none;
+}
+
+.feedback-correct {
+    background: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    color: #5ddc7e;
+}
+
+.feedback-incorrect {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    color: #ff6b6b;
+}
+
+.slide {
+    display: none;
+}
+
+.slide.active {
+    display: block;
+}
+
+.slide h3 {
+    color: var(--accent-color);
+    margin-bottom: 0.75rem;
+}
+
+.slide p, .slide li {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.slide-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.slide-btn {
+    background: var(--accent-color);
+    color: #000;
+    padding: 0.5rem 1.2rem;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.slide-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+}
+
+.slide-btn:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.3);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.slide-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.slide-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.slide-indicator.active {
+    background: var(--accent-color);
+    box-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+}
+
+/* Enhanced module styling */
+.example-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.danger-warning {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    color: #ffd93d;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+.video-example {
+    margin: 1rem 0;
+    padding: 0.75rem;
+    background: rgba(0, 242, 255, 0.05);
+    border: 1px solid rgba(0, 242, 255, 0.1);
+    border-radius: 8px;
+}
+
+.demo-link {
+    color: var(--accent-color);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.demo-link:hover {
+    text-decoration: underline;
+    color: #66f7ff;
+}
+
+.tip-box, .emergency-box {
+    background: rgba(40, 167, 69, 0.08);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.emergency-box {
+    background: rgba(220, 53, 69, 0.08);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #ff6b6b;
+}
+
+.security-measures {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.measure {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-color);
+}
+
+.awareness-tips {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.tip {
+    background: rgba(255, 193, 7, 0.05);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+}
+
+.module-card.locked .module-content {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.module-status {
+    font-weight: bold;
+}
+
+.module-status.unlocked {
+    color: #5ddc7e;
+}
+
+.module-status.locked {
+    color: #ff6b6b;
+}
+
+.quiz-controls {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.reset-btn {
+    background: rgba(220, 53, 69, 0.3) !important;
+    color: #ff6b6b !important;
+    border: 1px solid rgba(220, 53, 69, 0.5) !important;
+}
+
+.reset-btn:hover {
+    background: rgba(220, 53, 69, 0.5) !important;
+}
+
+.deselect-btn {
+    background: rgba(255, 193, 7, 0.25);
+    color: #ffd93d;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    transition: all 0.3s;
+}
+
+.deselect-btn:hover {
+    background: rgba(255, 193, 7, 0.4);
+}
+
+@media (max-width: 768px) {
+    .module-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .security-measures, .awareness-tips {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="{{ url_for('analysis.learn') }}" style="color: var(--accent-color); text-decoration: none;"><i class="fas fa-arrow-left"></i> Back to Learn</a>
+</div>
+<h1 style="text-align: center;">Learn About Phishing</h1>
+<p style="text-align: center; color: rgba(255,255,255,0.6); margin-bottom: 0.5rem;">Master the skills to identify and avoid phishing attacks</p>
+<p style="text-align: center; color: rgba(255,255,255,0.4); margin-bottom: 2rem; font-size: 0.85rem;">Difficulty: <span style="color: var(--accent-color); font-weight: 600;">{{ difficulty | capitalize }}</span> (based on your profile)</p>
+
+<div class="learning-content">
+    <!-- Module 1 -->
+    <div class="module-card">
+        <div class="module-header">
+            <div>Module 1: Introduction to Phishing</div>
+            <div>Progress: <span id="module1-progress">0%</span></div>
+        </div>
+        <div class="module-content">
+            <div class="progress-bar">
+                <div class="progress-fill" id="module1-progress-bar" style="width: 0%"></div>
+            </div>
+            
+            <div class="slides-container">
+                <div class="slide active" id="slide1">
+                    <h3>What is Phishing?</h3>
+                    <p>Phishing is a cybercrime in which targets are contacted by email, telephone or text message by someone posing as a legitimate institution to lure individuals into providing sensitive data.</p>
+                    <img src="{{ url_for('static', filename='images/phishing_example.svg') }}" alt="Phishing Example" style="max-width: 100%; margin-top: 1rem; border-radius: 8px; opacity: 0.9;">
+                </div>
+                
+                <div class="slide" id="slide2">
+                    <h3>Common Phishing Techniques</h3>
+                    <ul>
+                        <li>Creating a sense of urgency or fear</li>
+                        <li>Requesting sensitive information</li>
+                        <li>Suspicious attachments or links</li>
+                        <li>Poor spelling and grammar</li>
+                        <li>Mismatched or fake URLs</li>
+                    </ul>
+                </div>
+                
+                <div class="slide" id="slide3">
+                    <h3>How to Identify Phishing</h3>
+                    <p>Look for these warning signs:</p>
+                    <ul>
+                        <li>Sender's email address doesn't match the company name</li>
+                        <li>Generic greetings instead of your name</li>
+                        <li>Requests for personal information</li>
+                        <li>Urgency or threats</li>
+                        <li>Too good to be true offers</li>
+                    </ul>
+                </div>
+                
+                <div class="slide-controls">
+                    <button id="prev-slide" class="slide-btn" disabled>Previous</button>
+                    <button id="next-slide" class="slide-btn">Next</button>
+                </div>
+                
+                <div class="slide-indicators">
+                    <div class="slide-indicator active" data-slide="1"></div>
+                    <div class="slide-indicator" data-slide="2"></div>
+                    <div class="slide-indicator" data-slide="3"></div>
+                </div>
+            </div>
+            
+            <div class="quiz-container">
+                <h3>Test Your Knowledge</h3>
+                <div class="quiz-question" data-question-id="1">
+                    <p>1. <span class="question-text">What is the primary goal of a phishing attack?</span></p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">To disable your computer</div>
+                        <div class="quiz-option" data-correct="false">To install software on your computer</div>
+                        <div class="quiz-option" data-correct="true">To steal sensitive information like passwords</div>
+                        <div class="quiz-option" data-correct="false">To make your computer run slower</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                    <button class="deselect-btn" style="display: none;">Deselect Answer</button>
+                </div>
+                
+                <div class="quiz-question" data-question-id="2">
+                    <p>2. <span class="question-text">Which of these is a common warning sign of a phishing email?</span></p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">Email comes from someone you know</div>
+                        <div class="quiz-option" data-correct="true">Urgent action required to prevent negative consequences</div>
+                        <div class="quiz-option" data-correct="false">Email has proper grammar and spelling</div>
+                        <div class="quiz-option" data-correct="false">Email addresses you by your correct name</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                    <button class="deselect-btn" style="display: none;">Deselect Answer</button>
+                </div>
+                
+                <div class="quiz-controls">
+                    <button id="submit-quiz" class="module-btn">Submit Answers</button>
+                    <button id="reset-quiz" class="module-btn reset-btn">Reset Quiz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Module 2 -->
+    <div class="module-card" id="module2">
+        <div class="module-header">
+            <div>Module 2: Types of Phishing Attacks</div>
+            <div>Progress: <span id="module2-progress">0%</span> | Status: <span class="module-status">Locked</span></div>
+        </div>
+        <div class="module-content" id="module2-content">
+            <div class="progress-bar">
+                <div class="progress-fill" id="module2-progress-bar" style="width: 0%"></div>
+            </div>
+            
+            <div class="slides-container" id="module2-slides">
+                <div class="slide active" id="module2-slide1">
+                    <h3>Email Phishing</h3>
+                    <p>The most common form of phishing where attackers send fraudulent emails that appear to be from legitimate sources.</p>
+                    <div class="example-box">
+                        <h4>Example Attack Vector:</h4>
+                        <p><strong>Scenario:</strong> Fake bank email requesting immediate account verification</p>
+                        <p><strong>Payload:</strong> Malicious link leading to credential harvesting site</p>
+                        <div class="danger-warning">&#9888;&#65039; This could lead to account takeover and financial theft!</div>
+                    </div>
+                    <div class="video-example">
+                        <p><strong>Interactive Demo:</strong> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="demo-link">See how attackers craft convincing emails</a></p>
+                    </div>
+                </div>
+                
+                <div class="slide" id="module2-slide2">
+                    <h3>Spear Phishing</h3>
+                    <p>Highly targeted attacks aimed at specific individuals or organizations using personalized information.</p>
+                    <div class="example-box">
+                        <h4>Advanced Attack Example:</h4>
+                        <p><strong>Target:</strong> Company executives or IT administrators</p>
+                        <p><strong>Technique:</strong> Social engineering with research-backed personal details</p>
+                        <p><strong>RCE Risk:</strong> Malicious attachments that execute code when opened</p>
+                        <div class="danger-warning">&#128293; Could result in complete system compromise and data breaches!</div>
+                    </div>
+                    <div class="video-example">
+                        <p><strong>Learn More:</strong> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="demo-link">Advanced spear phishing techniques</a></p>
+                    </div>
+                </div>
+                
+                <div class="slide" id="module2-slide3">
+                    <h3>Whaling & CEO Fraud</h3>
+                    <p>Attacks targeting high-profile individuals like CEOs, CFOs, or other executives.</p>
+                    <div class="example-box">
+                        <h4>High-Impact Attack:</h4>
+                        <p><strong>Method:</strong> Impersonating C-level executives to authorize fraudulent transactions</p>
+                        <p><strong>Impact:</strong> Financial losses in millions, reputation damage</p>
+                        <div class="danger-warning">&#128176; Average loss per successful whaling attack: $130,000+</div>
+                    </div>
+                </div>
+                
+                <div class="slide" id="module2-slide4">
+                    <h3>Smishing & Vishing</h3>
+                    <p>SMS (Smishing) and Voice (Vishing) based phishing attacks targeting mobile users.</p>
+                    <div class="example-box">
+                        <h4>Mobile-First Attacks:</h4>
+                        <p><strong>Smishing:</strong> Fake SMS from "banks" with malicious links</p>
+                        <p><strong>Vishing:</strong> Fake phone calls requesting sensitive information</p>
+                        <div class="danger-warning">&#128241; Mobile users are 3x more likely to fall for phishing attacks!</div>
+                    </div>
+                    <div class="video-example">
+                        <p><strong>Real Examples:</strong> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="demo-link">Mobile phishing in action</a></p>
+                    </div>
+                </div>
+                
+                <div class="slide-controls">
+                    <button id="module2-prev-slide" class="slide-btn" disabled>Previous</button>
+                    <button id="module2-next-slide" class="slide-btn">Next</button>
+                </div>
+                
+                <div class="slide-indicators">
+                    <div class="slide-indicator active" data-slide="1"></div>
+                    <div class="slide-indicator" data-slide="2"></div>
+                    <div class="slide-indicator" data-slide="3"></div>
+                    <div class="slide-indicator" data-slide="4"></div>
+                </div>
+            </div>
+            
+            <div class="quiz-container">
+                <h3>Test Your Knowledge</h3>
+                <div class="quiz-question" data-question-id="1">
+                    <p>1. <span class="question-text">Which type of phishing attack specifically targets high-profile executives?</span></p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">Email phishing</div>
+                        <div class="quiz-option" data-correct="false">Spear phishing</div>
+                        <div class="quiz-option" data-correct="true">Whaling</div>
+                        <div class="quiz-option" data-correct="false">Smishing</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                    <button class="deselect-btn" style="display: none;">Deselect Answer</button>
+                </div>
+                
+                <div class="quiz-question" data-question-id="2">
+                    <p>2. <span class="question-text">What makes spear phishing more dangerous than regular phishing?</span></p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">It uses more colorful emails</div>
+                        <div class="quiz-option" data-correct="true">It uses personalized information to target specific individuals</div>
+                        <div class="quiz-option" data-correct="false">It only targets mobile devices</div>
+                        <div class="quiz-option" data-correct="false">It's sent through social media only</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                    <button class="deselect-btn" style="display: none;">Deselect Answer</button>
+                </div>
+                
+                <div class="quiz-controls">
+                    <button id="module2-submit-quiz" class="module-btn">Submit Answers</button>
+                    <button id="module2-reset-quiz" class="module-btn reset-btn">Reset Quiz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Module 3 -->
+    <div class="module-card" id="module3">
+        <div class="module-header">
+            <div>Module 3: Protecting Yourself Online</div>
+            <div>Progress: <span id="module3-progress">0%</span> | Status: <span class="module-status">Locked</span></div>
+        </div>
+        <div class="module-content" id="module3-content">
+            <div class="progress-bar">
+                <div class="progress-fill" id="module3-progress-bar" style="width: 0%"></div>
+            </div>
+            
+            <div class="slides-container" id="module3-slides">
+                <div class="slide active" id="module3-slide1">
+                    <h3>Email Security Best Practices</h3>
+                    <ul>
+                        <li><strong>Verify sender identity:</strong> Check email addresses carefully</li>
+                        <li><strong>Hover over links:</strong> See the real destination before clicking</li>
+                        <li><strong>Be skeptical:</strong> If it seems too good to be true, it probably is</li>
+                        <li><strong>Use 2FA:</strong> Enable two-factor authentication on all accounts</li>
+                    </ul>
+                    <div class="tip-box">
+                        <h4>&#128161; Pro Tip:</h4>
+                        <p>When in doubt, contact the organization directly through official channels!</p>
+                    </div>
+                </div>
+                
+                <div class="slide" id="module3-slide2">
+                    <h3>Technical Security Measures</h3>
+                    <div class="security-measures">
+                        <div class="measure">
+                            <h4>&#128737;&#65039; Endpoint Protection</h4>
+                            <p>Use reliable antivirus and anti-malware solutions that can detect malicious attachments.</p>
+                        </div>
+                        <div class="measure">
+                            <h4>&#128274; Email Filtering</h4>
+                            <p>Implement advanced email security solutions that can detect and block phishing attempts.</p>
+                        </div>
+                        <div class="measure">
+                            <h4>&#127760; Browser Security</h4>
+                            <p>Keep browsers updated and use extensions that warn about malicious websites.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="slide" id="module3-slide3">
+                    <h3>Incident Response</h3>
+                    <p>What to do if you suspect you've encountered a phishing attempt:</p>
+                    <ol>
+                        <li><strong>Don't panic</strong> - Stay calm and think clearly</li>
+                        <li><strong>Don't click</strong> - Avoid clicking any suspicious links or attachments</li>
+                        <li><strong>Report it</strong> - Forward the email to your IT security team</li>
+                        <li><strong>Change passwords</strong> - If you think you've been compromised</li>
+                        <li><strong>Monitor accounts</strong> - Watch for unauthorized activity</li>
+                    </ol>
+                    <div class="emergency-box">
+                        <h4>&#128680; If You Already Clicked:</h4>
+                        <p>Immediately disconnect from the internet, run a full system scan, and contact your IT department!</p>
+                    </div>
+                </div>
+                
+                <div class="slide" id="module3-slide4">
+                    <h3>Training and Awareness</h3>
+                    <p>Building a security-conscious mindset:</p>
+                    <div class="awareness-tips">
+                        <div class="tip">
+                            <h4>&#128218; Continuous Learning</h4>
+                            <p>Stay updated on the latest phishing techniques and security threats.</p>
+                        </div>
+                        <div class="tip">
+                            <h4>&#128101; Share Knowledge</h4>
+                            <p>Help educate friends and colleagues about cybersecurity best practices.</p>
+                        </div>
+                        <div class="tip">
+                            <h4>&#129504; Think Before You Click</h4>
+                            <p>Always pause and analyze emails, especially urgent requests or too-good-to-be-true offers.</p>
+                        </div>
+                    </div>
+                    <div class="video-example">
+                        <p><strong>Master Class:</strong> <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="demo-link">Advanced cybersecurity awareness</a></p>
+                    </div>
+                </div>
+                
+                <div class="slide-controls">
+                    <button id="module3-prev-slide" class="slide-btn" disabled>Previous</button>
+                    <button id="module3-next-slide" class="slide-btn">Next</button>
+                </div>
+                
+                <div class="slide-indicators">
+                    <div class="slide-indicator active" data-slide="1"></div>
+                    <div class="slide-indicator" data-slide="2"></div>
+                    <div class="slide-indicator" data-slide="3"></div>
+                    <div class="slide-indicator" data-slide="4"></div>
+                </div>
+            </div>
+            
+            <div class="quiz-container">
+                <h3>Test Your Knowledge</h3>
+                <div class="quiz-question" data-question-id="1">
+                    <p>1. <span class="question-text">What is the FIRST thing you should do if you receive a suspicious email?</span></p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">Click the link to investigate</div>
+                        <div class="quiz-option" data-correct="false">Reply to ask if it's legitimate</div>
+                        <div class="quiz-option" data-correct="true">Don't click anything and verify through official channels</div>
+                        <div class="quiz-option" data-correct="false">Forward it to all your contacts</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                    <button class="deselect-btn" style="display: none;">Deselect Answer</button>
+                </div>
+                
+                <div class="quiz-question" data-question-id="2">
+                    <p>2. <span class="question-text">Two-Factor Authentication (2FA) helps protect against phishing because:</span></p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" data-correct="false">It makes emails harder to send</div>
+                        <div class="quiz-option" data-correct="true">Even if credentials are stolen, attackers need the second factor</div>
+                        <div class="quiz-option" data-correct="false">It automatically deletes phishing emails</div>
+                        <div class="quiz-option" data-correct="false">It makes passwords longer</div>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                    <button class="deselect-btn" style="display: none;">Deselect Answer</button>
+                </div>
+                
+                <div class="quiz-controls">
+                    <button id="module3-submit-quiz" class="module-btn">Submit Answers</button>
+                    <button id="module3-reset-quiz" class="module-btn reset-btn">Reset Quiz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modules = {
+            1: { currentSlide: 1, totalSlides: 3, completed: false, prefix: '', nextModule: 2 },
+            2: { currentSlide: 1, totalSlides: 4, completed: false, prefix: 'module2-', nextModule: 3 },
+            3: { currentSlide: 1, totalSlides: 4, completed: false, prefix: 'module3-', nextModule: null }
+        };
+
+        const difficulty = '{{ difficulty }}';
+
+        const questionBanks = {
+            1: {
+                easy: [
+                    { question: "What is phishing?", options: ["A type of fishing sport", "A cyberattack that tricks you into giving personal information", "A computer virus", "A social media platform"], correct: 1 },
+                    { question: "Which of these is a warning sign of a phishing email?", options: ["The email is from a friend", "The email asks for your password urgently", "The email has no images", "The email has a short subject line"], correct: 1 },
+                    { question: "What should you do if you receive a suspicious email?", options: ["Click every link to investigate", "Reply with your personal details", "Delete it or report it to IT", "Forward it to everyone you know"], correct: 2 },
+                    { question: "Phishing emails often create a sense of:", options: ["Calm and relaxation", "Urgency or fear", "Boredom", "Happiness"], correct: 1 }
+                ],
+                medium: [
+                    { question: "What is the primary goal of a phishing attack?", options: ["To disable your computer", "To install software on your computer", "To steal sensitive information like passwords", "To make your computer run slower"], correct: 2 },
+                    { question: "Which of these is a common warning sign of a phishing email?", options: ["Email comes from someone you know", "Urgent action required to prevent negative consequences", "Email has proper grammar and spelling", "Email addresses you by your correct name"], correct: 1 },
+                    { question: "What does phishing typically attempt to steal?", options: ["Computer processing power", "Personal information and passwords", "Software licenses", "Internet bandwidth"], correct: 1 },
+                    { question: "Which email characteristic is most suspicious?", options: ["Professional formatting", "Requests for personal information", "Proper company branding", "Clear contact information"], correct: 1 }
+                ],
+                hard: [
+                    { question: "Which protocol helps verify email sender authenticity?", options: ["HTTP", "SPF/DKIM/DMARC", "FTP", "SSH"], correct: 1 },
+                    { question: "What distinguishes a Business Email Compromise (BEC) from standard phishing?", options: ["BEC uses more colourful emails", "BEC specifically impersonates trusted business contacts using social engineering", "BEC only targets mobile devices", "BEC always contains malware attachments"], correct: 1 },
+                    { question: "In a homograph attack, the attacker uses:", options: ["Similar-looking Unicode characters to create fake URLs", "A loud microphone for vishing", "Only SMS messages", "Large file attachments"], correct: 0 },
+                    { question: "What is credential harvesting in phishing?", options: ["Collecting social media followers", "Creating fake login pages to capture usernames and passwords", "Mining cryptocurrency", "Gathering email addresses for newsletters"], correct: 1 }
+                ]
+            },
+            2: {
+                easy: [
+                    { question: "What is 'spear phishing'?", options: ["Phishing using a spear weapon", "A targeted phishing attack aimed at a specific person", "Phishing through phone calls", "A random mass email scam"], correct: 1 },
+                    { question: "Which of these is a type of phishing?", options: ["Swimming phishing", "Email phishing", "Cloud phishing", "Server phishing"], correct: 1 },
+                    { question: "Smishing is phishing done through:", options: ["Email", "Phone calls", "Text messages (SMS)", "Social media only"], correct: 2 },
+                    { question: "Vishing is phishing done through:", options: ["Video games", "Voice/phone calls", "Virtual reality", "Vinyl records"], correct: 1 }
+                ],
+                medium: [
+                    { question: "Which type of phishing attack specifically targets high-profile executives?", options: ["Email phishing", "Spear phishing", "Whaling", "Smishing"], correct: 2 },
+                    { question: "What makes spear phishing more dangerous than regular phishing?", options: ["It uses more colorful emails", "It uses personalized information to target specific individuals", "It only targets mobile devices", "It's sent through social media only"], correct: 1 },
+                    { question: "What is 'Smishing'?", options: ["Email-based phishing attacks", "SMS/text message-based phishing attacks", "Social media phishing", "Phone call-based attacks"], correct: 1 },
+                    { question: "RCE attacks through phishing typically use:", options: ["Malicious email attachments that execute code when opened", "Colorful images in emails", "Long email subject lines", "Multiple recipients in CC"], correct: 0 }
+                ],
+                hard: [
+                    { question: "An adversary-in-the-middle (AiTM) phishing attack is designed to:", options: ["Block all internet traffic", "Intercept authentication tokens by proxying between victim and legitimate site", "Send mass emails to random users", "Encrypt victim files for ransom"], correct: 1 },
+                    { question: "Which technique helps attackers bypass MFA in phishing?", options: ["Using longer passwords", "Real-time phishing proxies that relay session tokens", "Sending emails at night", "Using encrypted email"], correct: 1 },
+                    { question: "Clone phishing involves:", options: ["Duplicating a legitimate previously delivered email with malicious modifications", "Creating identical copies of a website", "Copying the victim's hard drive", "Cloning the attacker's phone"], correct: 0 },
+                    { question: "What is pharming?", options: ["Agricultural email scams", "Redirecting traffic from legitimate websites to fraudulent ones via DNS poisoning", "Farming cryptocurrency", "A social media attack"], correct: 1 }
+                ]
+            },
+            3: {
+                easy: [
+                    { question: "What should you NEVER share in response to an email?", options: ["Your favourite colour", "Your password or bank details", "Your favourite movie", "Your opinion on weather"], correct: 1 },
+                    { question: "Two-factor authentication adds:", options: ["Two passwords", "An extra layer of security beyond just a password", "Two email addresses", "Two usernames"], correct: 1 },
+                    { question: "If you clicked a suspicious link, you should:", options: ["Wait and see what happens", "Change your passwords immediately", "Click more links", "Ignore it"], correct: 1 },
+                    { question: "Who should you report suspicious emails to?", options: ["The email sender", "Your IT/security team", "Your social media followers", "Nobody"], correct: 1 }
+                ],
+                medium: [
+                    { question: "What is the FIRST thing you should do if you receive a suspicious email?", options: ["Click the link to investigate", "Reply to ask if it's legitimate", "Don't click anything and verify through official channels", "Forward it to all your contacts"], correct: 2 },
+                    { question: "Two-Factor Authentication (2FA) helps protect against phishing because:", options: ["It makes emails harder to send", "Even if credentials are stolen, attackers need the second factor", "It automatically deletes phishing emails", "It makes passwords longer"], correct: 1 },
+                    { question: "If you accidentally clicked a malicious link, what should you do IMMEDIATELY?", options: ["Disconnect from the internet and run a security scan", "Keep browsing normally", "Click more links to see what happens", "Wait to see if anything bad happens"], correct: 0 },
+                    { question: "The most effective defense against phishing is:", options: ["Having the newest computer", "Using complex passwords only", "A combination of technology, training, and vigilant behavior", "Never using email"], correct: 2 }
+                ],
+                hard: [
+                    { question: "Which email authentication standard prevents domain spoofing by specifying how to handle unauthenticated emails?", options: ["SPF", "DKIM", "DMARC", "TLS"], correct: 2 },
+                    { question: "In an incident response plan, the correct order after detecting a phishing compromise is:", options: ["Delete evidence, change passwords, continue working", "Contain, eradicate, recover, and document lessons learned", "Immediately format all computers", "Notify social media followers first"], correct: 1 },
+                    { question: "Zero-day phishing exploits are particularly dangerous because:", options: ["They happen at midnight", "They exploit unknown vulnerabilities with no existing patches", "They only target zero users", "They cost zero dollars"], correct: 1 },
+                    { question: "What is the role of a SIEM in phishing detection?", options: ["Sending emails to employees", "Aggregating and analysing security events to detect patterns of phishing activity", "Blocking all incoming emails", "Creating phishing emails for testing"], correct: 1 }
+                ]
+            }
+        };
+
+        function getQuestionsForModule(moduleNum) {
+            return questionBanks[moduleNum][difficulty] || questionBanks[moduleNum]['medium'];
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function populateQuiz(moduleNum) {
+            const moduleCard = document.getElementById(`module${moduleNum}`) || document.querySelector('.module-card');
+            if (!moduleCard) return;
+            const questions = shuffleArray(getQuestionsForModule(moduleNum)).slice(0, 2);
+            const quizQuestions = moduleCard.querySelectorAll('.quiz-question');
+            questions.forEach((questionData, index) => {
+                if (quizQuestions[index]) {
+                    const questionElement = quizQuestions[index];
+                    const questionText = questionElement.querySelector('.question-text');
+                    const options = questionElement.querySelectorAll('.quiz-option');
+                    if (questionText) questionText.textContent = questionData.question;
+                    options.forEach((option, optionIndex) => {
+                        option.textContent = questionData.options[optionIndex];
+                        option.setAttribute('data-correct', optionIndex === questionData.correct ? 'true' : 'false');
+                        option.classList.remove('selected', 'correct', 'incorrect');
+                    });
+                    const feedback = questionElement.querySelector('.quiz-feedback');
+                    if (feedback) { feedback.style.display = 'none'; feedback.textContent = ''; }
+                    const deselectBtn = questionElement.querySelector('.deselect-btn');
+                    if (deselectBtn) deselectBtn.style.display = 'none';
+                }
+            });
+        }
+
+        function initializeModules() {
+            for (let i = 1; i <= 3; i++) {
+                if (localStorage.getItem(`module${i}-quiz-completed`) === 'true') {
+                    modules[i].completed = true;
+                    if (i < 3) unlockModule(i + 1);
+                    const moduleCard = document.getElementById(`module${i}`) || (i === 1 ? document.querySelector('.module-card') : null);
+                    const quizContainer = moduleCard ? moduleCard.querySelector('.quiz-container') : null;
+                    if (quizContainer) quizContainer.classList.add('available');
+                }
+            }
+            updateAllProgress();
+        }
+
+        function unlockModule(moduleNum) {
+            const moduleCard = document.getElementById(`module${moduleNum}`);
+            const moduleStatus = moduleCard ? moduleCard.querySelector('.module-status') : null;
+            if (moduleCard) {
+                moduleCard.classList.remove('locked');
+                if (moduleStatus) { moduleStatus.textContent = 'Unlocked'; moduleStatus.classList.add('unlocked'); moduleStatus.classList.remove('locked'); }
+            }
+        }
+
+        function setupSlideNavigation(moduleNum) {
+            const module = modules[moduleNum];
+            const prefix = module.prefix;
+            function updateSlide() {
+                const moduleContainer = document.getElementById(`module${moduleNum}-slides`) || document.querySelector('#module1 .slides-container');
+                if (!moduleContainer) return;
+                const slides = moduleContainer.querySelectorAll('.slide');
+                slides.forEach(slide => slide.classList.remove('active'));
+                const currentSlideEl = document.getElementById(`${prefix}slide${module.currentSlide}`) || document.getElementById(`slide${module.currentSlide}`);
+                if (currentSlideEl) currentSlideEl.classList.add('active');
+                const indicators = moduleContainer.querySelectorAll('.slide-indicator');
+                indicators.forEach((indicator, index) => { indicator.classList.toggle('active', index + 1 === module.currentSlide); });
+                const nextBtnId = prefix ? `${prefix}next-slide` : 'next-slide';
+                const prevBtnId = prefix ? `${prefix}prev-slide` : 'prev-slide';
+                const prevBtn = document.getElementById(prevBtnId);
+                const nextBtn = document.getElementById(nextBtnId);
+                if (prevBtn) prevBtn.disabled = module.currentSlide === 1;
+                if (nextBtn) nextBtn.disabled = module.currentSlide === module.totalSlides;
+                const moduleCard = document.getElementById(`module${moduleNum}`) || document.querySelector('.module-card');
+                const quizContainer = moduleCard ? moduleCard.querySelector('.quiz-container') : null;
+                if (quizContainer && module.currentSlide === module.totalSlides) {
+                    quizContainer.classList.add('available');
+                    if (!quizContainer.querySelector('.quiz-available-notice')) {
+                        const notice = document.createElement('div');
+                        notice.className = 'quiz-available-notice';
+                        notice.innerHTML = '<p style="color: #5ddc7e; font-weight: bold; margin-bottom: 1rem;">&#128218; Great! You\'ve completed the learning material. Now test your knowledge below:</p>';
+                        quizContainer.insertBefore(notice, quizContainer.firstChild);
+                    }
+                }
+                updateModuleProgress(moduleNum);
+            }
+            const nextBtnId = prefix ? `${prefix}next-slide` : 'next-slide';
+            const prevBtnId = prefix ? `${prefix}prev-slide` : 'prev-slide';
+            const nextBtn = document.getElementById(nextBtnId);
+            const prevBtn = document.getElementById(prevBtnId);
+            if (nextBtn) { const newBtn = nextBtn.cloneNode(true); newBtn.addEventListener('click', function() { if (module.currentSlide < module.totalSlides) { module.currentSlide++; updateSlide(); } }); nextBtn.parentNode.replaceChild(newBtn, nextBtn); }
+            if (prevBtn) { const newBtn = prevBtn.cloneNode(true); newBtn.addEventListener('click', function() { if (module.currentSlide > 1) { module.currentSlide--; updateSlide(); } }); prevBtn.parentNode.replaceChild(newBtn, prevBtn); }
+            const moduleContainer = document.getElementById(`module${moduleNum}-slides`) || document.querySelector('#module1 .slides-container');
+            if (moduleContainer) {
+                const indicators = moduleContainer.querySelectorAll('.slide-indicator');
+                indicators.forEach(indicator => { const newInd = indicator.cloneNode(true); newInd.addEventListener('click', function() { module.currentSlide = parseInt(this.getAttribute('data-slide')); updateSlide(); }); indicator.parentNode.replaceChild(newInd, indicator); });
+            }
+            updateSlide();
+        }
+
+        function setupQuizFunctionality(moduleNum) {
+            const module = modules[moduleNum];
+            const prefix = module.prefix;
+            const moduleCard = document.getElementById(`module${moduleNum}`) || document.querySelector('.module-card');
+            if (!moduleCard) return;
+            populateQuiz(moduleNum);
+            const quizOptions = moduleCard.querySelectorAll('.quiz-option');
+            quizOptions.forEach(option => {
+                const newOption = option.cloneNode(true);
+                newOption.addEventListener('click', function() {
+                    const question = this.closest('.quiz-question');
+                    this.parentElement.querySelectorAll('.quiz-option').forEach(sib => sib.classList.remove('selected'));
+                    this.classList.add('selected');
+                    const deselectBtn = question.querySelector('.deselect-btn');
+                    if (deselectBtn) deselectBtn.style.display = 'inline-block';
+                });
+                option.parentNode.replaceChild(newOption, option);
+            });
+            const deselectBtns = moduleCard.querySelectorAll('.deselect-btn');
+            deselectBtns.forEach(btn => {
+                const newBtn = btn.cloneNode(true);
+                newBtn.addEventListener('click', function() {
+                    const question = this.closest('.quiz-question');
+                    question.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected', 'correct', 'incorrect'));
+                    const feedback = question.querySelector('.quiz-feedback');
+                    feedback.style.display = 'none'; feedback.textContent = '';
+                    this.style.display = 'none';
+                });
+                btn.parentNode.replaceChild(newBtn, btn);
+            });
+            const submitBtn = document.getElementById(`${prefix}submit-quiz`) || document.getElementById('submit-quiz');
+            if (submitBtn) {
+                const newSubmitBtn = submitBtn.cloneNode(true);
+                newSubmitBtn.addEventListener('click', function() {
+                    let correct = 0;
+                    const questions = moduleCard.querySelectorAll('.quiz-question');
+                    questions.forEach(question => {
+                        const selected = question.querySelector('.quiz-option.selected');
+                        const feedback = question.querySelector('.quiz-feedback');
+                        if (!selected) { feedback.textContent = 'Please select an answer.'; feedback.className = 'quiz-feedback feedback-incorrect'; feedback.style.display = 'block'; return; }
+                        question.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('correct', 'incorrect'));
+                        if (selected.getAttribute('data-correct') === 'true') { selected.classList.add('correct'); feedback.textContent = 'Correct!'; feedback.className = 'quiz-feedback feedback-correct'; correct++; }
+                        else { selected.classList.add('incorrect'); question.querySelector('.quiz-option[data-correct="true"]').classList.add('correct'); feedback.textContent = 'Incorrect. The correct answer is highlighted.'; feedback.className = 'quiz-feedback feedback-incorrect'; }
+                        feedback.style.display = 'block';
+                    });
+                    if (correct === questions.length) { localStorage.setItem(`module${moduleNum}-quiz-completed`, 'true'); modules[moduleNum].completed = true; alert(`Congratulations! You've completed Module ${moduleNum} with a perfect score!`); if (module.nextModule) unlockModule(module.nextModule); updateModuleProgress(moduleNum); }
+                    else { alert(`You got ${correct} out of ${questions.length} questions correct. Review the incorrect answers and try again!`); }
+                });
+                submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+            }
+            const resetBtn = document.getElementById(`${prefix}reset-quiz`) || document.getElementById('reset-quiz');
+            if (resetBtn) {
+                const newResetBtn = resetBtn.cloneNode(true);
+                newResetBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to reset the quiz? This will generate new questions and clear your answers.')) {
+                        moduleCard.querySelectorAll('.quiz-question').forEach(question => {
+                            question.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected', 'correct', 'incorrect'));
+                            const feedback = question.querySelector('.quiz-feedback'); feedback.style.display = 'none'; feedback.textContent = '';
+                            const deselectBtn = question.querySelector('.deselect-btn'); if (deselectBtn) deselectBtn.style.display = 'none';
+                        });
+                        populateQuiz(moduleNum);
+                    }
+                });
+                resetBtn.parentNode.replaceChild(newResetBtn, resetBtn);
+            }
+        }
+
+        function updateModuleProgress(moduleNum) {
+            const module = modules[moduleNum];
+            let progress = (module.currentSlide / module.totalSlides) * 50;
+            if (localStorage.getItem(`module${moduleNum}-quiz-completed`) === 'true') progress += 50;
+            progress = Math.min(Math.round(progress), 100);
+            const progressText = document.getElementById(`module${moduleNum}-progress`);
+            const progressBar = document.getElementById(`module${moduleNum}-progress-bar`);
+            if (progressText) progressText.textContent = `${progress}%`;
+            if (progressBar) progressBar.style.width = `${progress}%`;
+            return progress;
+        }
+
+        function updateAllProgress() { for (let i = 1; i <= 3; i++) updateModuleProgress(i); }
+
+        initializeModules();
+        for (let i = 1; i <= 3; i++) { setupSlideNavigation(i); setupQuizFunctionality(i); }
+        document.querySelectorAll('.module-card').forEach((card, index) => {
+            const moduleNum = index + 1;
+            if (moduleNum > 1 && localStorage.getItem(`module${moduleNum-1}-quiz-completed`) !== 'true') card.classList.add('locked');
+        });
+    });
+</script>
+{% endblock %}
