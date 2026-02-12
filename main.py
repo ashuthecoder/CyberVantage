@@ -5,7 +5,7 @@ Refactored to use modular structure with focused components
 import os
 from flask import render_template
 from config.app_config import create_app, db
-from config.ai_config import configure_azure_openai
+from config.ai_config import configure_ai_providers
 from models.database import update_database_schema
 from routes.auth_routes import auth_bp, token_required
 from routes.simulation_routes import simulation_bp
@@ -19,8 +19,8 @@ load_dotenv()
 # Create Flask app
 app = create_app()
 
-# Configure AI services (Azure OpenAI only - Gemini removed as requested)
-configure_azure_openai(app)
+# Configure AI services (Azure OpenAI and Google Gemini with fallback support)
+configure_ai_providers(app)
 
 # Register blueprints
 app.register_blueprint(auth_bp)
