@@ -34,6 +34,11 @@ def index():
     """Landing page with detailed CyberVantage information"""
     return render_template("index.html")
 
+@app.route('/about')
+def about():
+    """About page with CyberVantage information and compliance details"""
+    return render_template("about.html")
+
 @app.route('/dashboard')
 @token_required
 def dashboard(current_user):
