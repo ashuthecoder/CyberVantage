@@ -333,6 +333,64 @@ footer {
     margin-top: auto;
 }
 
+/* Custom Footer with Animated Heart */
+.custom-footer {
+    text-align: center;
+    padding: 2rem;
+    background: rgba(5, 5, 16, 0.8);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--glass-border);
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: auto;
+    font-size: 1rem;
+}
+
+.custom-footer p {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.heart {
+    color: #ff6b6b;
+    display: inline-block;
+    animation: heartbeat 1.2s ease-in-out infinite;
+    font-size: 1.2rem;
+}
+
+@keyframes heartbeat {
+    0% {
+        transform: scale(1);
+    }
+    10% {
+        transform: scale(1.2);
+    }
+    20% {
+        transform: scale(1);
+    }
+    30% {
+        transform: scale(1.2);
+    }
+    40% {
+        transform: scale(1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.custom-footer .creators {
+    font-weight: 600;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+
 /* Hero Section */
 .hero {
     height: 100vh;
