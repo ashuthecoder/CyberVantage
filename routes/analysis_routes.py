@@ -4,7 +4,7 @@ Analysis and monitoring routes
 import os
 import datetime
 from sqlalchemy import inspect
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, render_template, jsonify, request, redirect, url_for
 from routes.auth_routes import token_required
 from models.database import User, SimulationEmail, SimulationResponse, get_simulation_id_for_email
 
