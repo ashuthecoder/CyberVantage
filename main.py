@@ -3,7 +3,7 @@ CyberVantage - Main application entry point
 Refactored to use modular structure with focused components
 """
 import os
-from flask import render_template
+from flask import render_template, redirect, url_for, session
 from config.app_config import create_app, db
 from config.ai_config import configure_azure_openai
 from models.database import update_database_schema
@@ -31,7 +31,14 @@ app.register_blueprint(threat_bp)
 # Main routes that don't fit into specific categories
 @app.route('/')
 def index():
-    """Landing page with detailed CyberVantage information"""
+    """Landing page - redirect to access code page for login flow"""
+    # If user is already logged in, go to dashboard
+    if session.get('token'):
+        return redirect(url_for('dashboard'))
+    # If access code already verified, go to login
+    if session.get('access_code_verified'):
+        return redirect(url_for('auth.login'))
+    # Show landing page with button to continue to access code
     return render_template("index.html")
 
 @app.route('/dashboard')

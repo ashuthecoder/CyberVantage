@@ -100,6 +100,31 @@ class SimulationSession(db.Model):
     
     user = db.relationship('User', backref=db.backref('simulation_sessions', lazy=True))
 
+class AccessCode(db.Model):
+    """Access codes for controlling platform entry"""
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    max_uses = db.Column(db.Integer, nullable=True)  # None = unlimited
+    current_uses = db.Column(db.Integer, default=0, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=True)
+    
+    def is_valid(self):
+        """Check if access code is valid for use"""
+        if not self.is_active:
+            return False
+        if self.expires_at and datetime.datetime.utcnow() > self.expires_at:
+            return False
+        if self.max_uses and self.current_uses >= self.max_uses:
+            return False
+        return True
+    
+    def increment_usage(self):
+        """Increment the usage counter"""
+        self.current_uses += 1
+
 # Database helper functions
 def update_database_schema(app):
     """Add the simulation_id column to the SimulationEmail table if it exists and the column is missing."""

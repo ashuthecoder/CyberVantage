@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Access Code - CyberVantage{% endblock %}
+
+{% block content %}
+<div class="glass-container" style="max-width: 500px; margin: 100px auto;">
+    <h2 style="margin-bottom: 10px; text-align: center;">🔑 Access Code Required</h2>
+    <p style="text-align: center; color: rgba(255,255,255,0.7); margin-bottom: 30px; font-size: 0.95em;">
+        Please enter your access code to continue to CyberVantage
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}" style="margin-bottom: 20px;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('auth.verify_access_code') }}" autocomplete="off" novalidate>
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+            <label for="access_code">Access Code:</label>
+            <input type="text" 
+                   id="access_code" 
+                   name="access_code" 
+                   required 
+                   autocomplete="off" 
+                   placeholder="Enter your access code"
+                   style="text-transform: uppercase; letter-spacing: 2px;">
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button type="submit" class="btn-primary" style="width: 100%;">
+                <i class="fas fa-unlock"></i> Verify Code
+            </button>
+        </div>
+    </form>
+
+    <div style="margin-top: 20px; text-align: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <p style="color: rgba(255,255,255,0.6); font-size: 0.9em;">
+            <i class="fas fa-info-circle"></i> Don't have an access code?<br>
+            Contact your administrator to request access.
+        </p>
+    </div>
+</div>
+
+<style>
+    .alert {
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-size: 0.95em;
+    }
+    
+    .alert-danger {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+    }
+    
+    .alert-success {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #86efac;
+    }
+    
+    .alert-warning {
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        color: #fde047;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-uppercase the access code as user types
+    document.getElementById('access_code').addEventListener('input', function(e) {
+        this.value = this.value.toUpperCase();
+    });
+</script>
+{% endblock %}

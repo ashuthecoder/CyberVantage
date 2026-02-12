@@ -35,7 +35,7 @@
             <a href="#features">Features</a>
             <a href="#phases">Learning Journey</a>
             <a href="#security">Security</a>
-            <a href="{{ url_for('auth.login') }}" class="btn-primary">Login</a>
+            <a href="{{ url_for('auth.access_code') }}" class="btn-primary">Login</a>
         </div>
     </nav>
 
@@ -55,7 +55,7 @@
                     and demonstrate your skills—all in a safe, controlled environment designed for education.
                 </p>
                 <div class="cta-group reveal-text-delayed">
-                    <button class="btn-glass" onclick="window.location.href='{{ url_for('auth.register') }}'">Get Started</button>
+                    <button class="btn-glass" onclick="window.location.href='{{ url_for('auth.access_code') }}'">Get Started</button>
                     <button class="btn-outline" onclick="document.getElementById('features').scrollIntoView({behavior: 'smooth'})">Learn More</button>
                 </div>
             </div>

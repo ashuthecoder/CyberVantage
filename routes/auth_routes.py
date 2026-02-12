@@ -4,10 +4,11 @@ Authentication routes - login, register, logout
 import datetime
 import jwt
 import time
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session
+import os
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session, flash
 from email_validator import validate_email, EmailNotValidError
 from functools import wraps
-from models.database import User, db
+from models.database import User, AccessCode, db
 from collections import defaultdict, deque
 
 auth_bp = Blueprint('auth', __name__)
@@ -15,9 +16,11 @@ auth_bp = Blueprint('auth', __name__)
 # Simple in-memory rate limiting (for production, use Redis or database)
 login_attempts = defaultdict(deque)
 registration_attempts = defaultdict(deque)
+access_code_attempts = defaultdict(deque)
 RATE_LIMIT_WINDOW = 300  # 5 minutes in seconds
 MAX_LOGIN_ATTEMPTS = 5
 MAX_REGISTRATION_ATTEMPTS = 3
+MAX_ACCESS_CODE_ATTEMPTS = 10
 
 def is_rate_limited(ip_address, attempts_dict, max_attempts):
     """Check if IP is rate limited"""
@@ -31,6 +34,15 @@ def is_rate_limited(ip_address, attempts_dict, max_attempts):
 def record_attempt(ip_address, attempts_dict):
     """Record an attempt for rate limiting"""
     attempts_dict[ip_address].append(time.time())
+
+def access_code_required(f):
+    """Decorator to require valid access code in session"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('access_code_verified'):
+            return redirect(url_for('auth.access_code'))
+        return f(*args, **kwargs)
+    return decorated
 
 def token_required(f):
     """Token required decorator with improved security"""
@@ -66,7 +78,62 @@ def token_required(f):
 
     return decorated
 
+@auth_bp.route('/access-code', methods=['GET', 'POST'])
+def access_code():
+    """Access code verification page - first step before login"""
+    # If already verified, redirect to login
+    if session.get('access_code_verified'):
+        return redirect(url_for('auth.login'))
+    
+    return render_template("access_code.html")
+
+@auth_bp.route('/verify-access-code', methods=['POST'])
+def verify_access_code():
+    """Verify the submitted access code"""
+    ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
+    
+    # Check rate limiting
+    if is_rate_limited(ip_address, access_code_attempts, MAX_ACCESS_CODE_ATTEMPTS):
+        flash("Too many access code attempts. Please try again in 5 minutes.", "danger")
+        return redirect(url_for('auth.access_code'))
+    
+    record_attempt(ip_address, access_code_attempts)
+    
+    submitted_code = request.form.get("access_code", "").strip().upper()
+    
+    if not submitted_code:
+        flash("Please enter an access code.", "danger")
+        return redirect(url_for('auth.access_code'))
+    
+    # Check master access code from environment variable
+    master_code = os.getenv("MASTER_ACCESS_CODE", "").upper()
+    
+    if master_code and submitted_code == master_code:
+        # Master code always works
+        session['access_code_verified'] = True
+        session['access_code_used'] = 'MASTER'
+        flash("Access granted! Welcome to CyberVantage.", "success")
+        return redirect(url_for('auth.login'))
+    
+    # Check database access codes
+    access_code_obj = AccessCode.query.filter_by(code=submitted_code).first()
+    
+    if access_code_obj and access_code_obj.is_valid():
+        # Valid code found
+        access_code_obj.increment_usage()
+        db.session.commit()
+        
+        session['access_code_verified'] = True
+        session['access_code_used'] = submitted_code
+        flash("Access granted! Welcome to CyberVantage.", "success")
+        return redirect(url_for('auth.login'))
+    
+    # Invalid code
+    flash("Invalid or expired access code. Please try again.", "danger")
+    return redirect(url_for('auth.access_code'))
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
+@access_code_required
 def register():
     if request.method == 'POST':
         ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
@@ -125,6 +192,7 @@ def register():
     return render_template("register.html")
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@access_code_required
 def login():
     if request.method == 'POST':
         ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
