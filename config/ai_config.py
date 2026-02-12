@@ -1,5 +1,5 @@
 """
-AI configuration - Azure OpenAI only (Gemini logic removed as requested)
+AI configuration - Multi-AI Provider support (Azure OpenAI and Google Gemini)
 """
 import os
 import openai
@@ -27,6 +27,45 @@ def configure_azure_openai(app):
         print(f"✓ Azure OpenAI API key loaded successfully: {AZURE_OPENAI_KEY[:4]}...{AZURE_OPENAI_KEY[-4:]}")
         print(f"✓ Azure OpenAI deployment: {deployment_name}")
     else:
-        print("Warning: AZURE_OPENAI_KEY or AZURE_OPENAI_ENDPOINT not found. AI features will be limited.")
+        print("Warning: AZURE_OPENAI_KEY or AZURE_OPENAI_ENDPOINT not found.")
     
     return AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT
+
+def configure_ai_providers(app):
+    """Configure all AI providers (Azure OpenAI and Google Gemini) with fallback support"""
+    # Configure Azure OpenAI
+    configure_azure_openai(app)
+    
+    # Configure Google Gemini
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    if GOOGLE_API_KEY:
+        app.config['GOOGLE_API_KEY'] = GOOGLE_API_KEY
+        print(f"✓ Google Gemini API key loaded successfully: {GOOGLE_API_KEY[:4]}...{GOOGLE_API_KEY[-4:]}")
+    else:
+        print("Warning: GOOGLE_API_KEY not found.")
+    
+    # Get primary AI model configuration
+    PRIMARY_AI_MODEL = os.getenv("PRIMARY_AI_MODEL", "azure").lower()
+    app.config['PRIMARY_AI_MODEL'] = PRIMARY_AI_MODEL
+    
+    # Determine fallback
+    FALLBACK_AI_MODEL = "gemini" if PRIMARY_AI_MODEL == "azure" else "azure"
+    app.config['FALLBACK_AI_MODEL'] = FALLBACK_AI_MODEL
+    
+    print(f"✓ AI Provider Configuration:")
+    print(f"  - Primary Model: {PRIMARY_AI_MODEL}")
+    print(f"  - Fallback Model: {FALLBACK_AI_MODEL}")
+    
+    # Initialize AI provider module
+    try:
+        from pyFunctions.ai_provider import initialize_ai_providers
+        initialize_ai_providers(app)
+    except ImportError as e:
+        print(f"Warning: Could not initialize AI providers: {e}")
+    
+    return {
+        "azure_configured": bool(os.getenv("AZURE_OPENAI_KEY") and os.getenv("AZURE_OPENAI_ENDPOINT")),
+        "gemini_configured": bool(GOOGLE_API_KEY),
+        "primary_model": PRIMARY_AI_MODEL,
+        "fallback_model": FALLBACK_AI_MODEL
+    }

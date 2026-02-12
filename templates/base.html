@@ -54,10 +54,8 @@
             <div class="nav-dropdown">
                 <a href="#" class="nav-dropdown-toggle" onclick="return false;">About <i class="fas fa-chevron-down" style="font-size: 0.65rem; margin-left: 4px;"></i></a>
                 <div class="nav-dropdown-menu">
-                    <a href="#"><i class="fas fa-info-circle"></i> About CyberVantage</a>
-                    <a href="#"><i class="fas fa-users"></i> Our Team</a>
-                    <a href="#"><i class="fas fa-envelope"></i> Contact</a>
-                    <a href="#"><i class="fas fa-question-circle"></i> FAQ</a>
+                    <a href="{{ url_for('about') }}"><i class="fas fa-info-circle"></i> About CyberVantage</a>
+                    <a href="{{ url_for('about') }}#compliance"><i class="fas fa-shield-alt"></i> Security & Compliance</a>
                 </div>
             </div>
             <a href="{{ url_for('auth.profile') }}"><i class="fas fa-user"></i> Profile</a>
@@ -67,10 +65,8 @@
             <div class="nav-dropdown">
                 <a href="#" class="nav-dropdown-toggle" onclick="return false;">About <i class="fas fa-chevron-down" style="font-size: 0.65rem; margin-left: 4px;"></i></a>
                 <div class="nav-dropdown-menu">
-                    <a href="#"><i class="fas fa-info-circle"></i> About CyberVantage</a>
-                    <a href="#"><i class="fas fa-users"></i> Our Team</a>
-                    <a href="#"><i class="fas fa-envelope"></i> Contact</a>
-                    <a href="#"><i class="fas fa-question-circle"></i> FAQ</a>
+                    <a href="{{ url_for('about') }}"><i class="fas fa-info-circle"></i> About CyberVantage</a>
+                    <a href="{{ url_for('about') }}#compliance"><i class="fas fa-shield-alt"></i> Security & Compliance</a>
                 </div>
             </div>
             <a href="{{ url_for('auth.login') }}">Login</a>
