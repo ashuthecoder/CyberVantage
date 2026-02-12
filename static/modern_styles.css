@@ -142,7 +142,7 @@ h3 {
 .nav-dropdown-menu {
     display: none;
     position: absolute;
-    top: 100%;
+    top: calc(100% - 10px);
     left: 0;
     min-width: 200px;
     background: rgba(10, 10, 30, 0.95);
@@ -153,6 +153,7 @@ h3 {
     z-index: 200;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     margin-top: 0.5rem;
+    padding-top: 15px;
 }
 
 .nav-dropdown:hover .nav-dropdown-menu {
