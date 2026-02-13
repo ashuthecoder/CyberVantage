@@ -102,7 +102,7 @@
 
 <div class="sections-container">
     <a href="{{ url_for('analysis.learn') }}" class="section-card">
-        <div class="glass-panel section-content">
+        <div class="section-content">
             <div class="section-icon">📚</div>
             <h3>Learn</h3>
             <p>Access educational resources, tutorials, and courses on cybersecurity fundamentals and advanced topics.
@@ -111,7 +111,7 @@
     </a>
 
     <a href="{{ url_for('simulation.simulate') }}" class="section-card">
-        <div class="glass-panel section-content">
+        <div class="section-content">
             <div class="section-icon">🛡️</div>
             <h3>Simulate</h3>
             <p>Practice with real-world cybersecurity scenarios in a safe, controlled environment.</p>
@@ -119,7 +119,7 @@
     </a>
 
     <a href="{{ url_for('analysis.analysis') }}" class="section-card">
-        <div class="glass-panel section-content">
+        <div class="section-content">
             <div class="section-icon">📊</div>
             <h3>Analysis</h3>
             <p>Review your performance metrics, progress tracking, and personalized recommendations.</p>
@@ -127,7 +127,7 @@
     </a>
 
     <a href="{{ url_for('threat.check_threats') }}" class="section-card">
-        <div class="glass-panel section-content">
+        <div class="section-content">
             <div class="section-icon">🔍</div>
             <h3>Check Threats</h3>
             <p>Scan files, URLs, and IPs to identify potential malware and security threats.</p>
@@ -135,7 +135,7 @@
     </a>
 
     <a href="{{ url_for('threat.get_phishing_assignment') }}" class="section-card">
-        <div class="glass-panel section-content">
+        <div class="section-content">
             <div class="section-icon">✏️</div>
             <h3>Assignment</h3>
             <p>Test your knowledge by creating a convincing phishing email and get AI feedback on your work.</p>
@@ -144,7 +144,7 @@
 
     {% if current_user and current_user.is_admin_user() %}
     <a href="{{ url_for('auth.admin_users') }}" class="section-card">
-        <div class="glass-panel section-content">
+        <div class="section-content">
             <div class="section-icon">👥</div>
             <h3>Admin Panel</h3>
             <p>Manage system users, view registration details, and maintain user accounts.</p>
