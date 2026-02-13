@@ -6,6 +6,7 @@ import jwt
 import time
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session
 from email_validator import validate_email, EmailNotValidError
+from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from models.database import User, db
 from collections import defaultdict, deque
@@ -116,7 +117,7 @@ def register():
 
         # Create user
         new_user = User(name=name, email=email)
-        new_user.set_password(password)
+        new_user.password_hash = generate_password_hash(password, method='pbkdf2:sha256', salt_length=16)
         db.session.add(new_user)
         db.session.commit()
 
@@ -142,7 +143,14 @@ def login():
             return jsonify({"error": "Email and password are required"}), 400
 
         user = User.query.filter_by(email=email).first()
-        if not user or not user.check_password(password):
+        is_valid_password = False
+        if user and user.password_hash:
+            if user.password_hash.startswith('pbkdf2:') or user.password_hash.startswith('scrypt:'):
+                is_valid_password = check_password_hash(user.password_hash, password)
+            else:
+                is_valid_password = user.check_password(password)
+
+        if not user or not is_valid_password:
             record_attempt(ip_address, login_attempts)
             return jsonify({"error": "Invalid credentials"}), 401
 

@@ -4,6 +4,7 @@ Database models and helper functions
 import datetime
 import os
 import bcrypt
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import inspect, text
 from config.app_config import db
 
@@ -25,13 +26,22 @@ class User(db.Model):
     demographics_completed = db.Column(db.Boolean, default=False, nullable=False)
 
     def set_password(self, password):
-        # Hash password with bcrypt
-        salt = bcrypt.gensalt()
-        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+        # Hash password with Werkzeug
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256', salt_length=16)
 
     def check_password(self, password):
-        # Verify password with bcrypt
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+        # Verify password with Werkzeug (primary)
+        if not self.password_hash:
+            return False
+
+        if self.password_hash.startswith('pbkdf2:') or self.password_hash.startswith('scrypt:'):
+            return check_password_hash(self.password_hash, password)
+
+        # Backward compatibility for previously-stored bcrypt hashes
+        if self.password_hash.startswith('$2a$') or self.password_hash.startswith('$2b$') or self.password_hash.startswith('$2y$'):
+            return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+
+        return False
     
     def is_admin_user(self):
         """Check if user has admin privileges"""
