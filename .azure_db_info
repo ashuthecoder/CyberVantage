@@ -1,0 +1,5 @@
+PG_SERVER=cvpg260213104545
+PG_DB=cybervantage
+PG_ADMIN=cvadmin
+APP_NAME=cybervantage-260213101228
+RG=cybervantage-rg
