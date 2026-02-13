@@ -79,9 +79,11 @@
         {% block content %}{% endblock %}
     </div>
 
+    {% block footer %}
     <footer>
         <p>&copy; 2026 CyberVantage. All rights reserved.</p>
     </footer>
+    {% endblock %}
 
     <script src="{{ url_for('static', filename='modern_script.js') }}"></script>
     {% block scripts %}{% endblock %}

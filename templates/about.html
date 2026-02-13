@@ -211,6 +211,38 @@
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
     }
+
+    /* Security & Compliance Section */
+    .security-compliance-card {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .security-icon {
+        margin-bottom: 1rem;
+        transition: transform 0.3s ease;
+    }
+
+    .security-compliance-card:hover .security-icon {
+        transform: scale(1.1);
+    }
+
+    @media (max-width: 768px) {
+        .security-icon svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .security-compliance-card h4 {
+            font-size: 1.1rem;
+        }
+
+        .security-compliance-card p {
+            font-size: 0.95rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -354,6 +386,64 @@
     </div>
 
     <div class="content-section">
+        <h2>Security & Compliance</h2>
+        <p style="text-align: center; color: rgba(255, 255, 255, 0.7); margin-bottom: 2rem;">
+            Our commitment to secure-by-design principles
+        </p>
+        <div class="feature-grid">
+            <div class="feature-card security-compliance-card">
+                <div class="security-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L4 6V11C4 16.55 7.84 21.74 12 23C16.16 21.74 20 16.55 20 11V6L12 2Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(102, 126, 234, 0.1)"/>
+                        <path d="M9 12L11 14L15 10" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h4>OWASP ASVS Level 1</h4>
+                <p>
+                    Aligned with OWASP ASVS Level 1 security controls
+                </p>
+            </div>
+            <div class="feature-card security-compliance-card">
+                <div class="security-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L4 6V11C4 16.55 7.84 21.74 12 23C16.16 21.74 20 16.55 20 11V6L12 2Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(102, 126, 234, 0.1)"/>
+                        <path d="M12 8V12M12 16H12.01" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h4>Australian Essential Eight ML1</h4>
+                <p>
+                    Self-assessed against Australian Essential Eight ML1
+                </p>
+            </div>
+            <div class="feature-card security-compliance-card">
+                <div class="security-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="5" y="11" width="14" height="10" rx="2" stroke="#667eea" stroke-width="2" fill="rgba(102, 126, 234, 0.1)"/>
+                        <path d="M12 15V17" stroke="#667eea" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M7 11V7C7 4.79086 8.79086 3 11 3H13C15.2091 3 17 4.79086 17 7V11" stroke="#667eea" stroke-width="2"/>
+                    </svg>
+                </div>
+                <h4>ISO 27001 Best Practices</h4>
+                <p>
+                    Designed in accordance with ISO 27001 best practices
+                </p>
+            </div>
+            <div class="feature-card security-compliance-card">
+                <div class="security-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L4 6V11C4 16.55 7.84 21.74 12 23C16.16 21.74 20 16.55 20 11V6L12 2Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(102, 126, 234, 0.1)"/>
+                        <circle cx="12" cy="12" r="3" stroke="#667eea" stroke-width="2" fill="none"/>
+                    </svg>
+                </div>
+                <h4>Secure-by-Design</h4>
+                <p>
+                    Built on a Secure-by-Design architectural foundation
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section">
         <h2>Security Measures</h2>
         <p>
             CyberVantage implements multiple layers of security to protect user data and provide a safe learning environment:
@@ -446,4 +536,10 @@
         });
     });
 </script>
+{% endblock %}
+
+{% block footer %}
+<footer class="custom-footer">
+    <p>Made with <span class="heart">♥</span> by <span class="creators">Ashutosh Gupta</span> and <span class="creators">Ujwwal Gupta</span></p>
+</footer>
 {% endblock %}
