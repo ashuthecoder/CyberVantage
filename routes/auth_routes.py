@@ -9,6 +9,7 @@ from email_validator import validate_email, EmailNotValidError
 from functools import wraps
 from models.database import User, db
 from collections import defaultdict, deque
+from pyFunctions.email_service import send_password_reset_email, send_welcome_email
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -119,6 +120,14 @@ def register():
         new_user.set_password(password)
         db.session.add(new_user)
         db.session.commit()
+
+        # Send welcome email
+        try:
+            email_result = send_welcome_email(email, name)
+            if not email_result['success']:
+                print(f"Warning: Failed to send welcome email: {email_result['message']}")
+        except Exception as e:
+            print(f"Warning: Error sending welcome email: {str(e)}")
 
         return redirect(url_for('auth.login'))
 
@@ -255,16 +264,27 @@ def reset_password_request():
             token = user.generate_reset_token()
             db.session.commit()
             
-            # In a real application, you would send an email here
-            # For demo purposes, we'll show the reset link
-            reset_url = url_for('auth.reset_password', token=token, _external=True)
-            
-            # Log the reset request for demo
-            print(f"Password reset requested for {email}")
-            print(f"Reset URL: {reset_url}")
-            
-            from flask import flash
-            flash(f"Password reset instructions have been sent to {email}. Check the console for the reset link.", "info")
+            # Send password reset email using Resend
+            try:
+                email_result = send_password_reset_email(email, token, user.name)
+                if email_result['success']:
+                    from flask import flash
+                    flash(f"Password reset instructions have been sent to {email}.", "info")
+                else:
+                    # Fallback to console logging if email fails
+                    reset_url = url_for('auth.reset_password', token=token, _external=True)
+                    print(f"Password reset requested for {email}")
+                    print(f"Reset URL: {reset_url}")
+                    from flask import flash
+                    flash(f"Password reset link generated. Check console: {reset_url}", "info")
+            except Exception as e:
+                # Fallback to console logging if email service fails
+                reset_url = url_for('auth.reset_password', token=token, _external=True)
+                print(f"Email service error: {str(e)}")
+                print(f"Password reset requested for {email}")
+                print(f"Reset URL: {reset_url}")
+                from flask import flash
+                flash(f"Password reset link generated. Check console for the link.", "info")
         else:
             # Don't reveal that email doesn't exist for security
             from flask import flash

@@ -1,14 +1,15 @@
-# --- Web Framework & Templates ---
-flask==3.0.0
-jinja2==3.1.2
-werkzeug==3.0.1
-flask-wtf==1.2.1
+# --- Web Framework ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
 
 # --- Authentication & Security ---
 pyjwt==2.8.0
 bcrypt==4.1.2
 cryptography==41.0.7
 email-validator==2.1.0
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
 
 # --- Web Requests ---
 requests==2.31.0
@@ -22,8 +23,12 @@ openai==1.6.1
 
 # --- Database ORM ---
 sqlalchemy==2.0.23
-flask-sqlalchemy==3.1.1
 psycopg2-binary==2.9.9
+
+# --- CORS & Middleware ---
+python-cors==1.0.0
 
 # --- Misc Utilities ---
 python-dotenv==1.0.0
+pydantic==2.10.5
+pydantic-settings==2.7.1
