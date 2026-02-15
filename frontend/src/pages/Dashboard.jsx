@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Terminal, Database, Activity, Zap, BookOpen, BarChart2, Award, CheckCircle, Target, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Shield, Terminal, Database, Activity, Zap, BookOpen, BarChart2, Award, CheckCircle, Target, Clock, Info, LogOut, AlertTriangle, Eye, TrendingUp } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
-export default function CyberVantageThemeable() {
-  const [theme, setTheme] = useState('soc'); // 'soc' or 'modern'
+export default function Dashboard() {
+  const { theme: t, themeName, toggleTheme } = useTheme();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [activePhase, setActivePhase] = useState('learn');
   const [scanLines, setScanLines] = useState(0);
   const [time, setTime] = useState(new Date());
 
+  const isSoc = themeName === 'soc';
+
   useEffect(() => {
-    if (theme === 'soc') {
+    if (isSoc) {
       const scanInterval = setInterval(() => setScanLines(prev => (prev + 1) % 100), 50);
       const timeInterval = setInterval(() => setTime(new Date()), 1000);
       return () => {
@@ -16,40 +23,24 @@ export default function CyberVantageThemeable() {
         clearInterval(timeInterval);
       };
     }
-  }, [theme]);
+  }, [isSoc]);
 
-  const themes = {
-    soc: {
-      bg: '#0a0e27',
-      bgSecondary: 'rgba(0, 0, 0, 0.5)',
-      bgTertiary: 'rgba(0, 0, 0, 0.3)',
-      text: '#00ff41',
-      textSecondary: '#00ff4180',
-      textTertiary: '#00ff4160',
-      border: '#00d9ff40',
-      primary: '#00d9ff',
-      success: '#00ff41',
-      warning: '#ffb800',
-      danger: '#ff0055',
-      fontFamily: '"JetBrains Mono", monospace'
-    },
-    modern: {
-      bg: '#ffffff',
-      bgSecondary: '#f8fafc',
-      bgTertiary: '#f1f5f9',
-      text: '#0f172a',
-      textSecondary: '#64748b',
-      textTertiary: '#94a3b8',
-      border: '#e2e8f0',
-      primary: '#3b82f6',
-      success: '#10b981',
-      warning: '#f59e0b',
-      danger: '#ef4444',
-      fontFamily: '"Inter", sans-serif'
-    }
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
-  const t = themes[theme];
+  const sidebarPhases = [
+    { id: 'learn', label: isSoc ? 'LEARN' : 'Learn', icon: isSoc ? Database : BookOpen },
+    { id: 'simulate', label: isSoc ? 'SIMULATE' : 'Simulate', icon: Terminal },
+    { id: 'analyze', label: isSoc ? 'ANALYZE' : 'Analyze', icon: Activity },
+    { id: 'demonstrate', label: isSoc ? 'DEMONSTRATE' : 'Demonstrate', icon: Zap }
+  ];
+
+  const sidebarNav = [
+    { id: 'check-threats', label: isSoc ? 'CHECK_THREATS' : 'Check Threats', icon: Shield, path: '/check-threats' },
+    { id: 'about', label: isSoc ? 'ABOUT' : 'About', icon: Info, path: '/about' }
+  ];
 
   return (
     <div style={{
@@ -66,12 +57,12 @@ export default function CyberVantageThemeable() {
         .terminal-text { text-shadow: 0 0 10px currentColor; animation: flicker 3s infinite; }
         @keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.95; } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .card { transition: all 0.2s ease; }
         .card:hover { transform: translateY(-2px); }
       `}</style>
 
-      {/* SOC Effects */}
-      {theme === 'soc' && (
+      {isSoc && (
         <>
           <div style={{
             position: 'absolute',
@@ -85,10 +76,7 @@ export default function CyberVantageThemeable() {
           }} />
           <div style={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            top: 0, left: 0, right: 0, bottom: 0,
             backgroundImage: 'linear-gradient(rgba(0, 217, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 217, 255, 0.03) 1px, transparent 1px)',
             backgroundSize: '50px 50px',
             pointerEvents: 'none',
@@ -100,9 +88,9 @@ export default function CyberVantageThemeable() {
       {/* Header */}
       <header style={{
         padding: '1rem 2rem',
-        borderBottom: theme === 'soc' ? `2px solid ${t.border}` : `1px solid ${t.border}`,
-        background: theme === 'soc' ? t.bgSecondary : t.bg,
-        backdropFilter: theme === 'soc' ? 'blur(10px)' : 'none',
+        borderBottom: isSoc ? `2px solid ${t.border}` : `1px solid ${t.border}`,
+        background: isSoc ? t.bgSecondary : t.bg,
+        backdropFilter: isSoc ? 'blur(10px)' : 'none',
         position: 'relative',
         zIndex: 10
       }}>
@@ -110,19 +98,17 @@ export default function CyberVantageThemeable() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <Shield size={32} color={t.primary} strokeWidth={2} />
             <div>
-              <div className={theme === 'soc' ? 'terminal-text' : ''} style={{ 
-                fontSize: '1.5rem', 
-                fontWeight: 800, 
-                color: t.primary, 
-                letterSpacing: theme === 'soc' ? '0.1em' : '-0.02em' 
+              <div className={isSoc ? 'terminal-text' : ''} style={{
+                fontSize: '1.5rem', fontWeight: 800, color: t.primary,
+                letterSpacing: isSoc ? '0.1em' : '-0.02em'
               }}>
-                {theme === 'soc' ? 'CYBERVANTAGE_SOC' : 'CyberVantage'}
+                {isSoc ? 'CYBERVANTAGE_SOC' : 'CyberVantage'}
               </div>
               <div style={{ fontSize: '0.75rem', color: t.textSecondary }}>
-                {theme === 'soc' ? 'SECURITY OPERATIONS v2.4.1' : 'Security Training Platform'}
+                {isSoc ? 'SECURITY OPERATIONS v2.4.1' : 'Security Training Platform'}
               </div>
             </div>
-            {theme === 'soc' && (
+            {isSoc && (
               <div style={{
                 padding: '0.5rem 1rem',
                 background: 'rgba(0, 217, 255, 0.1)',
@@ -138,39 +124,62 @@ export default function CyberVantageThemeable() {
 
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <button
-              onClick={() => setTheme(theme === 'soc' ? 'modern' : 'soc')}
+              onClick={toggleTheme}
               style={{
                 padding: '0.625rem 1.25rem',
-                borderRadius: theme === 'soc' ? '0' : '8px',
-                border: theme === 'soc' ? `1px solid ${t.primary}` : `1px solid ${t.border}`,
-                background: theme === 'soc' ? 'rgba(0, 217, 255, 0.1)' : t.bgSecondary,
-                color: theme === 'soc' ? t.primary : t.text,
+                borderRadius: isSoc ? '0' : '8px',
+                border: isSoc ? `1px solid ${t.primary}` : `1px solid ${t.border}`,
+                background: isSoc ? 'rgba(0, 217, 255, 0.1)' : t.bgSecondary,
+                color: isSoc ? t.primary : t.text,
                 fontSize: '0.8rem',
-                fontWeight: theme === 'soc' ? 700 : 600,
-                letterSpacing: theme === 'soc' ? '0.05em' : 'normal',
+                fontWeight: isSoc ? 700 : 600,
+                letterSpacing: isSoc ? '0.05em' : 'normal',
                 cursor: 'pointer',
                 fontFamily: t.fontFamily,
-                boxShadow: theme === 'soc' ? '0 0 20px rgba(0, 217, 255, 0.3)' : 'none',
+                boxShadow: isSoc ? '0 0 20px rgba(0, 217, 255, 0.3)' : 'none',
                 transition: 'all 0.3s ease'
               }}
             >
-              {theme === 'soc' ? '[SWITCH_TO_MODERN]' : '🖥️ SOC Mode'}
+              {isSoc ? '[SWITCH_TO_MODERN]' : '🖥️ SOC Mode'}
             </button>
 
             <div style={{
               padding: '0.75rem 1.25rem',
-              borderRadius: theme === 'soc' ? '0' : '8px',
-              background: theme === 'soc' ? 'rgba(0, 255, 65, 0.05)' : `${t.warning}20`,
-              border: theme === 'soc' ? `1px solid ${t.success}` : `1px solid ${t.warning}40`,
-              boxShadow: theme === 'soc' ? `0 0 20px ${t.success}50` : 'none'
+              borderRadius: isSoc ? '0' : '8px',
+              background: isSoc ? 'rgba(0, 255, 65, 0.05)' : `${t.warning}20`,
+              border: isSoc ? `1px solid ${t.success}` : `1px solid ${t.warning}40`,
+              boxShadow: isSoc ? `0 0 20px ${t.success}50` : 'none'
             }}>
               <div style={{ fontSize: '0.7rem', color: t.textSecondary }}>
-                {theme === 'soc' ? 'THREAT_POINTS' : 'Total Points'}
+                {isSoc ? 'THREAT_POINTS' : 'Total Points'}
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: theme === 'soc' ? t.success : t.warning }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: isSoc ? t.success : t.warning }}>
                 2,840
               </div>
             </div>
+
+            <button
+              onClick={handleLogout}
+              style={{
+                padding: '0.625rem 1.25rem',
+                borderRadius: isSoc ? '0' : '8px',
+                border: isSoc ? `1px solid ${t.danger}` : `1px solid ${t.border}`,
+                background: isSoc ? 'rgba(255, 0, 85, 0.1)' : t.bgSecondary,
+                color: isSoc ? t.danger : t.text,
+                fontSize: '0.8rem',
+                fontWeight: isSoc ? 700 : 600,
+                letterSpacing: isSoc ? '0.05em' : 'normal',
+                cursor: 'pointer',
+                fontFamily: t.fontFamily,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              <LogOut size={16} />
+              {isSoc ? '[LOGOUT]' : 'Logout'}
+            </button>
           </div>
         </div>
       </header>
@@ -179,29 +188,21 @@ export default function CyberVantageThemeable() {
         {/* Sidebar */}
         <aside style={{
           width: '280px',
-          borderRight: theme === 'soc' ? `2px solid ${t.border}` : `1px solid ${t.border}`,
-          background: theme === 'soc' ? t.bgTertiary : t.bgSecondary,
+          borderRight: isSoc ? `2px solid ${t.border}` : `1px solid ${t.border}`,
+          background: isSoc ? t.bgTertiary : t.bgSecondary,
           padding: '2rem 0',
           overflowY: 'auto'
         }}>
           <div style={{ padding: '0 1.5rem', marginBottom: '2rem' }}>
-            <div style={{ 
-              fontSize: '0.7rem', 
-              color: t.textTertiary, 
-              letterSpacing: theme === 'soc' ? '0.1em' : '0.05em', 
-              marginBottom: '1rem',
-              fontWeight: 700,
-              textTransform: 'uppercase'
+            <div style={{
+              fontSize: '0.7rem', color: t.textTertiary,
+              letterSpacing: isSoc ? '0.1em' : '0.05em',
+              marginBottom: '1rem', fontWeight: 700, textTransform: 'uppercase'
             }}>
-              {theme === 'soc' ? 'SYSTEM_MODULES' : 'Learning Paths'}
+              {isSoc ? 'SYSTEM_MODULES' : 'Learning Paths'}
             </div>
-            
-            {[
-              { id: 'learn', label: theme === 'soc' ? 'LEARN' : 'Learn', icon: theme === 'soc' ? Database : BookOpen },
-              { id: 'simulate', label: theme === 'soc' ? 'SIMULATE' : 'Simulate', icon: Terminal },
-              { id: 'analyze', label: theme === 'soc' ? 'ANALYZE' : 'Analyze', icon: Activity },
-              { id: 'demonstrate', label: theme === 'soc' ? 'DEMONSTRATE' : 'Demonstrate', icon: Zap }
-            ].map((phase) => {
+
+            {sidebarPhases.map((phase) => {
               const Icon = phase.icon;
               const isActive = activePhase === phase.id;
               return (
@@ -209,32 +210,60 @@ export default function CyberVantageThemeable() {
                   key={phase.id}
                   onClick={() => setActivePhase(phase.id)}
                   style={{
-                    padding: theme === 'soc' ? '1rem' : '0.75rem 1rem',
+                    padding: isSoc ? '1rem' : '0.75rem 1rem',
                     marginBottom: '0.5rem',
-                    background: isActive ? (theme === 'soc' ? 'rgba(0, 217, 255, 0.1)' : t.primary) : 'transparent',
-                    border: isActive ? (theme === 'soc' ? `1px solid ${t.primary}` : 'none') : (theme === 'soc' ? '1px solid transparent' : 'none'),
-                    borderRadius: theme === 'soc' ? '0' : '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    color: isActive ? (theme === 'soc' ? t.primary : '#fff') : t.textSecondary,
-                    fontWeight: theme === 'soc' ? 700 : (isActive ? 600 : 500),
-                    fontSize: theme === 'soc' ? '0.9rem' : '0.875rem',
-                    letterSpacing: theme === 'soc' ? '0.05em' : 'normal',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+                    background: isActive ? (isSoc ? 'rgba(0, 217, 255, 0.1)' : t.primary) : 'transparent',
+                    border: isActive ? (isSoc ? `1px solid ${t.primary}` : 'none') : (isSoc ? '1px solid transparent' : 'none'),
+                    borderRadius: isSoc ? '0' : '8px',
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    color: isActive ? (isSoc ? t.primary : '#fff') : t.textSecondary,
+                    fontWeight: isSoc ? 700 : (isActive ? 600 : 500),
+                    fontSize: isSoc ? '0.9rem' : '0.875rem',
+                    letterSpacing: isSoc ? '0.05em' : 'normal',
+                    cursor: 'pointer', transition: 'all 0.2s ease'
                   }}
                 >
                   <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                   <span style={{ flex: 1 }}>{phase.label}</span>
-                  {isActive && theme === 'soc' && (
-                    <div style={{
-                      width: '8px',
-                      height: '8px',
-                      background: t.primary,
-                      animation: 'pulse 2s infinite'
-                    }} />
+                  {isActive && isSoc && (
+                    <div style={{ width: '8px', height: '8px', background: t.primary, animation: 'pulse 2s infinite' }} />
                   )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ padding: '0 1.5rem' }}>
+            <div style={{
+              fontSize: '0.7rem', color: t.textTertiary,
+              letterSpacing: isSoc ? '0.1em' : '0.05em',
+              marginBottom: '1rem', fontWeight: 700, textTransform: 'uppercase'
+            }}>
+              {isSoc ? 'NAVIGATION' : 'Navigation'}
+            </div>
+
+            {sidebarNav.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => navigate(item.path)}
+                  style={{
+                    padding: isSoc ? '1rem' : '0.75rem 1rem',
+                    marginBottom: '0.5rem',
+                    background: 'transparent',
+                    border: isSoc ? '1px solid transparent' : 'none',
+                    borderRadius: isSoc ? '0' : '8px',
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    color: t.textSecondary,
+                    fontWeight: isSoc ? 700 : 500,
+                    fontSize: isSoc ? '0.9rem' : '0.875rem',
+                    letterSpacing: isSoc ? '0.05em' : 'normal',
+                    cursor: 'pointer', transition: 'all 0.2s ease'
+                  }}
+                >
+                  <Icon size={20} strokeWidth={2} />
+                  <span style={{ flex: 1 }}>{item.label}</span>
                 </div>
               );
             })}
@@ -246,28 +275,24 @@ export default function CyberVantageThemeable() {
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
             {[
-              { label: theme === 'soc' ? 'DETECTION_RATE' : 'Detection Rate', value: '85.5%', color: t.success },
-              { label: theme === 'soc' ? 'ACTIVE_STREAK' : 'Current Streak', value: '12 DAYS', color: t.warning },
-              { label: theme === 'soc' ? 'THREATS_FOUND' : 'Threats Found', value: '47', color: t.primary },
-              { label: theme === 'soc' ? 'AVG_RESPONSE' : 'Avg Response', value: '2.3s', color: '#8b5cf6' }
+              { label: isSoc ? 'DETECTION_RATE' : 'Detection Rate', value: '85.5%', color: t.success },
+              { label: isSoc ? 'ACTIVE_STREAK' : 'Current Streak', value: '12 DAYS', color: t.warning },
+              { label: isSoc ? 'THREATS_FOUND' : 'Threats Found', value: '47', color: t.primary },
+              { label: isSoc ? 'AVG_RESPONSE' : 'Avg Response', value: '2.3s', color: '#8b5cf6' }
             ].map((stat, i) => (
-              <div key={i} className="card" style={{
+              <div key={`stat-${i}`} className="card" style={{
                 padding: '1.5rem',
-                background: theme === 'soc' ? t.bgTertiary : t.bgSecondary,
-                border: theme === 'soc' ? `1px solid ${stat.color}40` : `1px solid ${t.border}`,
-                borderRadius: theme === 'soc' ? '0' : '12px'
+                background: isSoc ? t.bgTertiary : t.bgSecondary,
+                border: isSoc ? `1px solid ${stat.color}40` : `1px solid ${t.border}`,
+                borderRadius: isSoc ? '0' : '12px',
+                position: 'relative', overflow: 'hidden'
               }}>
-                {theme === 'soc' && (
+                {isSoc && (
                   <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '2px',
-                    background: stat.color
+                    position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: stat.color
                   }} />
                 )}
-                <div style={{ fontSize: theme === 'soc' ? '0.65rem' : '0.875rem', color: t.textSecondary, marginBottom: '0.75rem', fontWeight: 600 }}>
+                <div style={{ fontSize: isSoc ? '0.65rem' : '0.875rem', color: t.textSecondary, marginBottom: '0.75rem', fontWeight: 600 }}>
                   {stat.label}
                 </div>
                 <div style={{ fontSize: '2rem', fontWeight: 800, color: stat.color }}>
@@ -277,30 +302,698 @@ export default function CyberVantageThemeable() {
             ))}
           </div>
 
-          {/* Content */}
+          {/* Phase Content */}
+          {activePhase === 'learn' && <LearnPhase t={t} isSoc={isSoc} />}
+          {activePhase === 'simulate' && <SimulatePhase t={t} isSoc={isSoc} />}
+          {activePhase === 'analyze' && <AnalyzePhase t={t} isSoc={isSoc} />}
+          {activePhase === 'demonstrate' && <DemonstratePhase t={t} isSoc={isSoc} />}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function LearnPhase({ t, isSoc }) {
+  const modules = [
+    { id: 'MOD_001', name: 'PHISHING_FUNDAMENTALS', displayName: 'Phishing Fundamentals', progress: 100, status: 'COMPLETED', displayStatus: 'Completed', threat: 'LOW' },
+    { id: 'MOD_002', name: 'SOCIAL_ENGINEERING', displayName: 'Social Engineering', progress: 70, status: 'IN_PROGRESS', displayStatus: 'In Progress', threat: 'MEDIUM' },
+    { id: 'MOD_003', name: 'EMAIL_SECURITY_PROTOCOL', displayName: 'Email Security Protocol', progress: 45, status: 'IN_PROGRESS', displayStatus: 'In Progress', threat: 'MEDIUM' },
+    { id: 'MOD_004', name: 'COMPLIANCE_STANDARDS', displayName: 'Compliance Standards', progress: 0, status: 'LOCKED', displayStatus: 'Locked', threat: 'LOW' }
+  ];
+
+  const getStatusColor = (status) => {
+    if (status === 'COMPLETED') return t.success;
+    if (status === 'IN_PROGRESS') return t.warning;
+    return t.textTertiary;
+  };
+
+  return (
+    <div>
+      <div style={{
+        fontSize: '0.8rem', color: t.primary,
+        letterSpacing: isSoc ? '0.1em' : '0.02em',
+        marginBottom: '1.5rem',
+        borderBottom: `1px solid ${t.border}`,
+        paddingBottom: '0.5rem'
+      }}>
+        {isSoc ? 'TRAINING_MODULES // SECURITY_EDUCATION_SYSTEM' : 'Training Modules — Security Education System'}
+      </div>
+
+      <div style={{ display: 'grid', gap: '1rem' }}>
+        {modules.map((module, index) => (
+          <div key={module.id} style={{
+            padding: '1.5rem',
+            background: isSoc ? t.bgTertiary : t.bgSecondary,
+            border: `1px solid ${t.border}`,
+            borderRadius: isSoc ? '0' : '12px',
+            display: 'flex', alignItems: 'center', gap: '1.5rem',
+            opacity: module.status === 'LOCKED' ? 0.4 : 1,
+            cursor: module.status !== 'LOCKED' ? 'pointer' : 'not-allowed',
+            transition: 'all 0.2s ease',
+            animation: `slideUp 0.5s ease-out ${index * 0.1}s backwards`
+          }}
+          onMouseEnter={(e) => {
+            if (module.status !== 'LOCKED') {
+              e.currentTarget.style.borderColor = t.primary;
+              e.currentTarget.style.transform = 'translateX(10px)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = t.border;
+            e.currentTarget.style.transform = 'translateX(0)';
+          }}>
+            <div style={{
+              width: '80px', padding: '1rem',
+              background: isSoc ? 'rgba(0, 217, 255, 0.1)' : `${t.primary}10`,
+              border: `1px solid ${t.primary}`,
+              borderRadius: isSoc ? '0' : '8px',
+              textAlign: 'center', fontSize: '0.7rem',
+              color: t.primary, letterSpacing: '0.05em'
+            }}>
+              {module.id}
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: t.text, letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+                  {isSoc ? module.name : module.displayName}
+                </div>
+                <div style={{
+                  padding: '0.25rem 0.75rem',
+                  background: `${getStatusColor(module.status)}15`,
+                  border: `1px solid ${getStatusColor(module.status)}`,
+                  borderRadius: isSoc ? '0' : '12px',
+                  color: getStatusColor(module.status),
+                  fontSize: '0.7rem', letterSpacing: isSoc ? '0.05em' : 'normal'
+                }}>
+                  {isSoc ? `[${module.status}]` : module.displayStatus}
+                </div>
+              </div>
+
+              <div style={{
+                position: 'relative', height: '6px',
+                background: `${t.primary}30`,
+                borderRadius: isSoc ? '0' : '3px',
+                marginBottom: '0.5rem'
+              }}>
+                <div style={{
+                  position: 'absolute', left: 0, top: 0, height: '100%',
+                  width: `${module.progress}%`,
+                  background: t.primary,
+                  borderRadius: isSoc ? '0' : '3px',
+                  transition: 'width 1s ease-out'
+                }} />
+              </div>
+
+              <div style={{ fontSize: '0.75rem', color: t.textSecondary }}>
+                {isSoc
+                  ? `COMPLETION: ${module.progress}% // THREAT_LEVEL: ${module.threat}`
+                  : `${module.progress}% complete · Threat Level: ${module.threat}`}
+              </div>
+            </div>
+
+            <div style={{
+              fontSize: '1.5rem',
+              color: getStatusColor(module.status)
+            }}>
+              {module.status === 'COMPLETED' ? '✓' : module.status === 'IN_PROGRESS' ? '◐' : '⊘'}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SimulatePhase({ t, isSoc }) {
+  const [selectedEmail, setSelectedEmail] = useState(null);
+
+  const threats = [
+    { id: 'THREAT_001', from: 'security@paypa1-verify.com', subject: isSoc ? 'URGENT_ACCOUNT_VERIFICATION' : 'Urgent Account Verification', risk: 'CRITICAL', indicators: 3 },
+    { id: 'THREAT_002', from: 'hr@company.com', subject: isSoc ? 'BENEFITS_UPDATE_2024' : 'Benefits Update 2024', risk: 'SAFE', indicators: 0 },
+    { id: 'THREAT_003', from: 'no-reply@amaz0n-security.net', subject: isSoc ? 'ORDER_CANCELLED_#8472819' : 'Order Cancelled #8472819', risk: 'HIGH', indicators: 4 },
+    { id: 'THREAT_004', from: 'notifications@linkedin.com', subject: isSoc ? 'NEW_CONNECTION_REQUESTS' : 'New Connection Requests', risk: 'SAFE', indicators: 0 }
+  ];
+
+  const getRiskColor = (risk) => {
+    if (risk === 'CRITICAL') return t.danger;
+    if (risk === 'HIGH') return t.warning;
+    return t.success;
+  };
+
+  return (
+    <div>
+      <div style={{
+        fontSize: '0.8rem', color: t.primary,
+        letterSpacing: isSoc ? '0.1em' : '0.02em',
+        marginBottom: '1.5rem',
+        borderBottom: `1px solid ${t.border}`,
+        paddingBottom: '0.5rem'
+      }}>
+        {isSoc ? 'THREAT_SIMULATION // INCIDENT_RESPONSE_TRAINING' : 'Threat Simulation — Incident Response Training'}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        {/* Threat Queue */}
+        <div>
+          <div style={{
+            padding: '1rem',
+            background: isSoc ? 'rgba(0, 217, 255, 0.1)' : `${t.primary}10`,
+            border: `1px solid ${t.primary}`,
+            borderRadius: isSoc ? '0' : '8px',
+            marginBottom: '1rem',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+          }}>
+            <span style={{ fontSize: '0.8rem', color: t.primary, letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+              {isSoc ? 'INCIDENT_QUEUE // SESSION_14' : 'Incident Queue · Session 14'}
+            </span>
+            <span style={{ fontSize: '0.8rem', color: t.warning }}>
+              {isSoc ? `${threats.length} THREATS_PENDING` : `${threats.length} threats pending`}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {threats.map((threat, index) => {
+              const isSelected = selectedEmail?.id === threat.id;
+              return (
+                <div
+                  key={threat.id}
+                  onClick={() => setSelectedEmail(threat)}
+                  style={{
+                    padding: '1rem',
+                    background: isSelected ? (isSoc ? 'rgba(0, 217, 255, 0.1)' : `${t.primary}10`) : (isSoc ? t.bgTertiary : t.bgSecondary),
+                    border: isSelected ? `1px solid ${t.primary}` : `1px solid ${t.border}`,
+                    borderRadius: isSoc ? '0' : '8px',
+                    cursor: 'pointer', transition: 'all 0.2s ease',
+                    animation: `slideUp 0.5s ease-out ${index * 0.1}s backwards`
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.75rem', color: t.textSecondary, letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+                      {threat.id}
+                    </span>
+                    <span style={{
+                      padding: '0.25rem 0.75rem',
+                      fontSize: '0.65rem', fontWeight: 700,
+                      borderRadius: isSoc ? '0' : '12px',
+                      background: `${getRiskColor(threat.risk)}15`,
+                      border: `1px solid ${getRiskColor(threat.risk)}`,
+                      color: getRiskColor(threat.risk)
+                    }}>
+                      {isSoc ? `RISK: ${threat.risk}` : threat.risk}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: t.textSecondary, marginBottom: '0.25rem' }}>
+                    {isSoc ? 'FROM: ' : 'From: '}{threat.from}
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: t.text, fontWeight: 700 }}>
+                    {isSoc ? 'SUBJECT: ' : ''}{threat.subject}
+                  </div>
+                  {threat.indicators > 0 && (
+                    <div style={{ fontSize: '0.7rem', color: t.danger, marginTop: '0.5rem' }}>
+                      {isSoc
+                        ? `⚠ ${threat.indicators} THREAT_INDICATORS_DETECTED`
+                        : `⚠ ${threat.indicators} threat indicators detected`}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Analysis Terminal */}
+        <div>
+          {selectedEmail ? (
+            <div style={{
+              padding: '1.5rem',
+              background: isSoc ? 'rgba(0, 0, 0, 0.5)' : t.bgSecondary,
+              border: `1px solid ${t.primary}`,
+              borderRadius: isSoc ? '0' : '12px',
+              height: 'fit-content'
+            }}>
+              <div style={{ fontSize: '0.8rem', color: t.primary, letterSpacing: isSoc ? '0.1em' : '0.02em', marginBottom: '1.5rem' }}>
+                {isSoc ? 'THREAT_ANALYSIS_TERMINAL' : 'Threat Analysis'}
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.75rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+                  {isSoc ? 'CLASSIFICATION_REQUIRED' : 'Classification Required'}
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button style={{
+                    flex: 1, padding: '1rem',
+                    background: `${t.success}10`,
+                    border: `1px solid ${t.success}`,
+                    borderRadius: isSoc ? '0' : '8px',
+                    color: t.success, fontSize: '0.85rem', fontWeight: 700,
+                    cursor: 'pointer', letterSpacing: isSoc ? '0.05em' : 'normal',
+                    fontFamily: t.fontFamily, transition: 'all 0.2s ease'
+                  }}>
+                    {isSoc ? '[LEGITIMATE]' : 'Legitimate'}
+                  </button>
+                  <button style={{
+                    flex: 1, padding: '1rem',
+                    background: `${t.danger}10`,
+                    border: `1px solid ${t.danger}`,
+                    borderRadius: isSoc ? '0' : '8px',
+                    color: t.danger, fontSize: '0.85rem', fontWeight: 700,
+                    cursor: 'pointer', letterSpacing: isSoc ? '0.05em' : 'normal',
+                    fontFamily: t.fontFamily, transition: 'all 0.2s ease'
+                  }}>
+                    {isSoc ? '[PHISHING]' : 'Phishing'}
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.75rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+                  {isSoc ? 'INDICATORS_DETECTED' : 'Indicators Detected'}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: t.danger, lineHeight: 2 }}>
+                  {(isSoc
+                    ? ['> SUSPICIOUS_DOMAIN_DETECTED', '> URGENCY_LANGUAGE_PRESENT', '> TYPOSQUATTING_IDENTIFIED']
+                    : ['• Suspicious domain detected', '• Urgency language present', '• Typosquatting identified']
+                  ).map((line, i) => (
+                    <div key={`indicator-${i}`}>{line}</div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.75rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+                  {isSoc ? 'ANALYSIS_REASONING' : 'Analysis Reasoning'}
+                </div>
+                <textarea
+                  placeholder={isSoc ? '// Enter detailed threat analysis...' : 'Enter your detailed threat analysis...'}
+                  style={{
+                    width: '100%', minHeight: '120px', padding: '1rem',
+                    background: isSoc ? 'rgba(0, 0, 0, 0.5)' : t.bgTertiary,
+                    border: `1px solid ${t.border}`,
+                    borderRadius: isSoc ? '0' : '8px',
+                    color: t.text, fontSize: '0.8rem',
+                    fontFamily: t.fontFamily, resize: 'vertical',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <button style={{
+                width: '100%', padding: '1rem',
+                background: `${t.primary}15`,
+                border: `1px solid ${t.primary}`,
+                borderRadius: isSoc ? '0' : '8px',
+                color: t.primary, fontSize: '0.9rem', fontWeight: 700,
+                cursor: 'pointer', letterSpacing: isSoc ? '0.05em' : 'normal',
+                fontFamily: t.fontFamily, transition: 'all 0.2s ease'
+              }}>
+                {isSoc ? '[SUBMIT_ANALYSIS]' : 'Submit Analysis'}
+              </button>
+            </div>
+          ) : (
+            <div style={{
+              padding: '3rem 2rem',
+              background: isSoc ? t.bgTertiary : t.bgSecondary,
+              border: `2px dashed ${t.border}`,
+              borderRadius: isSoc ? '0' : '12px',
+              textAlign: 'center', color: t.textTertiary
+            }}>
+              <Terminal size={48} style={{ margin: '0 auto 1rem' }} />
+              <div style={{ fontSize: '0.9rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+                {isSoc ? 'SELECT_THREAT_TO_BEGIN_ANALYSIS' : 'Select a threat to begin analysis'}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AnalyzePhase({ t, isSoc }) {
+  const sessions = [
+    { id: 14, date: isSoc ? 'TODAY' : 'Today', accuracy: 88, threats: 15, time: '2.1s' },
+    { id: 13, date: isSoc ? 'YESTERDAY' : 'Yesterday', accuracy: 85, threats: 20, time: '2.3s' },
+    { id: 12, date: isSoc ? '2_DAYS_AGO' : '2 days ago', accuracy: 92, threats: 18, time: '1.9s' },
+    { id: 11, date: isSoc ? '3_DAYS_AGO' : '3 days ago', accuracy: 79, threats: 12, time: '2.8s' }
+  ];
+
+  const getAccuracyColor = (acc) => {
+    if (acc >= 90) return t.success;
+    if (acc >= 80) return t.primary;
+    return t.warning;
+  };
+
+  return (
+    <div>
+      <div style={{
+        fontSize: '0.8rem', color: t.primary,
+        letterSpacing: isSoc ? '0.1em' : '0.02em',
+        marginBottom: '1.5rem',
+        borderBottom: `1px solid ${t.border}`,
+        paddingBottom: '0.5rem'
+      }}>
+        {isSoc ? 'PERFORMANCE_ANALYTICS // THREAT_DETECTION_METRICS' : 'Performance Analytics — Threat Detection Metrics'}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+        {/* Chart */}
+        <div style={{
+          padding: '2rem',
+          background: isSoc ? t.bgTertiary : t.bgSecondary,
+          border: `1px solid ${t.border}`,
+          borderRadius: isSoc ? '0' : '12px'
+        }}>
+          <div style={{ fontSize: '0.8rem', color: t.primary, marginBottom: '2rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+            {isSoc ? 'ACCURACY_TREND_ANALYSIS' : 'Accuracy Trend Analysis'}
+          </div>
+
+          <svg width="100%" height="200" style={{ overflow: 'visible' }}>
+            {[0, 25, 50, 75, 100].map((y) => (
+              <g key={`grid-${y}`}>
+                <line x1="40" y1={180 - (y * 1.6)} x2="100%" y2={180 - (y * 1.6)} stroke={`${t.primary}20`} strokeWidth="1" />
+                <text x="0" y={180 - (y * 1.6) + 5} fill={t.textTertiary} fontSize="10" fontFamily={t.fontFamily}>
+                  {y}%
+                </text>
+              </g>
+            ))}
+            <polyline points="60,115 140,90 220,75 300,65 380,45" fill="none" stroke={t.primary} strokeWidth="2" />
+            {[[60, 115], [140, 90], [220, 75], [300, 65], [380, 45]].map((point, i) => (
+              <circle key={`point-${i}`} cx={point[0]} cy={point[1]} r="4" fill={t.primary} stroke={t.bg} strokeWidth="2" />
+            ))}
+          </svg>
+        </div>
+
+        {/* Stats sidebar */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {[
+            { label: isSoc ? 'BEST_ACCURACY' : 'Best Accuracy', value: '92%', sub: isSoc ? 'SESSION_12' : 'Session 12', color: t.success },
+            { label: isSoc ? 'IMPROVEMENT' : 'Improvement', value: '+27%', sub: isSoc ? 'SINCE_START' : 'Since start', color: t.primary },
+            { label: isSoc ? 'TOTAL_SESSIONS' : 'Total Sessions', value: '14', sub: isSoc ? 'LAST_30_DAYS' : 'Last 30 days', color: t.warning }
+          ].map((stat) => (
+            <div key={stat.label} style={{
+              padding: '1.5rem',
+              background: `${stat.color}08`,
+              border: `1px solid ${stat.color}`,
+              borderRadius: isSoc ? '0' : '12px',
+              textAlign: 'center',
+              boxShadow: isSoc ? `0 0 20px ${stat.color}30` : 'none'
+            }}>
+              <div style={{ fontSize: '0.65rem', color: t.textSecondary, marginBottom: '0.5rem' }}>{stat.label}</div>
+              <div style={{ fontSize: '2rem', fontWeight: 800, color: stat.color }}>{stat.value}</div>
+              <div style={{ fontSize: '0.7rem', color: t.textTertiary, marginTop: '0.25rem' }}>{stat.sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Session Log */}
+      <div style={{
+        padding: '2rem',
+        background: isSoc ? t.bgTertiary : t.bgSecondary,
+        border: `1px solid ${t.border}`,
+        borderRadius: isSoc ? '0' : '12px'
+      }}>
+        <div style={{ fontSize: '0.8rem', color: t.primary, marginBottom: '1.5rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+          {isSoc ? 'SESSION_HISTORY_LOG' : 'Session History'}
+        </div>
+
+        {sessions.map((session, index) => (
+          <div key={`session-${session.id}`} style={{
+            padding: '1rem',
+            background: `${t.primary}08`,
+            border: `1px solid ${t.border}`,
+            borderRadius: isSoc ? '0' : '8px',
+            marginBottom: '0.75rem',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            animation: `slideUp 0.5s ease-out ${index * 0.1}s backwards`
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+              <div style={{
+                width: '60px', padding: '0.75rem',
+                background: `${t.primary}15`,
+                border: `1px solid ${t.primary}`,
+                borderRadius: isSoc ? '0' : '8px',
+                textAlign: 'center', fontSize: '0.9rem', fontWeight: 700, color: t.primary
+              }}>
+                {session.id}
+              </div>
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: t.text, marginBottom: '0.25rem' }}>
+                  {isSoc ? `SESSION_${session.id}` : `Session ${session.id}`}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: t.textSecondary }}>
+                  {isSoc
+                    ? `${session.date} // ${session.threats}_THREATS_ANALYZED`
+                    : `${session.date} · ${session.threats} threats analyzed`}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '2rem', textAlign: 'right' }}>
+              <div>
+                <div style={{ fontSize: '0.65rem', color: t.textSecondary, marginBottom: '0.25rem' }}>
+                  {isSoc ? 'ACCURACY' : 'Accuracy'}
+                </div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: getAccuracyColor(session.accuracy) }}>
+                  {session.accuracy}%
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.65rem', color: t.textSecondary, marginBottom: '0.25rem' }}>
+                  {isSoc ? 'AVG_TIME' : 'Avg Time'}
+                </div>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: t.primary }}>
+                  {session.time}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DemonstratePhase({ t, isSoc }) {
+  const breakdownItems = [
+    { metric: isSoc ? 'URGENCY_TACTICS' : 'Urgency Tactics', score: 92 },
+    { metric: isSoc ? 'AUTHORITY_MIMICRY' : 'Authority Mimicry', score: 85 },
+    { metric: isSoc ? 'TECHNICAL_SOPHISTICATION' : 'Technical Sophistication', score: 81 },
+    { metric: isSoc ? 'SOCIAL_ENGINEERING' : 'Social Engineering', score: 90 }
+  ];
+
+  const tactics = ['URGENCY', 'AUTHORITY', 'FEAR', 'CURIOSITY', 'GREED'];
+  const tacticLabels = isSoc ? tactics : ['Urgency', 'Authority', 'Fear', 'Curiosity', 'Greed'];
+
+  return (
+    <div>
+      <div style={{
+        fontSize: '0.8rem', color: t.primary,
+        letterSpacing: isSoc ? '0.1em' : '0.02em',
+        marginBottom: '1.5rem',
+        borderBottom: `1px solid ${t.border}`,
+        paddingBottom: '0.5rem'
+      }}>
+        {isSoc ? 'RED_TEAM_EXERCISE // PHISHING_SIMULATION_CREATOR' : 'Red Team Exercise — Phishing Simulation Creator'}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        {/* Threat Composer */}
+        <div style={{
+          padding: '2rem',
+          background: isSoc ? t.bgTertiary : t.bgSecondary,
+          border: `1px solid ${t.border}`,
+          borderRadius: isSoc ? '0' : '12px'
+        }}>
+          <div style={{ fontSize: '0.8rem', color: t.primary, marginBottom: '1.5rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+            {isSoc ? 'THREAT_COMPOSER' : 'Threat Composer'}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div>
+              <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.5rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+                {isSoc ? 'TARGET_SCENARIO' : 'Target Scenario'}
+              </div>
+              <select style={{
+                width: '100%', padding: '0.75rem',
+                background: isSoc ? 'rgba(0, 0, 0, 0.5)' : t.bgTertiary,
+                border: `1px solid ${t.border}`,
+                borderRadius: isSoc ? '0' : '8px',
+                color: t.primary, fontSize: '0.8rem',
+                fontFamily: t.fontFamily
+              }}>
+                <option>{isSoc ? 'BANK_ACCOUNT_VERIFICATION' : 'Bank Account Verification'}</option>
+                <option>{isSoc ? 'PACKAGE_DELIVERY_ALERT' : 'Package Delivery Alert'}</option>
+                <option>{isSoc ? 'IT_SECURITY_WARNING' : 'IT Security Warning'}</option>
+                <option>{isSoc ? 'HR_BENEFITS_UPDATE' : 'HR Benefits Update'}</option>
+              </select>
+            </div>
+
+            <div>
+              <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.5rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+                {isSoc ? 'SENDER_ADDRESS' : 'Sender Address'}
+              </div>
+              <input
+                type="text"
+                placeholder="security@paypa1-verify.com"
+                style={{
+                  width: '100%', padding: '0.75rem',
+                  background: isSoc ? 'rgba(0, 0, 0, 0.5)' : t.bgTertiary,
+                  border: `1px solid ${t.border}`,
+                  borderRadius: isSoc ? '0' : '8px',
+                  color: t.text, fontSize: '0.8rem',
+                  fontFamily: t.fontFamily, boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div>
+              <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.5rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+                {isSoc ? 'SUBJECT_LINE' : 'Subject Line'}
+              </div>
+              <input
+                type="text"
+                placeholder={isSoc ? 'URGENT_VERIFICATION_REQUIRED' : 'Urgent Verification Required'}
+                style={{
+                  width: '100%', padding: '0.75rem',
+                  background: isSoc ? 'rgba(0, 0, 0, 0.5)' : t.bgTertiary,
+                  border: `1px solid ${t.border}`,
+                  borderRadius: isSoc ? '0' : '8px',
+                  color: t.text, fontSize: '0.8rem',
+                  fontFamily: t.fontFamily, boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div>
+              <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.5rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+                {isSoc ? 'MESSAGE_PAYLOAD' : 'Email Body'}
+              </div>
+              <textarea
+                placeholder={isSoc ? '// Construct phishing email content...' : 'Construct your phishing email content...'}
+                style={{
+                  width: '100%', minHeight: '150px', padding: '1rem',
+                  background: isSoc ? 'rgba(0, 0, 0, 0.5)' : t.bgTertiary,
+                  border: `1px solid ${t.border}`,
+                  borderRadius: isSoc ? '0' : '8px',
+                  color: t.text, fontSize: '0.8rem',
+                  fontFamily: t.fontFamily, resize: 'vertical',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div>
+              <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.75rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+                {isSoc ? 'SOCIAL_ENGINEERING_TACTICS' : 'Social Engineering Tactics'}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                {tacticLabels.map((tactic) => (
+                  <button key={tactic} style={{
+                    padding: '0.5rem 1rem',
+                    background: `${t.warning}15`,
+                    border: `1px solid ${t.warning}`,
+                    borderRadius: isSoc ? '0' : '8px',
+                    color: t.warning, fontSize: '0.7rem',
+                    cursor: 'pointer', letterSpacing: isSoc ? '0.05em' : 'normal',
+                    fontFamily: t.fontFamily, transition: 'all 0.2s ease'
+                  }}>
+                    {isSoc ? `[${tactic}]` : tactic}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button style={{
+              width: '100%', padding: '1rem',
+              background: `${t.warning}15`,
+              border: `1px solid ${t.warning}`,
+              borderRadius: isSoc ? '0' : '8px',
+              color: t.warning, fontSize: '0.9rem', fontWeight: 700,
+              cursor: 'pointer', letterSpacing: isSoc ? '0.05em' : 'normal',
+              fontFamily: t.fontFamily, transition: 'all 0.2s ease'
+            }}>
+              {isSoc ? '[EXECUTE_AI_EVALUATION]' : 'Run AI Evaluation'}
+            </button>
+          </div>
+        </div>
+
+        {/* Scoring Rubric / AI Results */}
+        <div style={{
+          padding: '2rem',
+          background: isSoc ? t.bgTertiary : t.bgSecondary,
+          border: `1px solid ${t.border}`,
+          borderRadius: isSoc ? '0' : '12px'
+        }}>
+          <div style={{ fontSize: '0.8rem', color: t.primary, marginBottom: '1.5rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+            {isSoc ? 'AI_EVALUATION_RESULTS' : 'AI Evaluation Results'}
+          </div>
+
           <div style={{
             padding: '2rem',
-            background: theme === 'soc' ? t.bgTertiary : t.bgSecondary,
-            border: theme === 'soc' ? `1px solid ${t.border}` : `1px solid ${t.border}`,
-            borderRadius: theme === 'soc' ? '0' : '12px'
+            background: `${t.warning}10`,
+            border: `2px solid ${t.warning}`,
+            borderRadius: isSoc ? '0' : '12px',
+            marginBottom: '2rem', textAlign: 'center'
           }}>
-            <h2 style={{
-              margin: '0 0 1rem 0',
-              fontSize: theme === 'soc' ? '1rem' : '1.5rem',
-              fontWeight: theme === 'soc' ? 700 : 700,
-              color: theme === 'soc' ? t.primary : t.text,
-              letterSpacing: theme === 'soc' ? '0.05em' : 'normal'
-            }}>
-              {activePhase === 'learn' && (theme === 'soc' ? 'TRAINING_MODULES' : 'Learning Modules')}
-              {activePhase === 'simulate' && (theme === 'soc' ? 'THREAT_SIMULATION' : 'Threat Simulation')}
-              {activePhase === 'analyze' && (theme === 'soc' ? 'PERFORMANCE_ANALYTICS' : 'Performance Analytics')}
-              {activePhase === 'demonstrate' && (theme === 'soc' ? 'RED_TEAM_EXERCISE' : 'Demonstrate Skills')}
-            </h2>
-            <p style={{ margin: 0, color: t.textSecondary, fontSize: '0.95rem' }}>
-              Content for {activePhase} phase...
-            </p>
+            <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.5rem' }}>
+              {isSoc ? 'THREAT_SCORE' : 'Threat Score'}
+            </div>
+            <div style={{ fontSize: '4rem', fontWeight: 800, color: t.warning, lineHeight: 1 }}>87</div>
+            <div style={{ fontSize: '0.8rem', color: t.textSecondary, marginTop: '0.5rem' }}>/100</div>
           </div>
-        </main>
+
+          <div style={{ fontSize: '0.75rem', marginBottom: '1rem' }}>
+            <div style={{ fontSize: '0.8rem', color: t.primary, marginBottom: '1rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
+              {isSoc ? 'BREAKDOWN_ANALYSIS' : 'Breakdown Analysis'}
+            </div>
+
+            {breakdownItems.map((item) => (
+              <div key={item.metric} style={{ marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ color: t.textSecondary, fontSize: '0.75rem' }}>{item.metric}</span>
+                  <span style={{ color: t.warning, fontWeight: 700 }}>{item.score}/100</span>
+                </div>
+                <div style={{ height: '4px', background: `${t.warning}30`, borderRadius: isSoc ? '0' : '2px' }}>
+                  <div style={{
+                    width: `${item.score}%`, height: '100%',
+                    background: t.warning,
+                    borderRadius: isSoc ? '0' : '2px',
+                    transition: 'width 1s ease-out'
+                  }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            padding: '1rem',
+            background: `${t.primary}10`,
+            border: `1px solid ${t.border}`,
+            borderRadius: isSoc ? '0' : '8px',
+            fontSize: '0.75rem', color: t.primary, lineHeight: 1.8
+          }}>
+            <div style={{ marginBottom: '0.5rem', fontWeight: 700 }}>
+              {isSoc ? 'RECOMMENDATIONS:' : 'Recommendations:'}
+            </div>
+            <div style={{ color: t.textSecondary }}>
+              {isSoc ? (
+                <>
+                  {'> INCREASE_TECHNICAL_DETAILS'}<br />
+                  {'> ADD_DEADLINE_PRESSURE'}<br />
+                  {'> ENHANCE_CALL_TO_ACTION'}
+                </>
+              ) : (
+                <>
+                  {'• Increase technical details'}<br />
+                  {'• Add deadline pressure'}<br />
+                  {'• Enhance call to action'}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
