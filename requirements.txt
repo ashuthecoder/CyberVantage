@@ -14,6 +14,9 @@ email-validator==2.1.0
 requests==2.31.0
 markdown==3.5.1
 
+# --- Email Service ---
+resend==2.6.0
+
 # --- AI Services (Azure OpenAI only) ---
 openai==1.6.1
 
