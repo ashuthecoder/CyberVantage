@@ -7,6 +7,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
+import ThreatAnalysisPage from './pages/ThreatAnalysisPage';
 import './App.css';
 
 function App() {
@@ -16,10 +17,22 @@ function App() {
         <ThemeProvider>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/landing" element={<LandingPage />} />
+            <Route path="/landing-new" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/threat-analysis" element={<ThreatAnalysisPage />} />
+            <Route path="/check-threats" element={<ThreatAnalysisPage />} />
             <Route 
               path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard-new" 
               element={
                 <ProtectedRoute>
                   <Dashboard />
