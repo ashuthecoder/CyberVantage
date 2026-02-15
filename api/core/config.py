@@ -21,8 +21,15 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     
-    # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./users.db")
+    # Database - check multiple Azure/Postgres env vars before falling back to SQLite
+    DATABASE_URL: str = (
+        os.getenv("DATABASE_URL")
+        or os.getenv("POSTGRES_URL")
+        or os.getenv("POSTGRES_PRISMA_URL")
+        or os.getenv("POSTGRES_URL_NON_POOLING")
+        or os.getenv("DATABASE_URL_UNPOOLED")
+        or "sqlite:///./users.db"
+    )
     
     # CORS
     CORS_ORIGINS: List[str] = [

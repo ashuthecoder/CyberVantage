@@ -275,12 +275,12 @@ export default function Dashboard() {
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
             {[
-              { label: isSoc ? 'DETECTION_RATE' : 'Detection Rate', value: '85.5%', color: t.success },
-              { label: isSoc ? 'ACTIVE_STREAK' : 'Current Streak', value: '12 DAYS', color: t.warning },
-              { label: isSoc ? 'THREATS_FOUND' : 'Threats Found', value: '47', color: t.primary },
-              { label: isSoc ? 'AVG_RESPONSE' : 'Avg Response', value: '2.3s', color: '#8b5cf6' }
-            ].map((stat, i) => (
-              <div key={`stat-${i}`} className="card" style={{
+              { id: 'detection', label: isSoc ? 'DETECTION_RATE' : 'Detection Rate', value: '85.5%', color: t.success },
+              { id: 'streak', label: isSoc ? 'ACTIVE_STREAK' : 'Current Streak', value: '12 DAYS', color: t.warning },
+              { id: 'threats', label: isSoc ? 'THREATS_FOUND' : 'Threats Found', value: '47', color: t.primary },
+              { id: 'response', label: isSoc ? 'AVG_RESPONSE' : 'Avg Response', value: '2.3s', color: '#8b5cf6' }
+            ].map((stat) => (
+              <div key={stat.id} className="card" style={{
                 padding: '1.5rem',
                 background: isSoc ? t.bgTertiary : t.bgSecondary,
                 border: isSoc ? `1px solid ${stat.color}40` : `1px solid ${t.border}`,
@@ -574,8 +574,8 @@ function SimulatePhase({ t, isSoc }) {
                   {(isSoc
                     ? ['> SUSPICIOUS_DOMAIN_DETECTED', '> URGENCY_LANGUAGE_PRESENT', '> TYPOSQUATTING_IDENTIFIED']
                     : ['• Suspicious domain detected', '• Urgency language present', '• Typosquatting identified']
-                  ).map((line, i) => (
-                    <div key={`indicator-${i}`}>{line}</div>
+                  ).map((line) => (
+                    <div key={line}>{line}</div>
                   ))}
                 </div>
               </div>
