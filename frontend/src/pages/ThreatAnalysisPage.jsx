@@ -29,8 +29,12 @@ export default function ThreatAnalysisPage() {
     setLoading(true);
     try {
       const response = await threats.checkUrl(url);
-      setResult(response.data);
-      setHistory((prev) => [response.data, ...prev].slice(0, 5));
+      const scanResult = {
+        ...response.data,
+        scanId: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`
+      };
+      setResult(scanResult);
+      setHistory((prev) => [scanResult, ...prev].slice(0, 5));
     } catch (scanError) {
       setError(scanError.response?.data?.detail || 'Unable to scan this URL right now.');
     } finally {
@@ -45,7 +49,7 @@ export default function ThreatAnalysisPage() {
           marginBottom: '1.5rem',
           padding: '1.5rem',
           border: `1px solid ${t.border}`,
-          background: themeName === 'soc' ? t.bgSecondary : t.bgSecondary,
+          background: t.bgSecondary,
           borderRadius: themeName === 'soc' ? '0' : '12px'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -96,13 +100,15 @@ export default function ThreatAnalysisPage() {
                   width: '100%',
                   padding: '0.75rem',
                   border: `1px solid ${t.primary}`,
-                  background: themeName === 'soc' ? 'rgba(0, 217, 255, 0.1)' : t.primary,
+                  background: themeName === 'soc' ? `${t.primary}20` : t.primary,
                   color: themeName === 'soc' ? t.primary : '#fff',
                   fontWeight: 700,
                   cursor: loading ? 'not-allowed' : 'pointer'
                 }}
               >
-                {loading ? '[SCANNING...]' : '[SCAN_URL]'}
+                {loading
+                  ? (themeName === 'soc' ? '[SCANNING...]' : 'Scanning...')
+                  : (themeName === 'soc' ? '[SCAN_URL]' : 'Scan URL')}
               </button>
             </form>
 
@@ -134,7 +140,7 @@ export default function ThreatAnalysisPage() {
               <div style={{ color: t.textSecondary, fontSize: '0.9rem' }}>No scans yet in this session.</div>
             ) : (
               history.map((item, idx) => (
-                <div key={`${item.url}-${idx}`} style={{ borderTop: idx === 0 ? 'none' : `1px solid ${t.border}`, padding: idx === 0 ? '0' : '0.75rem 0' }}>
+                <div key={item.scanId} style={{ borderTop: idx === 0 ? 'none' : `1px solid ${t.border}`, padding: idx === 0 ? '0' : '0.75rem 0' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                     <Globe size={14} color={t.primary} />
                     <span style={{ fontSize: '0.85rem', wordBreak: 'break-all' }}>{item.url}</span>
