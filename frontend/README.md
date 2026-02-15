@@ -1,16 +1,58 @@
-# React + Vite
+# CyberVantage React UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This directory contains the React/Vite-based frontend for CyberVantage's new UI components.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The new UI includes:
+- **Landing Page**: Modern SOC-themed landing page with terminal aesthetics
+- **Dashboard**: Themeable dashboard with SOC and Modern themes
 
-## React Compiler
+## Architecture
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework**: React 19+ with Vite build tool
+- **UI Library**: Lucide React for icons
+- **Styling**: Inline styles with dynamic theme switching
+- **Build Output**: Static files generated to `../static/react-build/`
 
-## Expanding the ESLint configuration
+## Development
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Install Dependencies
+```bash
+npm install
+```
+
+### Build for Production
+```bash
+npm run build
+```
+
+This generates optimized JavaScript and CSS files in `../static/react-build/`.
+
+## Flask Integration
+
+The React components are integrated with Flask via templates:
+
+- `/landing-new` → `templates/landing_new.html` → Loads React landing page
+- `/dashboard-new` → `templates/dashboard_new.html` → Loads React dashboard (auth required)
+
+## Features
+
+### Landing Page
+- Terminal-style SOC theme with scanlines and grid effects
+- Animated typing effect and cursor blink
+- Real-time UTC clock display
+- Responsive four-phase training protocol cards
+- Enterprise features showcase
+
+### Dashboard
+- **Dual Themes**: SOC Mode (dark/terminal) and Modern Mode (light/clean)
+- Theme toggle button with instant switching
+- Real-time stat cards with hover effects
+- Sidebar navigation with icons
+
+## Browser Support
+
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
