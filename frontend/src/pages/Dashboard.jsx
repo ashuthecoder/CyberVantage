@@ -24,6 +24,24 @@ export default function Dashboard() {
   }, [themeName]);
 
   const t = theme;
+  const phaseContent = {
+    learn: {
+      overview: 'Strengthen core phishing detection skills through interactive micro-lessons.',
+      modules: ['Phishing anatomy and spoof indicators', 'Link and sender verification drills', 'Safe reporting workflow and escalation basics']
+    },
+    simulate: {
+      overview: 'Practice handling realistic inbox scenarios in a safe sandbox.',
+      modules: ['Inbox triage simulation with mixed emails', 'Timed incident response challenge', 'Feedback on missed warning signs']
+    },
+    analyze: {
+      overview: 'Track your performance and prioritize the skills that need reinforcement.',
+      modules: ['Weekly threat-detection trend', 'False-positive vs false-negative breakdown', 'Recommended follow-up lesson plan']
+    },
+    demonstrate: {
+      overview: 'Apply everything end-to-end and prove readiness in guided exercises.',
+      modules: ['Capstone phishing investigation task', 'Team playbook walkthrough', 'Readiness score with improvement actions']
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -116,6 +134,9 @@ export default function Dashboard() {
           </div>
 
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+            <div style={{ fontSize: '0.875rem', color: t.textSecondary }}>
+              {themeName === 'soc' ? `AGENT: ${user?.name || 'OPERATOR'}` : `Welcome, ${user?.name || 'Learner'}`}
+            </div>
             <button
               onClick={toggleTheme}
               style={{
@@ -150,6 +171,23 @@ export default function Dashboard() {
                 2,840
               </div>
             </div>
+            <button
+              onClick={handleLogout}
+              style={{
+                padding: '0.625rem 1rem',
+                borderRadius: themeName === 'soc' ? '0' : '8px',
+                border: `1px solid ${themeName === 'soc' ? t.danger : t.border}`,
+                background: 'transparent',
+                color: themeName === 'soc' ? t.danger : t.text,
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                letterSpacing: themeName === 'soc' ? '0.05em' : 'normal',
+                cursor: 'pointer',
+                fontFamily: t.fontFamily
+              }}
+            >
+              {themeName === 'soc' ? '[LOGOUT]' : 'Logout'}
+            </button>
           </div>
         </div>
       </header>
@@ -276,8 +314,13 @@ export default function Dashboard() {
               {activePhase === 'demonstrate' && (themeName === 'soc' ? 'RED_TEAM_EXERCISE' : 'Demonstrate Skills')}
             </h2>
             <p style={{ margin: 0, color: t.textSecondary, fontSize: '0.95rem' }}>
-              Content for {activePhase} phase...
+              {phaseContent[activePhase].overview}
             </p>
+            <ul style={{ margin: '1rem 0 0 1rem', padding: 0, color: t.textSecondary, lineHeight: 1.9 }}>
+              {phaseContent[activePhase].modules.map((item) => (
+                <li key={item} style={{ marginBottom: '0.35rem' }}>{item}</li>
+              ))}
+            </ul>
           </div>
         </main>
       </div>

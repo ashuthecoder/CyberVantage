@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Shield, Terminal, Zap, Target, TrendingUp, CheckCircle, ArrowRight, Play, Globe, Lock, Eye, Activity, Users, Award, ChevronDown } from 'lucide-react';
 
 export default function CyberVantageLanding() {
+  const navigate = useNavigate();
   const [scanLines, setScanLines] = useState(0);
   const [time, setTime] = useState(new Date());
   const [typedText, setTypedText] = useState('');
@@ -286,7 +288,10 @@ export default function CyberVantageLanding() {
               fontWeight: 700,
               letterSpacing: '0.05em',
               border: '1px solid #00d9ff'
-            }}>
+            }}
+            onClick={() => navigate('/login')}
+            aria-label="Go to login"
+            >
               [LOGIN]
             </button>
           </div>
