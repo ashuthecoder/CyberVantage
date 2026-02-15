@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Terminal, Database, Activity, Zap, BookOpen, BarChart2, Award, CheckCircle, Target, Clock, LogOut } from 'lucide-react';
+import { Shield, Terminal, Database, Activity, Zap, BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -171,6 +171,23 @@ export default function Dashboard() {
                 2,840
               </div>
             </div>
+            <button
+              onClick={() => navigate('/threat-analysis')}
+              style={{
+                padding: '0.625rem 1rem',
+                borderRadius: themeName === 'soc' ? '0' : '8px',
+                border: `1px solid ${t.primary}`,
+                background: 'transparent',
+                color: t.primary,
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                letterSpacing: themeName === 'soc' ? '0.05em' : 'normal',
+                cursor: 'pointer',
+                fontFamily: t.fontFamily
+              }}
+            >
+              {themeName === 'soc' ? '[THREAT_CENTER]' : 'Threat Center'}
+            </button>
             <button
               onClick={handleLogout}
               style={{
