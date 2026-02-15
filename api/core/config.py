@@ -7,7 +7,10 @@ import os
 
 class Settings(BaseSettings):
     """Application settings"""
-    
+
+    # Allow unknown/extra environment variables (some `.env` entries are legacy)
+    model_config = {"extra": "allow", "env_file": ".env", "case_sensitive": True}
+
     # Application
     APP_NAME: str = "CyberVantage"
     ENVIRONMENT: str = "development"
@@ -43,8 +46,5 @@ class Settings(BaseSettings):
     # Application URL
     APP_URL: str = os.getenv("APP_URL", "http://localhost:8000")
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
 settings = Settings()
