@@ -264,7 +264,6 @@ export default function AboutPage() {
               cursor: 'pointer'
             }}
             onClick={() => navigate('/login')}
-            aria-label="Go to login"
             >
               [LOGIN]
             </button>

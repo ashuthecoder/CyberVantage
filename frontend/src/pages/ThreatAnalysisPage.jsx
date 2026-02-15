@@ -42,6 +42,11 @@ export default function ThreatAnalysisPage() {
   const isSoc = themeName === 'soc';
   const radius = isSoc ? '0' : '12px';
 
+  const handleViewResult = (item) => {
+    setResult(item);
+    window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  };
+
   // Service status check on mount
   useEffect(() => {
     let cancelled = false;
@@ -629,7 +634,7 @@ export default function ThreatAnalysisPage() {
                         </td>
                         <td style={{ padding: '10px 16px', textAlign: 'center' }}>
                           <button
-                            onClick={() => { setResult(item); window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }}
+                            onClick={() => handleViewResult(item)}
                             title="View"
                             style={{
                               padding: '4px 10px', marginRight: '4px',

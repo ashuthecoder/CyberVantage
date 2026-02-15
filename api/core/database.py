@@ -1,6 +1,7 @@
 """
 Database configuration and session management
 """
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -13,8 +14,9 @@ if _db_url.startswith("postgres://"):
 elif _db_url.startswith("postgresql://"):
     _db_url = _db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 if _db_url.startswith("postgresql+psycopg2://") and "sslmode=" not in _db_url:
+    _sslmode = os.getenv("POSTGRES_SSLMODE", "require")
     _sep = "&" if "?" in _db_url else "?"
-    _db_url = f"{_db_url}{_sep}sslmode=require"
+    _db_url = f"{_db_url}{_sep}sslmode={_sslmode}"
 
 # Create engine
 engine = create_engine(
