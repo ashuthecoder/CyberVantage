@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import ThreatAnalysisPage from './pages/ThreatAnalysisPage';
+import AboutPage from './pages/AboutPage';
 import './App.css';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/threat-analysis" element={<ThreatAnalysisPage />} />
             <Route path="/check-threats" element={<ThreatAnalysisPage />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route 
               path="/dashboard" 
               element={
