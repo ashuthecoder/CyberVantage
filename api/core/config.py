@@ -21,8 +21,15 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     
-    # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./users.db")
+    # Database - check multiple Azure/Postgres env vars before falling back to SQLite
+    DATABASE_URL: str = (
+        os.getenv("DATABASE_URL")
+        or os.getenv("POSTGRES_URL")
+        or os.getenv("POSTGRES_PRISMA_URL")
+        or os.getenv("POSTGRES_URL_NON_POOLING")
+        or os.getenv("DATABASE_URL_UNPOOLED")
+        or "sqlite:///./users.db"
+    )
     
     # CORS
     CORS_ORIGINS: List[str] = [
@@ -38,10 +45,14 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
     RESEND_FROM_EMAIL: str = os.getenv("RESEND_FROM_EMAIL", "noreply@cybervantage.com")
     
-    # AI Services
+    # AI Services - Azure OpenAI (fallback)
     AZURE_OPENAI_API_KEY: str = os.getenv("AZURE_OPENAI_API_KEY", "")
     AZURE_OPENAI_ENDPOINT: str = os.getenv("AZURE_OPENAI_ENDPOINT", "")
     AZURE_OPENAI_DEPLOYMENT_NAME: str = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "")
+    
+    # AI Services - Google Gemini (primary)
+    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
     
     # Application URL
     APP_URL: str = os.getenv("APP_URL", "http://localhost:8000")
