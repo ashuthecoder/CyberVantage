@@ -45,6 +45,17 @@ except ImportError:
     def extract_text_from_ai_response(*args, **kwargs): return ""
     def get_provider_status(): return {}
 
+# Import Azure OpenAI helpers with fallback
+try:
+    from .azure_openai_helper import (
+        azure_openai_completion,
+        call_azure_openai_with_retry,
+        extract_text_from_response
+    )
+    AZURE_HELPERS_AVAILABLE = True
+except ImportError:
+    AZURE_HELPERS_AVAILABLE = False
+
 # Import Google Generative AI (Gemini) with fallback
 try:
     import google.generativeai as genai
@@ -357,6 +368,9 @@ def multi_approach_generation_with_fallback(user_name, previous_responses, app):
     
     print("[AI] All approaches failed")
     return None
+
+# Alias for backward compatibility - used in generate_ai_email fallback path
+multi_approach_generation_azure = multi_approach_generation_with_fallback
 
 def extract_score_from_feedback(feedback_text, is_spam, user_response):
     """Extract the actual score from AI feedback text that contains point breakdowns"""
