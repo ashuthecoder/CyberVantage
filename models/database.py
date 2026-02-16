@@ -17,6 +17,10 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     password_reset_token = db.Column(db.String(255), nullable=True)  # For password reset
     password_reset_expires = db.Column(db.DateTime, nullable=True)
+    # OTP fields for password reset
+    password_reset_otp = db.Column(db.String(6), nullable=True)  # 6-digit OTP
+    otp_expires = db.Column(db.DateTime, nullable=True)  # OTP expiration
+    otp_attempts = db.Column(db.Integer, default=0)  # Failed OTP attempts counter
 
     def set_password(self, password):
         # Hash password with bcrypt
@@ -54,6 +58,45 @@ class User(db.Model):
         """Clear password reset token after use"""
         self.password_reset_token = None
         self.password_reset_expires = None
+    
+    def generate_otp(self):
+        """Generate a 6-digit OTP for password reset"""
+        import secrets
+        import datetime as dt
+        
+        otp = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
+        self.password_reset_otp = otp
+        self.otp_expires = dt.datetime.utcnow() + dt.timedelta(minutes=15)  # 15 min expiry
+        self.otp_attempts = 0  # Reset attempts counter
+        return otp
+    
+    def verify_otp(self, otp):
+        """Verify OTP and check expiration"""
+        import datetime as dt
+        
+        if not self.password_reset_otp or not self.otp_expires:
+            return False
+        
+        # Check if OTP expired
+        if dt.datetime.utcnow() > self.otp_expires:
+            return False
+        
+        # Check if too many failed attempts (max 5)
+        if self.otp_attempts >= 5:
+            return False
+        
+        # Verify OTP
+        if self.password_reset_otp == otp:
+            return True
+        else:
+            self.otp_attempts += 1
+            return False
+    
+    def clear_otp(self):
+        """Clear OTP after successful use"""
+        self.password_reset_otp = None
+        self.otp_expires = None
+        self.otp_attempts = 0
 
 class SimulationResponse(db.Model):
     id = db.Column(db.Integer, primary_key=True)
