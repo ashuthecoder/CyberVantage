@@ -175,7 +175,7 @@ def update_database_schema(app):
                 columns = [col['name'] for col in inspector.get_columns('user')]
                 
                 new_user_columns = {
-                    'demographics_completed': "ALTER TABLE user ADD COLUMN demographics_completed BOOLEAN DEFAULT 0 NOT NULL",
+                    'demographics_completed': "ALTER TABLE user ADD COLUMN demographics_completed BOOLEAN DEFAULT FALSE NOT NULL",
                     'tech_confidence': "ALTER TABLE user ADD COLUMN tech_confidence VARCHAR(50)",
                     'cybersecurity_experience': "ALTER TABLE user ADD COLUMN cybersecurity_experience VARCHAR(50)",
                     'age_group': "ALTER TABLE user ADD COLUMN age_group VARCHAR(50)",
