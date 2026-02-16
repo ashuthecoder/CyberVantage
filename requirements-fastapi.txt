@@ -26,7 +26,8 @@ sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
 
 # --- CORS & Middleware ---
-python-cors==1.0.0
+# CORS support is provided by FastAPI/Starlette; no separate package required
+# (Removed bogus "python-cors==1.0.0" which is not on PyPI)
 
 # --- Misc Utilities ---
 python-dotenv==1.0.0
