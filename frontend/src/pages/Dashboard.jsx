@@ -428,55 +428,19 @@ function LearnPhase({ t, isSoc }) {
 function SimulatePhase({ t, isSoc }) {
   const navigate = useNavigate();
   const [selectedEmail, setSelectedEmail] = useState(null);
+  const [predefinedEmails, setPredefinedEmails] = useState([]);
 
-  // Real emails from the predefined list - 5 emails that will be shown in Phase 1
-  const predefinedEmails = [
-    { 
-      id: 1, 
-      from: 'security@paypa1.com', 
-      subject: isSoc ? 'YOUR_ACCOUNT_COMPROMISED' : 'Your account has been compromised',
-      preview: 'We have detected unusual activity on your account...',
-      risk: 'CRITICAL', 
-      indicators: 3,
-      isSpam: true
-    },
-    { 
-      id: 2, 
-      from: 'amazondelivery@amazon-shipment.net', 
-      subject: isSoc ? 'PACKAGE_DELIVERY_FAILED' : 'Your Amazon package delivery failed',
-      preview: 'We attempted to deliver your package today but were unable...',
-      risk: 'CRITICAL', 
-      indicators: 4,
-      isSpam: true
-    },
-    { 
-      id: 3, 
-      from: 'notifications@linkedin.com', 
-      subject: isSoc ? 'NEW_CONNECTION_REQUESTS' : 'You have 3 new connection requests',
-      preview: 'You have 3 new connection requests waiting for your response...',
-      risk: 'SAFE', 
-      indicators: 0,
-      isSpam: false
-    },
-    { 
-      id: 4, 
-      from: 'microsoft365@outlook.cn', 
-      subject: isSoc ? 'PASSWORD_EXPIRATION_URGENT' : 'Your Microsoft password will expire today',
-      preview: 'URGENT: Your Microsoft password will expire in 12 hours...',
-      risk: 'HIGH', 
-      indicators: 2,
-      isSpam: true
-    },
-    { 
-      id: 5, 
-      from: 'newsletter@nytimes.com', 
-      subject: isSoc ? 'WEEKLY_NEWS_DIGEST' : 'Your Weekly News Digest from The New York Times',
-      preview: 'This Week\'s Top Stories: Global Climate Summit Concludes...',
-      risk: 'SAFE', 
-      indicators: 0,
-      isSpam: false
-    }
-  ];
+  // Load email previews from external JSON file
+  useEffect(() => {
+    fetch('/data/email-previews.json')
+      .then(res => res.json())
+      .then(data => setPredefinedEmails(data))
+      .catch(err => {
+        console.error('Error loading email previews:', err);
+        // Fallback to empty array if loading fails
+        setPredefinedEmails([]);
+      });
+  }, []);
 
   const getRiskColor = (risk) => {
     if (risk === 'CRITICAL') return t.danger;
@@ -620,7 +584,7 @@ function SimulatePhase({ t, isSoc }) {
               </div>
               
               <div style={{ fontSize: '0.85rem', color: t.text, fontWeight: 700, marginBottom: '0.5rem' }}>
-                {email.subject}
+                {isSoc ? email.subject_soc : email.subject}
               </div>
               
               <div style={{ 
@@ -670,11 +634,12 @@ function SimulatePhase({ t, isSoc }) {
 }
 
 function AnalyzePhase({ t, isSoc }) {
+  const navigate = useNavigate();
   const sessions = [
-    { id: 14, date: isSoc ? 'TODAY' : 'Today', accuracy: 88, threats: 15, time: '2.1s' },
-    { id: 13, date: isSoc ? 'YESTERDAY' : 'Yesterday', accuracy: 85, threats: 20, time: '2.3s' },
-    { id: 12, date: isSoc ? '2_DAYS_AGO' : '2 days ago', accuracy: 92, threats: 18, time: '1.9s' },
-    { id: 11, date: isSoc ? '3_DAYS_AGO' : '3 days ago', accuracy: 79, threats: 12, time: '2.8s' }
+    { id: 14, date: isSoc ? 'TODAY' : 'Today', accuracy: 88, threats: 15, time: '2.1s', phase: 'simulate' },
+    { id: 13, date: isSoc ? 'YESTERDAY' : 'Yesterday', accuracy: 85, threats: 20, time: '2.3s', phase: 'demonstrate' },
+    { id: 12, date: isSoc ? '2_DAYS_AGO' : '2 days ago', accuracy: 92, threats: 18, time: '1.9s', phase: 'simulate' },
+    { id: 11, date: isSoc ? '3_DAYS_AGO' : '3 days ago', accuracy: 79, threats: 12, time: '2.8s', phase: 'demonstrate' }
   ];
 
   const getAccuracyColor = (acc) => {
@@ -693,6 +658,27 @@ function AnalyzePhase({ t, isSoc }) {
         paddingBottom: '0.5rem'
       }}>
         {isSoc ? 'PERFORMANCE_ANALYTICS // THREAT_DETECTION_METRICS' : 'Performance Analytics — Threat Detection Metrics'}
+      </div>
+
+      {/* Info Panel */}
+      <div style={{
+        padding: '1.25rem',
+        background: isSoc ? 'rgba(59, 130, 246, 0.05)' : `${t.primary}05`,
+        border: `1px solid ${t.primary}`,
+        borderRadius: isSoc ? '0' : '12px',
+        marginBottom: '2rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem'
+      }}>
+        <BarChart2 size={24} color={t.primary} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '0.85rem', color: t.textSecondary, lineHeight: 1.6 }}>
+            {isSoc 
+              ? '> Analytics are generated from Simulate and Demonstrate phase completions. Complete training sessions to populate performance metrics.'
+              : 'Analytics are generated from your Simulate and Demonstrate phase completions. Complete training sessions to see your performance metrics here.'}
+          </div>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', marginBottom: '2rem' }}>

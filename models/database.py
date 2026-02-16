@@ -265,83 +265,28 @@ def get_emails_for_simulation(simulation_id, app):
         print(f"[DB] Error getting emails for simulation: {str(e)}")
         return []
 
-# Predefined phishing emails
-predefined_emails = [
-    {
-        "id": 1,
-        "sender": "security@paypa1.com",
-        "subject": "Your account has been compromised",
-        "date": "August 12, 2025",
-        "content": """
-            <p>Dear Valued Customer,</p>
-            <p>We have detected unusual activity on your account. Your account has been temporarily limited.</p>
-            <p>Please click the link below to verify your information and restore full access to your account:</p>
-            <p><a href="https://paypa1-secure.com/verify">https://paypa1-secure.com/verify</a></p>
-            <p>If you don't verify your account within 24 hours, it will be permanently suspended.</p>
-            <p>Thank you,<br>PayPal Security Team</p>
-        """,
-        "is_spam": True
-    },
-    {
-        "id": 2,
-        "sender": "amazondelivery@amazon-shipment.net",
-        "subject": "Your Amazon package delivery failed",
-        "date": "August 10, 2025",
-        "content": """
-            <p>Dear Customer,</p>
-            <p>We attempted to deliver your package today but were unable to complete the delivery.</p>
-            <p>To reschedule your delivery, please confirm your details by clicking here:</p>
-            <p><a href="http://amazon-redelivery.net/confirm">Confirm Delivery Details</a></p>
-            <p>Your package will be returned to our warehouse if you don't respond within 3 days.</p>
-            <p>Amazon Delivery Services</p>
-        """,
-        "is_spam": True
-    },
-    {
-        "id": 3,
-        "sender": "notifications@linkedin.com",
-        "subject": "You have 3 new connection requests",
-        "date": "August 11, 2025",
-        "content": """
-            <p>Hi there,</p>
-            <p>You have 3 new connection requests waiting for your response.</p>
-            <p>- Jane Smith, Senior Developer at Tech Solutions</p>
-            <p>- Michael Johnson, Project Manager at Enterprise Inc.</p>
-            <p>- Sarah Williams, HR Director at Global Innovations</p>
-            <p>Log in to your LinkedIn account to view and respond to these requests.</p>
-            <p>The LinkedIn Team</p>
-        """,
-        "is_spam": False
-    },
-    {
-        "id": 4,
-        "sender": "microsoft365@outlook.cn",
-        "subject": "Your Microsoft password will expire today",
-        "date": "August 13, 2025",
-        "content": """
-            <p>URGENT: Your Microsoft password will expire in 12 hours</p>
-            <p>To ensure uninterrupted access to your Microsoft 365 services, please update your password immediately.</p>
-            <p>Click here to update: <a href="http://ms-365-password-portal.cn/reset">Reset Password Now</a></p>
-            <p>Ignore this message at your own risk. Account lockout will occur at midnight.</p>
-            <p>Microsoft 365 Support Team</p>
-        """,
-        "is_spam": True
-    },
-    {
-        "id": 5,
-        "sender": "newsletter@nytimes.com",
-        "subject": "Your Weekly News Digest from The New York Times",
-        "date": "August 9, 2025",
-        "content": """
-            <h2>This Week's Top Stories</h2>
-            <p>• Global Climate Summit Concludes with New Emission Targets</p>
-            <p>• Tech Companies Announce Collaboration on AI Safety Standards</p>
-            <p>• Medical Breakthrough: New Treatment Shows Promise for Alzheimer's</p>
-            <p>• Sports: Championship Finals Set After Dramatic Semifinals</p>
-            <p>• Arts: Review of the Summer's Most Anticipated Exhibition</p>
-            <p>Read these stories and more on our website. Not interested in these emails? <a href="https://nytimes.com/newsletter/unsubscribe">Unsubscribe here</a>.</p>
-            <p>© 2025 The New York Times Company</p>
-        """,
-        "is_spam": False
-    }
-]
+# Function to load predefined emails from JSON file
+def load_predefined_emails():
+    """Load predefined phishing emails from external JSON file"""
+    import json
+    try:
+        json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config', 'predefined_emails.json')
+        with open(json_path, 'r', encoding='utf-8') as f:
+            emails = json.load(f)
+            # Ensure is_spam is boolean (in case JSON has it as string)
+            for email in emails:
+                if isinstance(email.get('is_spam'), str):
+                    email['is_spam'] = email['is_spam'].lower() == 'true'
+            return emails
+    except FileNotFoundError:
+        print(f"[DB] Warning: predefined_emails.json not found at {json_path}, using empty list")
+        return []
+    except json.JSONDecodeError as e:
+        print(f"[DB] Error parsing predefined_emails.json: {e}")
+        return []
+    except Exception as e:
+        print(f"[DB] Error loading predefined emails: {e}")
+        return []
+
+# Load predefined phishing emails from external file
+predefined_emails = load_predefined_emails()
