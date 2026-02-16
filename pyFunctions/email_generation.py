@@ -29,19 +29,21 @@ except ImportError:
     def create_cache_key(prefix, content): return f"{prefix}_{hash(content)}"
     def get_log_dir(): return None
 
-# Import Azure OpenAI helper functions with fallback
+# Import AI provider with fallback support
 try:
-    from .azure_openai_helper import (
-        azure_openai_completion, test_azure_openai_connection, 
-        extract_text_from_response, call_azure_openai_with_retry
+    from .ai_provider import (
+        ai_completion_with_fallback,
+        ai_chat_completion_with_fallback,
+        extract_text_from_ai_response,
+        get_provider_status
     )
-    AZURE_HELPERS_AVAILABLE = True
+    AI_PROVIDER_AVAILABLE = True
 except ImportError:
-    AZURE_HELPERS_AVAILABLE = False
-    def azure_openai_completion(*args, **kwargs): return None, "IMPORT_ERROR"
-    def test_azure_openai_connection(*args, **kwargs): return {"status": "IMPORT_ERROR"}
-    def extract_text_from_response(*args, **kwargs): return ""
-    def call_azure_openai_with_retry(*args, **kwargs): return None, "IMPORT_ERROR"
+    AI_PROVIDER_AVAILABLE = False
+    def ai_completion_with_fallback(*args, **kwargs): return None, "IMPORT_ERROR", "none"
+    def ai_chat_completion_with_fallback(*args, **kwargs): return None, "IMPORT_ERROR", "none"
+    def extract_text_from_ai_response(*args, **kwargs): return ""
+    def get_provider_status(): return {}
 
 # Import Google Generative AI (Gemini) with fallback
 try:
@@ -157,13 +159,13 @@ def generate_ai_email(user_name, previous_responses, GOOGLE_API_KEY=None, genai=
             print("[GENERATE] Attempting Azure OpenAI generation (fallback)")
             result = multi_approach_generation_azure(user_name, previous_responses, app)
             if result_has_valid_content(result):
-                print("[GENERATE] Azure OpenAI generation succeeded")
+                print("[GENERATE] AI generation succeeded")
                 return result
             else:
-                print("[GENERATE] Azure OpenAI generation failed, falling back to template")
+                print("[GENERATE] AI generation failed, falling back to template")
         except Exception as e:
-            print(f"[GENERATE] Azure OpenAI error: {e}")
-            log_api_request("generate_ai_email", 0, False, error=str(e), api_source="AZURE")
+            print(f"[GENERATE] AI error: {e}")
+            log_api_request("generate_ai_email", 0, False, error=str(e), api_source="AI")
     
     # ── 3. Fallback to template email ────────────────────────────────────
     print("[GENERATE] Using template email fallback")
@@ -188,12 +190,12 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
         # ── 2. Try Azure OpenAI (fallback) ───────────────────────────────
         if AZURE_HELPERS_AVAILABLE:
             try:
-                result = evaluate_with_azure(email_content, is_spam, user_response, user_explanation, app)
+                result = evaluate_with_ai_fallback(email_content, is_spam, user_response, user_explanation, app)
                 if result:
                     return result
             except Exception as e:
-                print(f"[EVALUATE] Azure OpenAI error: {e}")
-                log_api_request("evaluate_explanation", 0, False, error=str(e), api_source="AZURE")
+                print(f"[EVALUATE] AI error: {e}")
+                log_api_request("evaluate_explanation", 0, False, error=str(e), api_source="AI")
         
         # Fallback evaluation
         print("[EVALUATE] Using fallback evaluation")
@@ -313,9 +315,9 @@ Format as JSON: {{"feedback": "detailed HTML feedback", "score": 7}}"""
 # AZURE OPENAI IMPLEMENTATION
 # =============================================================================
 
-def multi_approach_generation_azure(user_name, previous_responses, app):
-    """Generate email using Azure OpenAI with multiple prompt approaches"""
-    print("[AZURE] Starting multi-approach generation")
+def multi_approach_generation_with_fallback(user_name, previous_responses, app):
+    """Generate email using AI with multiple prompt approaches and automatic fallback"""
+    print("[AI] Starting multi-approach generation with fallback")
     
     approaches = [
         "Generate a realistic training email (either phishing or legitimate) for cybersecurity education.",
@@ -325,13 +327,13 @@ def multi_approach_generation_azure(user_name, previous_responses, app):
     
     for i, base_prompt in enumerate(approaches):
         try:
-            print(f"[AZURE] Trying approach {i+1}: {base_prompt[:50]}...")
+            print(f"[AI] Trying approach {i+1}: {base_prompt[:50]}...")
             
             # Build full prompt
             prompt = build_generation_prompt(base_prompt, user_name, previous_responses)
             
-            # Call Azure OpenAI
-            response, status = call_azure_openai_with_retry(
+            # Call AI with automatic fallback
+            response, status, provider = ai_chat_completion_with_fallback(
                 messages=[{"role": "user", "content": prompt}],
                 app=app,
                 max_tokens=512,
@@ -340,20 +342,20 @@ def multi_approach_generation_azure(user_name, previous_responses, app):
             
             if response and status == "SUCCESS":
                 # Extract and parse response
-                text_content = extract_text_from_response(response)
+                text_content = extract_text_from_ai_response(response, provider)
                 if text_content:
                     parsed = parse_email_response(text_content)
                     if parsed and result_has_valid_content(parsed):
-                        print(f"[AZURE] Success with approach {i+1}")
+                        print(f"[AI] Success with approach {i+1} using provider: {provider}")
                         return parsed
             
-            print(f"[AZURE] Approach {i+1} failed")
+            print(f"[AI] Approach {i+1} failed with status: {status}")
             
         except Exception as e:
-            print(f"[AZURE] Error with approach {i+1}: {e}")
+            print(f"[AI] Error with approach {i+1}: {e}")
             continue
     
-    print("[AZURE] All approaches failed")
+    print("[AI] All approaches failed")
     return None
 
 def extract_score_from_feedback(feedback_text, is_spam, user_response):
@@ -407,10 +409,10 @@ def extract_score_from_feedback(feedback_text, is_spam, user_response):
         # Return fallback score
         return 7 if user_response == is_spam else 3
 
-def evaluate_with_azure(email_content, is_spam, user_response, user_explanation, app):
-    """Evaluate user explanation using Azure OpenAI"""
+def evaluate_with_ai_fallback(email_content, is_spam, user_response, user_explanation, app):
+    """Evaluate user explanation using AI with automatic fallback"""
     try:
-        print("[AZURE] Starting evaluation")
+        print("[AI] Starting evaluation with fallback")
         
         # Build evaluation prompt
         correct_answer = "phishing" if is_spam else "legitimate"
@@ -443,8 +445,8 @@ Provide detailed, constructive feedback that helps them improve their phishing d
 
 Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendations", "score": 7}}"""
         
-        # Call Azure OpenAI
-        response, status = call_azure_openai_with_retry(
+        # Call AI with automatic fallback
+        response, status, provider = ai_chat_completion_with_fallback(
             messages=[{"role": "user", "content": prompt}],
             app=app,
             max_tokens=1024,  # Increased from 256 to prevent feedback truncation
@@ -452,7 +454,7 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
         )
         
         if response and status == "SUCCESS":
-            text_content = extract_text_from_response(response)
+            text_content = extract_text_from_ai_response(response, provider)
             if text_content:
                 # Clean HTML code blocks from AI response
                 text_content = clean_html_code_blocks(text_content)
@@ -464,6 +466,7 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
                         # Clean HTML code blocks from feedback if it exists
                         if "feedback" in result:
                             result["feedback"] = clean_html_code_blocks(result["feedback"])
+                        print(f"[AI] Evaluation successful using provider: {provider}")
                         return result
                 except json.JSONDecodeError:
                     # Fallback parsing - extract score from text content
@@ -476,7 +479,7 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
         return None
         
     except Exception as e:
-        print(f"[AZURE] Evaluation error: {e}")
+        print(f"[AI] Evaluation error: {e}")
         return None
 
 # =============================================================================

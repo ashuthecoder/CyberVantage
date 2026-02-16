@@ -1,0 +1,704 @@
+{% extends "base.html" %}
+{% block title %}About CyberVantage{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .about-hero {
+        text-align: center;
+        padding: 4rem 2rem 2rem 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .about-hero h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+    }
+
+    .about-hero p {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.7);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .content-section {
+        margin-bottom: 3rem;
+    }
+
+    .content-section h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: #fff;
+    }
+
+    .content-section h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 2rem 0 1rem 0;
+        color: rgba(255, 255, 255, 0.95);
+    }
+
+    .content-section p {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 1rem;
+    }
+
+    .content-section ul {
+        list-style: none;
+        padding-left: 0;
+        margin: 1.5rem 0;
+    }
+
+    .content-section ul li {
+        padding: 0.75rem 0 0.75rem 2rem;
+        position: relative;
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .content-section ul li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #667eea;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        transform: translateY(-4px);
+        border-color: rgba(102, 126, 234, 0.5);
+    }
+
+    .feature-card h4 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 0.75rem;
+    }
+
+    .feature-card p {
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.75);
+        margin: 0;
+    }
+
+    .essential-eight-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .essential-item {
+        padding: 1.5rem;
+        border-radius: 12px;
+        background: rgba(102, 126, 234, 0.1);
+        border-left: 4px solid #667eea;
+    }
+
+    .essential-item h4 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 0.5rem;
+    }
+
+    .essential-item .status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+
+    .status.implemented {
+        background: rgba(72, 187, 120, 0.2);
+        color: #48bb78;
+    }
+
+    .status.partial {
+        background: rgba(237, 137, 54, 0.2);
+        color: #ed8936;
+    }
+
+    .essential-item p {
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+    }
+
+    .cta-section {
+        text-align: center;
+        padding: 3rem 2rem;
+        margin-top: 3rem;
+    }
+
+    .cta-section h2 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .cta-section p {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 2rem;
+    }
+
+    .cta-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-glass {
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-glass:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Security & Compliance Section - 2026 Premium Design */
+    .security-compliance-section {
+        padding: 2rem 0;
+    }
+
+    .security-compliance-section .feature-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.5rem;
+    }
+
+    .security-compliance-section .content-section h2 {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.85) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .security-compliance-section .content-section > p {
+        text-align: center;
+        font-size: 1.15rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 3rem;
+        font-weight: 400;
+    }
+
+    .security-compliance-card {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        padding: 2rem 1.75rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+
+    .security-compliance-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 16px;
+        padding: 1px;
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--accent-color, #667eea) 40%, transparent),
+            rgba(118, 75, 162, 0.3)
+        );
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .security-compliance-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        transform: translateY(-8px);
+        border-color: var(--accent-color, #667eea);
+        box-shadow: 
+            0 20px 40px rgba(0, 0, 0, 0.3),
+            0 0 40px color-mix(in srgb, var(--accent-color, #667eea) 25%, transparent),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .security-compliance-card:hover::before {
+        opacity: 1;
+    }
+
+    .security-icon {
+        margin-bottom: 1.5rem;
+        position: relative;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.2));
+    }
+
+    .security-compliance-card:hover .security-icon {
+        transform: scale(1.1) translateY(-4px);
+        filter: drop-shadow(0 8px 24px color-mix(in srgb, var(--accent-color, #667eea) 45%, transparent));
+    }
+
+    .security-compliance-card h4 {
+        font-size: 1.35rem !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.01em;
+        margin-bottom: 1rem !important;
+        color: #fff !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        line-height: 1.3;
+    }
+
+    .security-compliance-card h4 .emoji {
+        font-size: 1.25rem;
+        display: inline-block;
+        transition: transform 0.3s ease;
+    }
+
+    .security-compliance-card:hover h4 .emoji {
+        transform: scale(1.15);
+    }
+
+    .security-compliance-card p {
+        font-size: 1.05rem !important;
+        line-height: 1.7 !important;
+        color: rgba(255, 255, 255, 0.7) !important;
+        margin: 0 !important;
+        font-weight: 400;
+    }
+
+    /* Enhanced SVG Icons */
+    .security-icon svg {
+        transition: all 0.4s ease;
+    }
+
+    .security-compliance-card:hover .security-icon svg path {
+        stroke: var(--accent-color, #667eea);
+        fill: color-mix(in srgb, var(--accent-color, #667eea) 18%, transparent);
+    }
+
+    .security-compliance-card:hover .security-icon svg rect,
+    .security-compliance-card:hover .security-icon svg circle {
+        stroke: var(--accent-color, #667eea);
+        fill: color-mix(in srgb, var(--accent-color, #667eea) 18%, transparent);
+    }
+
+    @media (max-width: 768px) {
+        .security-compliance-section .content-section h2 {
+            font-size: 2rem;
+        }
+
+        .security-compliance-section .feature-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .security-icon svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .security-compliance-card {
+            padding: 1.5rem 1.25rem;
+        }
+
+        .security-compliance-card h4 {
+            font-size: 1.15rem !important;
+        }
+
+        .security-compliance-card p {
+            font-size: 0.95rem !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="about-hero">
+    <h1>About CyberVantage</h1>
+    <p>Empowering the next generation with essential cybersecurity skills through interactive, AI-powered education</p>
+</div>
+
+<div class="glass-container" style="max-width: 1200px; margin: 0 auto;">
+    <div class="content-section">
+        <h2>What is CyberVantage?</h2>
+        <p>
+            CyberVantage is an innovative educational web platform designed to teach students about cybersecurity, 
+            phishing attacks, spam detection, and cyber safety through interactive, hands-on learning experiences. 
+            Our platform combines cutting-edge AI technology with proven educational methodologies to create engaging 
+            simulations that prepare students for real-world cyber threats.
+        </p>
+        <p>
+            Built with modern web technologies and powered by advanced AI models, CyberVantage provides a safe, 
+            controlled environment where students can learn to identify and respond to cyber threats without any 
+            real-world risk.
+        </p>
+    </div>
+
+    <div class="content-section">
+        <h2>Our Four-Phase Learning Journey</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>📚 Phase 1: Learn</h4>
+                <p>
+                    Interactive educational content covering phishing fundamentals, cyber safety principles, 
+                    and security best practices. Students complete quizzes to reinforce their understanding.
+                </p>
+            </div>
+            <div class="feature-card">
+                <h4>🛡️ Phase 2: Simulate</h4>
+                <p>
+                    Hands-on experience with realistic phishing simulations. Students analyze emails, 
+                    make decisions, and receive personalized AI-powered feedback on their performance.
+                </p>
+            </div>
+            <div class="feature-card">
+                <h4>📊 Phase 3: Analyze</h4>
+                <p>
+                    Comprehensive performance analysis with detailed metrics, progress tracking, 
+                    and personalized learning recommendations based on individual strengths and weaknesses.
+                </p>
+            </div>
+            <div class="feature-card">
+                <h4>✏️ Phase 4: Demonstrate</h4>
+                <p>
+                    Students create their own phishing scenarios to demonstrate understanding. 
+                    AI evaluates their work and provides constructive feedback for improvement.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section security-compliance-section" id="compliance">
+        <h2>Security & Compliance</h2>
+        <p>
+            Our commitment to secure-by-design principles
+        </p>
+        <div class="feature-grid">
+            <article class="feature-card security-compliance-card" aria-labelledby="owasp-asvs-title">
+                <div class="security-icon">
+                    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                        <path d="M12 2L4 6V11C4 16.55 7.84 21.74 12 23C16.16 21.74 20 16.55 20 11V6L12 2Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(102, 126, 234, 0.1)"/>
+                        <path d="M9 12L11 14L15 10" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h4 id="owasp-asvs-title"><span class="emoji">🛡️</span> OWASP ASVS Level 1</h4>
+                <p>
+                    Aligned with OWASP Application Security Verification Standard Level 1 security controls for robust protection
+                </p>
+            </article>
+            <article class="feature-card security-compliance-card" aria-labelledby="essential-eight-title">
+                <div class="security-icon">
+                    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                        <path d="M12 2L4 6V11C4 16.55 7.84 21.74 12 23C16.16 21.74 20 16.55 20 11V6L12 2Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(102, 126, 234, 0.1)"/>
+                        <path d="M12 8V12M12 16H12.01" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h4 id="essential-eight-title"><span class="emoji">🧭</span> Australian Essential Eight ML1</h4>
+                <p>
+                    Self-assessed against ACSC's Essential Eight Maturity Level 1 framework for cyber resilience
+                </p>
+            </article>
+            <article class="feature-card security-compliance-card">
+                <div class="security-icon">
+                    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                        <rect x="5" y="11" width="14" height="10" rx="2" stroke="#667eea" stroke-width="2" fill="rgba(102, 126, 234, 0.1)"/>
+                        <path d="M12 15V17" stroke="#667eea" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M7 11V7C7 4.79086 8.79086 3 11 3H13C15.2091 3 17 4.79086 17 7V11" stroke="#667eea" stroke-width="2"/>
+                    </svg>
+                </div>
+                <h4><span class="emoji">🔐</span> ISO 27001 Best Practices</h4>
+                <p>
+                    Designed in accordance with ISO 27001 information security management best practices
+                </p>
+            </article>
+            <article class="feature-card security-compliance-card" aria-labelledby="secure-design-title">
+                <div class="security-icon">
+                    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                        <path d="M12 2L4 6V11C4 16.55 7.84 21.74 12 23C16.16 21.74 20 16.55 20 11V6L12 2Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(102, 126, 234, 0.1)"/>
+                        <circle cx="12" cy="12" r="3" stroke="#667eea" stroke-width="2" fill="none"/>
+                    </svg>
+                </div>
+                <h4 id="secure-design-title"><span class="emoji">🏗️</span> Secure-by-Design</h4>
+                <p>
+                    Built on a Secure-by-Design architectural foundation with security integrated at every layer
+                </p>
+            </article>
+            <article class="feature-card security-compliance-card" aria-labelledby="identity-access-title">
+                <div class="security-icon">
+                    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                        <rect x="3.5" y="11" width="17" height="9" rx="2" stroke="#667eea" stroke-width="2" fill="rgba(102, 126, 234, 0.1)"/>
+                        <path d="M8 11V8.5C8 6.29 9.79 4.5 12 4.5C14.21 4.5 16 6.29 16 8.5V11" stroke="#667eea" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="12" cy="15.5" r="1.2" fill="#667eea"/>
+                    </svg>
+                </div>
+                <h4 id="identity-access-title"><span class="emoji">🔑</span> Identity &amp; Access Control</h4>
+                <p>
+                    Role-Based Access Control (RBAC) ensures least-privilege access. JWT-based authentication with expiration, session validation, and rate limiting protects user accounts.
+                </p>
+            </article>
+            <article class="feature-card security-compliance-card" aria-labelledby="secure-testing-title">
+                <div class="security-icon">
+                    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                        <path d="M9 3H15" stroke="#667eea" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M10 3V8L5.5 15.5C4.7 16.83 5.66 18.5 7.22 18.5H16.78C18.34 18.5 19.3 16.83 18.5 15.5L14 8V3" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(102, 126, 234, 0.1)"/>
+                        <path d="M8.5 13.5H15.5" stroke="#667eea" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h4 id="secure-testing-title"><span class="emoji">🧪</span> Secure Testing Environment</h4>
+                <p>
+                    All phishing simulations and threat scenarios are executed in a controlled, sandboxed learning environment designed to prevent real-world exposure while preserving realism.
+                </p>
+            </article>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <h2>Australian Essential Eight Compliance</h2>
+        <p>
+            CyberVantage aligns with the Australian Cyber Security Centre's (ACSC) Essential Eight Maturity Model, 
+            a prioritized list of mitigation strategies to protect organizations against cyber threats. Our platform 
+            incorporates these principles to ensure robust security and educate users about these critical controls.
+        </p>
+        
+        <div class="essential-eight-grid">
+            <div class="essential-item">
+                <h4>1. Application Control</h4>
+                <span class="status implemented">Implemented</span>
+                <p>
+                    Only approved applications run on the platform. User-uploaded content is strictly validated 
+                    and sandboxed to prevent malicious code execution.
+                </p>
+            </div>
+
+            <div class="essential-item">
+                <h4>2. Patch Applications</h4>
+                <span class="status implemented">Implemented</span>
+                <p>
+                    All dependencies are regularly updated. Security patches are applied promptly to address 
+                    vulnerabilities in Flask, SQLAlchemy, and other libraries.
+                </p>
+            </div>
+
+            <div class="essential-item">
+                <h4>3. Configure Microsoft Office Macros</h4>
+                <span class="status partial">Educational</span>
+                <p>
+                    While not directly applicable to our web platform, students learn about macro-based 
+                    threats through our educational content and simulations.
+                </p>
+            </div>
+
+            <div class="essential-item">
+                <h4>4. User Application Hardening</h4>
+                <span class="status implemented">Implemented</span>
+                <p>
+                    Web browsers security features are leveraged. Content Security Policy (CSP) headers 
+                    and XSS protection mechanisms are enabled.
+                </p>
+            </div>
+
+            <div class="essential-item">
+                <h4>5. Restrict Administrative Privileges</h4>
+                <span class="status implemented">Implemented</span>
+                <p>
+                    Role-based access control (RBAC) ensures users only have necessary permissions. 
+                    Administrative functions are restricted to verified admin accounts.
+                </p>
+            </div>
+
+            <div class="essential-item">
+                <h4>6. Patch Operating Systems</h4>
+                <span class="status implemented">Implemented</span>
+                <p>
+                    Platform runs on regularly updated infrastructure. Operating system patches are 
+                    applied as part of our deployment process.
+                </p>
+            </div>
+
+            <div class="essential-item">
+                <h4>7. Multi-Factor Authentication</h4>
+                <span class="status partial">Roadmap</span>
+                <p>
+                    Currently uses JWT-based authentication. MFA implementation is planned for 
+                    future releases to add an extra layer of security.
+                </p>
+            </div>
+
+            <div class="essential-item">
+                <h4>8. Regular Backups</h4>
+                <span class="status implemented">Implemented</span>
+                <p>
+                    Database backups are performed regularly. Encrypted backups ensure data can be 
+                    recovered in case of system failure or security incident.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <h2>Security Measures</h2>
+        <p>
+            CyberVantage implements multiple layers of security to protect user data and provide a safe learning environment:
+        </p>
+
+        <h3>Authentication & Access Control</h3>
+        <ul>
+            <li><strong>JWT Authentication:</strong> Secure token-based authentication with HS256 algorithm</li>
+            <li><strong>Password Security:</strong> BCrypt hashing with strong password requirements (8+ chars, mixed case, numbers)</li>
+            <li><strong>Rate Limiting:</strong> Protection against brute force attacks (5 login attempts per 5 minutes)</li>
+            <li><strong>Session Management:</strong> Secure server-side session storage with 1-hour token expiration</li>
+        </ul>
+
+        <h3>Data Protection</h3>
+        <ul>
+            <li><strong>Encryption at Rest:</strong> Sensitive data encrypted using Fernet (AES-128) encryption</li>
+            <li><strong>Secure Database:</strong> SQLAlchemy ORM prevents SQL injection attacks</li>
+            <li><strong>Environment-based Secrets:</strong> No hardcoded credentials in source code</li>
+            <li><strong>HTTPS Support:</strong> SSL/TLS encryption for data in transit (production)</li>
+        </ul>
+
+        <h3>Input Validation & Output Encoding</h3>
+        <ul>
+            <li><strong>CSRF Protection:</strong> Flask-WTF CSRF tokens on all forms</li>
+            <li><strong>XSS Prevention:</strong> Template auto-escaping and Content Security Policy headers</li>
+            <li><strong>Email Validation:</strong> RFC-compliant validation using email-validator library</li>
+            <li><strong>Input Sanitization:</strong> All user inputs validated and sanitized server-side</li>
+        </ul>
+
+        <h3>Security Headers</h3>
+        <ul>
+            <li><strong>X-Frame-Options:</strong> DENY - Prevents clickjacking attacks</li>
+            <li><strong>X-Content-Type-Options:</strong> nosniff - Prevents MIME type confusion</li>
+            <li><strong>X-XSS-Protection:</strong> 1; mode=block - Browser-level XSS filtering</li>
+            <li><strong>Referrer-Policy:</strong> same-origin - Controls referrer information</li>
+        </ul>
+
+        <h3>AI Safety</h3>
+        <ul>
+            <li><strong>Multi-Provider Fallback:</strong> Azure OpenAI and Google Gemini with automatic failover</li>
+            <li><strong>Content Filtering:</strong> AI responses validated to ensure appropriate educational content</li>
+            <li><strong>Rate Limiting:</strong> API usage limits prevent abuse and manage costs</li>
+            <li><strong>Prompt Engineering:</strong> Carefully designed prompts ensure safe, relevant AI outputs</li>
+        </ul>
+    </div>
+
+    <div class="content-section">
+        <h2>Our Technology Stack</h2>
+        <p>
+            CyberVantage is built using modern, secure technologies:
+        </p>
+        <ul>
+            <li><strong>Backend:</strong> Python Flask framework with SQLAlchemy ORM</li>
+            <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript with Jinja2 templating</li>
+            <li><strong>AI Integration:</strong> Azure OpenAI and Google Gemini APIs</li>
+            <li><strong>Database:</strong> PostgreSQL (production) / SQLite (development)</li>
+            <li><strong>Security Libraries:</strong> BCrypt, PyJWT, Cryptography, Flask-WTF</li>
+            <li><strong>Deployment:</strong> Vercel (serverless) with environment-based configuration</li>
+        </ul>
+    </div>
+</div>
+
+<div class="glass-container cta-section" style="max-width: 800px; margin: 3rem auto;">
+    <h2>Ready to Get Started?</h2>
+    <p>Join thousands of students learning essential cybersecurity skills</p>
+    <div class="cta-buttons">
+        {% if session.get('token') %}
+        <a href="{{ url_for('dashboard') }}" class="btn-primary">Go to Dashboard</a>
+        {% else %}
+        <a href="{{ url_for('auth.register') }}" class="btn-primary">Create Account</a>
+        <a href="{{ url_for('auth.login') }}" class="btn-glass">Sign In</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Smooth scroll for internal links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% block footer %}
+<footer class="custom-footer">
+    <p>Made with <span class="heart">♥</span> by <span class="creators">Ashutosh Gupta</span> and <span class="creators">Ujwwal Gupta</span></p>
+</footer>
+{% endblock %}

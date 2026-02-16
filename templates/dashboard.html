@@ -29,11 +29,60 @@
         align-items: center;
         text-align: center;
         height: 100%;
+        position: relative;
+        padding: 2rem 1.75rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+
+    .section-content::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 16px;
+        padding: 1px;
+        background: linear-gradient(
+            135deg,
+            rgba(102, 126, 234, 0.4),
+            rgba(118, 75, 162, 0.3)
+        );
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .section-content:hover {
+        background: rgba(255, 255, 255, 0.04);
+        transform: translateY(-8px);
+        border-color: #667eea;
+        box-shadow: 
+            0 20px 40px rgba(0, 0, 0, 0.3),
+            0 0 40px rgba(102, 126, 234, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .section-content:hover::before {
+        opacity: 1;
     }
 
     .section-icon {
         font-size: 3rem;
         margin-bottom: 1rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.2));
+    }
+
+    .section-content:hover .section-icon {
+        transform: scale(1.1) translateY(-4px);
+        filter: drop-shadow(0 8px 24px rgba(102, 126, 234, 0.45));
     }
 
     .current-time {
@@ -53,7 +102,7 @@
 
 <div class="sections-container">
     <a href="{{ url_for('analysis.learn') }}" class="section-card">
-        <div class="glass-panel section-content">
+        <div class="section-content">
             <div class="section-icon">📚</div>
             <h3>Learn</h3>
             <p>Access educational resources, tutorials, and courses on cybersecurity fundamentals and advanced topics.
@@ -62,7 +111,7 @@
     </a>
 
     <a href="{{ url_for('simulation.simulate') }}" class="section-card">
-        <div class="glass-panel section-content">
+        <div class="section-content">
             <div class="section-icon">🛡️</div>
             <h3>Simulate</h3>
             <p>Practice with real-world cybersecurity scenarios in a safe, controlled environment.</p>
@@ -70,7 +119,7 @@
     </a>
 
     <a href="{{ url_for('analysis.analysis') }}" class="section-card">
-        <div class="glass-panel section-content">
+        <div class="section-content">
             <div class="section-icon">📊</div>
             <h3>Analysis</h3>
             <p>Review your performance metrics, progress tracking, and personalized recommendations.</p>
@@ -78,7 +127,7 @@
     </a>
 
     <a href="{{ url_for('threat.check_threats') }}" class="section-card">
-        <div class="glass-panel section-content">
+        <div class="section-content">
             <div class="section-icon">🔍</div>
             <h3>Check Threats</h3>
             <p>Scan files, URLs, and IPs to identify potential malware and security threats.</p>
@@ -86,7 +135,7 @@
     </a>
 
     <a href="{{ url_for('threat.get_phishing_assignment') }}" class="section-card">
-        <div class="glass-panel section-content">
+        <div class="section-content">
             <div class="section-icon">✏️</div>
             <h3>Assignment</h3>
             <p>Test your knowledge by creating a convincing phishing email and get AI feedback on your work.</p>
@@ -95,7 +144,7 @@
 
     {% if current_user and current_user.is_admin_user() %}
     <a href="{{ url_for('auth.admin_users') }}" class="section-card">
-        <div class="glass-panel section-content">
+        <div class="section-content">
             <div class="section-icon">👥</div>
             <h3>Admin Panel</h3>
             <p>Manage system users, view registration details, and maintain user accounts.</p>

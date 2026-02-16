@@ -4,83 +4,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberVantage 2026</title>
+    <title>CyberVantage 2026 - Learn Cybersecurity</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@300;500;700&display=swap"
-        rel="stylesheet">
 </head>
 
 <body>
-    <div class="cursor-glow"></div>
+    <!-- Custom Cursor -->
+    <div class="custom-cursor"></div>
+    <div class="cursor-dot"></div>
+
+    <!-- Animated Gradient Mesh Background -->
+    <div class="gradient-mesh">
+        <div class="mesh-gradient mesh-1"></div>
+        <div class="mesh-gradient mesh-2"></div>
+        <div class="mesh-gradient mesh-3"></div>
+        <div class="mesh-gradient mesh-4"></div>
+    </div>
+
+    <!-- Noise Overlay -->
     <div class="noise-overlay"></div>
 
-    <!-- SVG Filter for Gooey Effect -->
-    <svg style="position: absolute; width: 0; height: 0;">
-        <defs>
-            <filter id="goo">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-                    result="goo" />
-                <feBlend in="SourceGraphic" in2="goo" />
-            </filter>
-        </defs>
-    </svg>
-
+    <!-- Navigation -->
     <nav class="glass-nav">
         <div class="logo">CyberVantage</div>
         <div class="nav-links">
             <a href="#features">Features</a>
             <a href="#phases">Learning Journey</a>
             <a href="#security">Security</a>
+            <a href="{{ url_for('about') }}">About</a>
             <a href="{{ url_for('auth.login') }}" class="btn-primary">Login</a>
         </div>
     </nav>
 
+    <!-- Main Content -->
     <main>
+        <!-- Hero Section -->
         <section class="hero">
             <div class="hero-content">
                 <h1 class="hero-title">
-                    <span class="reveal-text">The Future</span>
-                    <span class="reveal-text">Is Transparent.</span>
+                    <span class="reveal-text">
+                        <span class="word">The</span>
+                        <span class="word">Future</span>
+                    </span>
+                    <span class="reveal-text">
+                        <span class="word">Is</span>
+                        <span class="word">Transparent.</span>
+                    </span>
                 </h1>
-                <p class="hero-subtitle reveal-text-delayed">
+                <p class="hero-subtitle">
                     <strong>CyberVantage</strong> is an educational platform that teaches students about cybersecurity, 
                     phishing, and spam detection through interactive AI-powered simulations and hands-on learning experiences.
                 </p>
-                <p class="hero-description reveal-text-delayed">
+                <p class="hero-description">
                     Learn to identify threats, practice with realistic simulations, analyze your performance, 
                     and demonstrate your skills—all in a safe, controlled environment designed for education.
                 </p>
-                <div class="cta-group reveal-text-delayed">
+                <div class="cta-group">
                     <button class="btn-glass" onclick="window.location.href='{{ url_for('auth.register') }}'">Get Started</button>
                     <button class="btn-outline" onclick="document.getElementById('features').scrollIntoView({behavior: 'smooth'})">Learn More</button>
                 </div>
             </div>
+            
+            <!-- Cybersecurity Shield Visual -->
             <div class="hero-visual">
-                <div class="liquid-container">
-                    <div class="liquid-orb orb-1"></div>
-                    <div class="liquid-orb orb-2"></div>
-                </div>
-                <div class="glass-card-mockup">
-                    <div class="card-header">
-                        <div class="dot red"></div>
-                        <div class="dot yellow"></div>
-                        <div class="dot green"></div>
+                <div class="cyber-shield-container" id="cyberShield">
+                    <!-- Shield Background -->
+                    <div class="shield-bg"></div>
+                    
+                    <!-- Lock Icon -->
+                    <div class="shield-lock">
+                        <div class="lock-shackle"></div>
+                        <div class="lock-body">
+                            <div class="lock-keyhole"></div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="line w-75"></div>
-                        <div class="line w-50"></div>
-                        <div class="line w-90"></div>
-                    </div>
+                    
+                    <!-- Network Nodes -->
+                    <div class="network-node node-1"></div>
+                    <div class="network-node node-2"></div>
+                    <div class="network-node node-3"></div>
+                    <div class="network-node node-4"></div>
+                    <div class="network-node node-5"></div>
+                    <div class="network-node node-6"></div>
+                    
+                    <!-- Connection Lines -->
+                    <div class="connection-line line-1"></div>
+                    <div class="connection-line line-2"></div>
+                    <div class="connection-line line-3"></div>
+                    <div class="connection-line line-4"></div>
+                    
+                    <!-- Orbiting Particles -->
+                    <div class="orbit-particle orbit-1"></div>
+                    <div class="orbit-particle orbit-2"></div>
+                    <div class="orbit-particle orbit-3"></div>
+                    
+                    <!-- Scan Line -->
+                    <div class="scan-line"></div>
                 </div>
             </div>
         </section>
 
-        <!-- What is CyberVantage Section -->
-        <section class="about-section">
+        <!-- About Section -->
+        <section class="about-section" id="about">
             <div class="about-content">
                 <h2 class="section-title">What is CyberVantage?</h2>
                 <p class="section-description">
@@ -92,57 +119,74 @@
             </div>
         </section>
 
-        <!-- Four Phases Section -->
+        <!-- Phases Section with Bento Grid -->
         <section id="phases" class="phases-section">
             <h2 class="section-title">Your Learning Journey</h2>
-            <div class="phases-grid">
-                <div class="glass-panel phase-card">
+            <div class="bento-grid">
+                <div class="phase-card">
                     <div class="phase-number">01</div>
-                    <h3>📚 Learning Phase</h3>
+                    <span class="phase-icon">📚</span>
+                    <h3>Learning Phase</h3>
                     <p>Start with interactive educational content, slides, and MCQ quizzes. Learn the fundamentals 
                     of phishing, spam, and cyber safety with instant feedback and progress tracking.</p>
                 </div>
-                <div class="glass-panel phase-card">
+                
+                <div class="phase-card">
                     <div class="phase-number">02</div>
-                    <h3>🎯 Simulation Phase</h3>
+                    <span class="phase-icon">🎯</span>
+                    <h3>Simulation Phase</h3>
                     <p>Practice with realistic, AI-generated phishing emails. Classify emails as safe or spam, 
                     explain your reasoning, and receive personalized feedback on your detection skills.</p>
                 </div>
-                <div class="glass-panel phase-card">
+                
+                <div class="phase-card">
                     <div class="phase-number">03</div>
-                    <h3>📊 Analysis Phase</h3>
+                    <span class="phase-icon">📊</span>
+                    <h3>Analysis Phase</h3>
                     <p>Review comprehensive performance summaries, accuracy statistics, and personalized learning paths. 
-                    Identify weak points and earn badges for achieving milestones.</p>
+                    Identify weak points and earn badges for achieving milestones. Track your progress over time and 
+                    see how you compare to other learners.</p>
                 </div>
-                <div class="glass-panel phase-card">
+                
+                <div class="phase-card">
                     <div class="phase-number">04</div>
-                    <h3>✍️ Final Assignment</h3>
+                    <span class="phase-icon">✍️</span>
+                    <h3>Final Assignment</h3>
                     <p>Create your own phishing email simulation. Our AI rates your creation and provides detailed 
                     feedback, helping you understand attacker tactics and defensive strategies.</p>
                 </div>
             </div>
         </section>
 
+        <!-- Features Section -->
         <section id="features" class="features">
             <h2 class="section-title">Key Features</h2>
-            <div class="glass-panel">
-                <h3>🤖 AI-Powered Simulations</h3>
-                <p>Realistic phishing scenarios generated by Azure OpenAI, providing safe hands-on experience 
-                with the latest threat tactics.</p>
-            </div>
-            <div class="glass-panel">
-                <h3>🔒 Enterprise Security</h3>
-                <p>JWT authentication, AES-256 encryption, bcrypt password hashing, and comprehensive CSRF protection 
-                ensure your data stays secure.</p>
-            </div>
-            <div class="glass-panel">
-                <h3>📈 Real-time Analytics</h3>
-                <p>Track your progress with detailed performance metrics, accuracy scores, and personalized 
-                improvement recommendations.</p>
+            <div class="features-grid">
+                <div class="glass-panel">
+                    <h3>🤖 AI-Powered Simulations</h3>
+                    <p>Realistic phishing scenarios generated by Azure OpenAI, providing safe hands-on experience 
+                    with the latest threat tactics and social engineering techniques.</p>
+                </div>
+                <div class="glass-panel">
+                    <h3>🔒 Enterprise Security</h3>
+                    <p>JWT authentication, AES-256 encryption, bcrypt password hashing, and comprehensive CSRF protection 
+                    ensure your data stays secure throughout your learning journey.</p>
+                </div>
+                <div class="glass-panel">
+                    <h3>📈 Real-time Analytics</h3>
+                    <p>Track your progress with detailed performance metrics, accuracy scores, and personalized 
+                    improvement recommendations based on your learning patterns.</p>
+                </div>
             </div>
         </section>
     </main>
 
+    <!-- Footer -->
+    <footer class="custom-footer">
+        <p>Made with <span class="heart">♥</span> by <span class="creators">Ashutosh Gupta</span> and <span class="creators">Ujwwal Gupta</span></p>
+    </footer>
+
+    <!-- JavaScript for Interactions -->
     <script src="{{ url_for('static', filename='landing.js') }}"></script>
 </body>
 

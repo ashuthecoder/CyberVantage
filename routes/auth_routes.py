@@ -79,9 +79,9 @@ def register():
         record_attempt(ip_address, registration_attempts)
         
         name = request.form.get("name", "").strip()
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "")
-        confirm_password = request.form.get("confirm_password", "")
+        email = request.form.get("email", "").strip().lower()  # Normalize email to lowercase
+        password = request.form.get("password", "").strip()  # Strip whitespace from password
+        confirm_password = request.form.get("confirm_password", "").strip()  # Strip whitespace from password
 
         # Input validation
         if not name or not email or not password:
@@ -115,7 +115,7 @@ def register():
         if User.query.filter_by(email=email).first():
             return jsonify({"error": "Email already registered"}), 400
 
-        # Create user
+        # Create user with properly hashed password
         new_user = User(name=name, email=email)
         new_user.set_password(password)
         db.session.add(new_user)
@@ -142,8 +142,8 @@ def login():
         if is_rate_limited(ip_address, login_attempts, MAX_LOGIN_ATTEMPTS):
             return jsonify({"error": "Too many login attempts. Please try again in 5 minutes."}), 429
         
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "")
+        email = request.form.get("email", "").strip().lower()  # Normalize email to lowercase
+        password = request.form.get("password", "").strip()  # Strip whitespace from password
 
         # Input validation
         if not email or not password:
@@ -151,6 +151,7 @@ def login():
             return jsonify({"error": "Email and password are required"}), 400
 
         user = User.query.filter_by(email=email).first()
+
         if not user or not user.check_password(password):
             record_attempt(ip_address, login_attempts)
             return jsonify({"error": "Invalid credentials"}), 401
@@ -226,6 +227,34 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated
 
+@auth_bp.route('/demographics', methods=['GET', 'POST'])
+@token_required
+def demographics(current_user):
+    if request.method == 'POST':
+        current_user.tech_confidence = request.form.get('tech_confidence', '').strip()
+        current_user.cybersecurity_experience = request.form.get('cybersecurity_experience', '').strip()
+        current_user.age_group = request.form.get('age_group', '').strip()
+        current_user.industry = request.form.get('industry', '').strip()
+        current_user.demographics_completed = True
+        db.session.commit()
+        return redirect(url_for('analysis.learn'))
+    return render_template('demographics.html', username=current_user.name, user=current_user)
+
+@auth_bp.route('/profile', methods=['GET', 'POST'])
+@token_required
+def profile(current_user):
+    if request.method == 'POST':
+        current_user.tech_confidence = request.form.get('tech_confidence', '').strip()
+        current_user.cybersecurity_experience = request.form.get('cybersecurity_experience', '').strip()
+        current_user.age_group = request.form.get('age_group', '').strip()
+        current_user.industry = request.form.get('industry', '').strip()
+        current_user.demographics_completed = True
+        db.session.commit()
+        from flask import flash
+        flash("Profile updated successfully.", "success")
+        return redirect(url_for('auth.profile'))
+    return render_template('profile.html', username=current_user.name, user=current_user)
+
 @auth_bp.route('/admin/users')
 @token_required
 @admin_required
@@ -254,7 +283,7 @@ def make_admin(current_user, user_id):
 def reset_password_request():
     """Request password reset"""
     if request.method == 'POST':
-        email = request.form.get('email', '').strip()
+        email = request.form.get('email', '').strip().lower()  # Normalize email to lowercase
         
         if not email:
             return jsonify({"error": "Email is required"}), 400
@@ -305,8 +334,8 @@ def reset_password(token):
         return redirect(url_for('auth.login'))
     
     if request.method == 'POST':
-        password = request.form.get('password', '')
-        confirm_password = request.form.get('confirm_password', '')
+        password = request.form.get('password', '').strip()  # Strip whitespace from password
+        confirm_password = request.form.get('confirm_password', '').strip()  # Strip whitespace from password
         
         # Password validation (same as registration)
         if not password:
@@ -495,8 +524,8 @@ def admin_reset_password(current_user, user_id):
     """Admin function to reset any user's password"""
     user = User.query.get_or_404(user_id)
     
-    new_password = request.form.get('new_password', '')
-    confirm_password = request.form.get('confirm_password', '')
+    new_password = request.form.get('new_password', '').strip()  # Strip whitespace from password
+    confirm_password = request.form.get('confirm_password', '').strip()  # Strip whitespace from password
     
     # Validation
     if not new_password or not confirm_password:
