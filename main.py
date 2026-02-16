@@ -34,6 +34,11 @@ def index():
     """Landing page with detailed CyberVantage information"""
     return render_template("index.html")
 
+@app.route('/about')
+def about():
+    """About page with platform information"""
+    return render_template("about.html")
+
 @app.route('/landing-new')
 def landing_new():
     """New React-based landing page"""
