@@ -33,8 +33,8 @@ export default function Dashboard() {
   const sidebarPhases = [
     { id: 'learn', label: isSoc ? 'LEARN' : 'Learn', icon: isSoc ? Database : BookOpen },
     { id: 'simulate', label: isSoc ? 'SIMULATE' : 'Simulate', icon: Terminal },
-    { id: 'analyze', label: isSoc ? 'ANALYZE' : 'Analyze', icon: Activity },
-    { id: 'demonstrate', label: isSoc ? 'DEMONSTRATE' : 'Demonstrate', icon: Zap }
+    { id: 'demonstrate', label: isSoc ? 'DEMONSTRATE' : 'Demonstrate', icon: Zap },
+    { id: 'analyze', label: isSoc ? 'ANALYZE' : 'Analyze', icon: Activity }
   ];
 
   const sidebarNav = [
@@ -305,8 +305,8 @@ export default function Dashboard() {
           {/* Phase Content */}
           {activePhase === 'learn' && <LearnPhase t={t} isSoc={isSoc} />}
           {activePhase === 'simulate' && <SimulatePhase t={t} isSoc={isSoc} />}
-          {activePhase === 'analyze' && <AnalyzePhase t={t} isSoc={isSoc} />}
           {activePhase === 'demonstrate' && <DemonstratePhase t={t} isSoc={isSoc} />}
+          {activePhase === 'analyze' && <AnalyzePhase t={t} isSoc={isSoc} />}
         </main>
       </div>
     </div>
@@ -426,19 +426,31 @@ function LearnPhase({ t, isSoc }) {
 }
 
 function SimulatePhase({ t, isSoc }) {
+  const navigate = useNavigate();
   const [selectedEmail, setSelectedEmail] = useState(null);
+  const [predefinedEmails, setPredefinedEmails] = useState([]);
 
-  const threats = [
-    { id: 'THREAT_001', from: 'security@paypa1-verify.com', subject: isSoc ? 'URGENT_ACCOUNT_VERIFICATION' : 'Urgent Account Verification', risk: 'CRITICAL', indicators: 3 },
-    { id: 'THREAT_002', from: 'hr@company.com', subject: isSoc ? 'BENEFITS_UPDATE_2024' : 'Benefits Update 2024', risk: 'SAFE', indicators: 0 },
-    { id: 'THREAT_003', from: 'no-reply@amaz0n-security.net', subject: isSoc ? 'ORDER_CANCELLED_#8472819' : 'Order Cancelled #8472819', risk: 'HIGH', indicators: 4 },
-    { id: 'THREAT_004', from: 'notifications@linkedin.com', subject: isSoc ? 'NEW_CONNECTION_REQUESTS' : 'New Connection Requests', risk: 'SAFE', indicators: 0 }
-  ];
+  // Load email previews from external JSON file
+  useEffect(() => {
+    fetch('/data/email-previews.json')
+      .then(res => res.json())
+      .then(data => setPredefinedEmails(data))
+      .catch(err => {
+        console.error('Error loading email previews:', err);
+        // Fallback to empty array if loading fails
+        setPredefinedEmails([]);
+      });
+  }, []);
 
   const getRiskColor = (risk) => {
     if (risk === 'CRITICAL') return t.danger;
     if (risk === 'HIGH') return t.warning;
     return t.success;
+  };
+
+  const handleStartSimulation = () => {
+    // Navigate to the Flask simulation route
+    window.location.href = '/simulate';
   };
 
   return (
@@ -450,180 +462,171 @@ function SimulatePhase({ t, isSoc }) {
         borderBottom: `1px solid ${t.border}`,
         paddingBottom: '0.5rem'
       }}>
-        {isSoc ? 'THREAT_SIMULATION // INCIDENT_RESPONSE_TRAINING' : 'Threat Simulation — Incident Response Training'}
+        {isSoc ? 'THREAT_SIMULATION // PHISHING_EMAIL_TRAINING' : 'Threat Simulation — Phishing Email Training'}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        {/* Threat Queue */}
-        <div>
-          <div style={{
-            padding: '1rem',
-            background: isSoc ? 'rgba(0, 217, 255, 0.1)' : `${t.primary}10`,
-            border: `1px solid ${t.primary}`,
-            borderRadius: isSoc ? '0' : '8px',
-            marginBottom: '1rem',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-          }}>
-            <span style={{ fontSize: '0.8rem', color: t.primary, letterSpacing: isSoc ? '0.05em' : 'normal' }}>
-              {isSoc ? 'INCIDENT_QUEUE // SESSION_14' : 'Incident Queue · Session 14'}
-            </span>
-            <span style={{ fontSize: '0.8rem', color: t.warning }}>
-              {isSoc ? `${threats.length} THREATS_PENDING` : `${threats.length} threats pending`}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {threats.map((threat, index) => {
-              const isSelected = selectedEmail?.id === threat.id;
-              return (
-                <div
-                  key={threat.id}
-                  onClick={() => setSelectedEmail(threat)}
-                  style={{
-                    padding: '1rem',
-                    background: isSelected ? (isSoc ? 'rgba(0, 217, 255, 0.1)' : `${t.primary}10`) : (isSoc ? t.bgTertiary : t.bgSecondary),
-                    border: isSelected ? `1px solid ${t.primary}` : `1px solid ${t.border}`,
-                    borderRadius: isSoc ? '0' : '8px',
-                    cursor: 'pointer', transition: 'all 0.2s ease',
-                    animation: `slideUp 0.5s ease-out ${index * 0.1}s backwards`
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <span style={{ fontSize: '0.75rem', color: t.textSecondary, letterSpacing: isSoc ? '0.05em' : 'normal' }}>
-                      {threat.id}
-                    </span>
-                    <span style={{
-                      padding: '0.25rem 0.75rem',
-                      fontSize: '0.65rem', fontWeight: 700,
-                      borderRadius: isSoc ? '0' : '12px',
-                      background: `${getRiskColor(threat.risk)}15`,
-                      border: `1px solid ${getRiskColor(threat.risk)}`,
-                      color: getRiskColor(threat.risk)
-                    }}>
-                      {isSoc ? `RISK: ${threat.risk}` : threat.risk}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: t.textSecondary, marginBottom: '0.25rem' }}>
-                    {isSoc ? 'FROM: ' : 'From: '}{threat.from}
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: t.text, fontWeight: 700 }}>
-                    {isSoc ? 'SUBJECT: ' : ''}{threat.subject}
-                  </div>
-                  {threat.indicators > 0 && (
-                    <div style={{ fontSize: '0.7rem', color: t.danger, marginTop: '0.5rem' }}>
-                      {isSoc
-                        ? `⚠ ${threat.indicators} THREAT_INDICATORS_DETECTED`
-                        : `⚠ ${threat.indicators} threat indicators detected`}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+      {/* Info Panel */}
+      <div style={{
+        padding: '1.5rem',
+        background: isSoc ? 'rgba(0, 217, 255, 0.05)' : `${t.primary}05`,
+        border: `1px solid ${t.primary}`,
+        borderRadius: isSoc ? '0' : '12px',
+        marginBottom: '2rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'start', gap: '1rem', marginBottom: '1rem' }}>
+          <Terminal size={24} color={t.primary} />
+          <div>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: t.text, marginBottom: '0.5rem' }}>
+              {isSoc ? 'SIMULATION_PROTOCOL' : 'Simulation Protocol'}
+            </div>
+            <div style={{ fontSize: '0.85rem', color: t.textSecondary, lineHeight: 1.6 }}>
+              {isSoc 
+                ? '> PHASE_1: 5 PREDEFINED_EMAILS // PHASE_2: 5 AI_GENERATED_EMAILS'
+                : 'Phase 1: Analyze 5 predefined emails · Phase 2: Analyze 5 AI-generated emails based on your performance'}
+            </div>
           </div>
         </div>
+        <button
+          onClick={handleStartSimulation}
+          style={{
+            width: '100%',
+            padding: '1rem',
+            background: `${t.primary}`,
+            border: 'none',
+            borderRadius: isSoc ? '0' : '8px',
+            color: '#fff',
+            fontSize: '0.9rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            letterSpacing: isSoc ? '0.05em' : 'normal',
+            fontFamily: t.fontFamily,
+            transition: 'all 0.3s ease',
+            boxShadow: isSoc ? '0 0 20px rgba(0, 217, 255, 0.3)' : '0 2px 8px rgba(0,0,0,0.1)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = isSoc ? '0 0 30px rgba(0, 217, 255, 0.5)' : '0 4px 12px rgba(0,0,0,0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = isSoc ? '0 0 20px rgba(0, 217, 255, 0.3)' : '0 2px 8px rgba(0,0,0,0.1)';
+          }}
+        >
+          {isSoc ? '[START_SIMULATION]' : '🚀 Start Simulation'}
+        </button>
+      </div>
 
-        {/* Analysis Terminal */}
-        <div>
-          {selectedEmail ? (
-            <div style={{
-              padding: '1.5rem',
-              background: isSoc ? 'rgba(0, 0, 0, 0.5)' : t.bgSecondary,
-              border: `1px solid ${t.primary}`,
-              borderRadius: isSoc ? '0' : '12px',
-              height: 'fit-content'
-            }}>
-              <div style={{ fontSize: '0.8rem', color: t.primary, letterSpacing: isSoc ? '0.1em' : '0.02em', marginBottom: '1.5rem' }}>
-                {isSoc ? 'THREAT_ANALYSIS_TERMINAL' : 'Threat Analysis'}
-              </div>
+      {/* Email Preview Grid */}
+      <div style={{
+        fontSize: '0.75rem', 
+        color: t.textSecondary, 
+        marginBottom: '1rem',
+        fontWeight: 600,
+        textTransform: 'uppercase',
+        letterSpacing: isSoc ? '0.1em' : '0.05em'
+      }}>
+        {isSoc ? 'PHASE_1_EMAIL_PREVIEW' : 'Phase 1 Email Preview (5 Emails)'}
+      </div>
 
-              <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.75rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
-                  {isSoc ? 'CLASSIFICATION_REQUIRED' : 'Classification Required'}
-                </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button style={{
-                    flex: 1, padding: '1rem',
-                    background: `${t.success}10`,
-                    border: `1px solid ${t.success}`,
-                    borderRadius: isSoc ? '0' : '8px',
-                    color: t.success, fontSize: '0.85rem', fontWeight: 700,
-                    cursor: 'pointer', letterSpacing: isSoc ? '0.05em' : 'normal',
-                    fontFamily: t.fontFamily, transition: 'all 0.2s ease'
-                  }}>
-                    {isSoc ? '[LEGITIMATE]' : 'Legitimate'}
-                  </button>
-                  <button style={{
-                    flex: 1, padding: '1rem',
-                    background: `${t.danger}10`,
-                    border: `1px solid ${t.danger}`,
-                    borderRadius: isSoc ? '0' : '8px',
-                    color: t.danger, fontSize: '0.85rem', fontWeight: 700,
-                    cursor: 'pointer', letterSpacing: isSoc ? '0.05em' : 'normal',
-                    fontFamily: t.fontFamily, transition: 'all 0.2s ease'
-                  }}>
-                    {isSoc ? '[PHISHING]' : 'Phishing'}
-                  </button>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.75rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
-                  {isSoc ? 'INDICATORS_DETECTED' : 'Indicators Detected'}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: t.danger, lineHeight: 2 }}>
-                  {(isSoc
-                    ? ['> SUSPICIOUS_DOMAIN_DETECTED', '> URGENCY_LANGUAGE_PRESENT', '> TYPOSQUATTING_IDENTIFIED']
-                    : ['• Suspicious domain detected', '• Urgency language present', '• Typosquatting identified']
-                  ).map((line) => (
-                    <div key={line}>{line}</div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.75rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
-                  {isSoc ? 'ANALYSIS_REASONING' : 'Analysis Reasoning'}
-                </div>
-                <textarea
-                  placeholder={isSoc ? '// Enter detailed threat analysis...' : 'Enter your detailed threat analysis...'}
-                  style={{
-                    width: '100%', minHeight: '120px', padding: '1rem',
-                    background: isSoc ? 'rgba(0, 0, 0, 0.5)' : t.bgTertiary,
-                    border: `1px solid ${t.border}`,
-                    borderRadius: isSoc ? '0' : '8px',
-                    color: t.text, fontSize: '0.8rem',
-                    fontFamily: t.fontFamily, resize: 'vertical',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-
-              <button style={{
-                width: '100%', padding: '1rem',
-                background: `${t.primary}15`,
-                border: `1px solid ${t.primary}`,
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+        {predefinedEmails.map((email, index) => {
+          const isSelected = selectedEmail?.id === email.id;
+          return (
+            <div
+              key={email.id}
+              onClick={() => setSelectedEmail(email)}
+              style={{
+                padding: '1rem',
+                background: isSelected ? (isSoc ? 'rgba(0, 217, 255, 0.1)' : `${t.primary}10`) : (isSoc ? t.bgTertiary : t.bgSecondary),
+                border: isSelected ? `2px solid ${t.primary}` : `1px solid ${t.border}`,
                 borderRadius: isSoc ? '0' : '8px',
-                color: t.primary, fontSize: '0.9rem', fontWeight: 700,
-                cursor: 'pointer', letterSpacing: isSoc ? '0.05em' : 'normal',
-                fontFamily: t.fontFamily, transition: 'all 0.2s ease'
-              }}>
-                {isSoc ? '[SUBMIT_ANALYSIS]' : 'Submit Analysis'}
-              </button>
-            </div>
-          ) : (
-            <div style={{
-              padding: '3rem 2rem',
-              background: isSoc ? t.bgTertiary : t.bgSecondary,
-              border: `2px dashed ${t.border}`,
-              borderRadius: isSoc ? '0' : '12px',
-              textAlign: 'center', color: t.textTertiary
-            }}>
-              <Terminal size={48} style={{ margin: '0 auto 1rem' }} />
-              <div style={{ fontSize: '0.9rem', letterSpacing: isSoc ? '0.05em' : 'normal' }}>
-                {isSoc ? 'SELECT_THREAT_TO_BEGIN_ANALYSIS' : 'Select a threat to begin analysis'}
+                cursor: 'pointer', 
+                transition: 'all 0.2s ease',
+                animation: `slideUp 0.5s ease-out ${index * 0.1}s backwards`
+              }}
+              onMouseEnter={(e) => {
+                if (!isSelected) {
+                  e.currentTarget.style.borderColor = t.primary;
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isSelected) {
+                  e.currentTarget.style.borderColor = t.border;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', alignItems: 'start' }}>
+                <span style={{ 
+                  fontSize: '0.7rem', 
+                  color: t.textTertiary, 
+                  letterSpacing: isSoc ? '0.05em' : 'normal',
+                  fontWeight: 600
+                }}>
+                  {isSoc ? `EMAIL_${String(email.id).padStart(3, '0')}` : `Email #${email.id}`}
+                </span>
+                <span style={{
+                  padding: '0.25rem 0.75rem',
+                  fontSize: '0.65rem', 
+                  fontWeight: 700,
+                  borderRadius: isSoc ? '0' : '12px',
+                  background: `${getRiskColor(email.risk)}15`,
+                  border: `1px solid ${getRiskColor(email.risk)}`,
+                  color: getRiskColor(email.risk)
+                }}>
+                  {isSoc ? `RISK:${email.risk}` : email.risk}
+                </span>
               </div>
+              
+              <div style={{ fontSize: '0.7rem', color: t.textSecondary, marginBottom: '0.5rem' }}>
+                {isSoc ? 'FROM: ' : 'From: '}{email.from}
+              </div>
+              
+              <div style={{ fontSize: '0.85rem', color: t.text, fontWeight: 700, marginBottom: '0.5rem' }}>
+                {isSoc ? email.subject_soc : email.subject}
+              </div>
+              
+              <div style={{ 
+                fontSize: '0.75rem', 
+                color: t.textSecondary, 
+                marginBottom: '0.75rem',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {email.preview}
+              </div>
+              
+              {email.indicators > 0 && (
+                <div style={{ fontSize: '0.7rem', color: t.danger }}>
+                  {isSoc
+                    ? `⚠ ${email.indicators} THREAT_INDICATORS`
+                    : `⚠ ${email.indicators} threat indicators detected`}
+                </div>
+              )}
             </div>
-          )}
+          );
+        })}
+      </div>
+
+      {/* AI Generation Info */}
+      <div style={{
+        padding: '1.5rem',
+        background: isSoc ? 'rgba(138, 92, 246, 0.05)' : '#f3e8ff',
+        border: `1px solid ${isSoc ? '#8b5cf6' : '#c084fc'}`,
+        borderRadius: isSoc ? '0' : '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+          <Zap size={20} color="#8b5cf6" />
+          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: isSoc ? '#a78bfa' : '#7c3aed' }}>
+            {isSoc ? 'PHASE_2_AI_GENERATION' : 'Phase 2: AI-Generated Emails'}
+          </div>
+        </div>
+        <div style={{ fontSize: '0.8rem', color: t.textSecondary, lineHeight: 1.6 }}>
+          {isSoc 
+            ? '> After Phase 1 completion, AI will generate 5 custom phishing scenarios tailored to your performance metrics. Difficulty adapts based on detection accuracy.'
+            : 'After completing Phase 1, our AI will generate 5 custom phishing scenarios tailored to your performance. The difficulty adapts based on your detection accuracy.'}
         </div>
       </div>
     </div>
@@ -631,11 +634,12 @@ function SimulatePhase({ t, isSoc }) {
 }
 
 function AnalyzePhase({ t, isSoc }) {
+  const navigate = useNavigate();
   const sessions = [
-    { id: 14, date: isSoc ? 'TODAY' : 'Today', accuracy: 88, threats: 15, time: '2.1s' },
-    { id: 13, date: isSoc ? 'YESTERDAY' : 'Yesterday', accuracy: 85, threats: 20, time: '2.3s' },
-    { id: 12, date: isSoc ? '2_DAYS_AGO' : '2 days ago', accuracy: 92, threats: 18, time: '1.9s' },
-    { id: 11, date: isSoc ? '3_DAYS_AGO' : '3 days ago', accuracy: 79, threats: 12, time: '2.8s' }
+    { id: 14, date: isSoc ? 'TODAY' : 'Today', accuracy: 88, threats: 15, time: '2.1s', phase: 'simulate' },
+    { id: 13, date: isSoc ? 'YESTERDAY' : 'Yesterday', accuracy: 85, threats: 20, time: '2.3s', phase: 'demonstrate' },
+    { id: 12, date: isSoc ? '2_DAYS_AGO' : '2 days ago', accuracy: 92, threats: 18, time: '1.9s', phase: 'simulate' },
+    { id: 11, date: isSoc ? '3_DAYS_AGO' : '3 days ago', accuracy: 79, threats: 12, time: '2.8s', phase: 'demonstrate' }
   ];
 
   const getAccuracyColor = (acc) => {
@@ -654,6 +658,27 @@ function AnalyzePhase({ t, isSoc }) {
         paddingBottom: '0.5rem'
       }}>
         {isSoc ? 'PERFORMANCE_ANALYTICS // THREAT_DETECTION_METRICS' : 'Performance Analytics — Threat Detection Metrics'}
+      </div>
+
+      {/* Info Panel */}
+      <div style={{
+        padding: '1.25rem',
+        background: isSoc ? 'rgba(59, 130, 246, 0.05)' : `${t.primary}05`,
+        border: `1px solid ${t.primary}`,
+        borderRadius: isSoc ? '0' : '12px',
+        marginBottom: '2rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem'
+      }}>
+        <BarChart2 size={24} color={t.primary} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '0.85rem', color: t.textSecondary, lineHeight: 1.6 }}>
+            {isSoc 
+              ? '> Analytics are generated from Simulate and Demonstrate phase completions. Complete training sessions to populate performance metrics.'
+              : 'Analytics are generated from your Simulate and Demonstrate phase completions. Complete training sessions to see your performance metrics here.'}
+          </div>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', marginBottom: '2rem' }}>

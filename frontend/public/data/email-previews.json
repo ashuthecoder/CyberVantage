@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "from": "security@paypa1.com",
+    "subject": "Your account has been compromised",
+    "subject_soc": "YOUR_ACCOUNT_COMPROMISED",
+    "preview": "We have detected unusual activity on your account...",
+    "risk": "CRITICAL",
+    "indicators": 3,
+    "isSpam": true
+  },
+  {
+    "id": 2,
+    "from": "amazondelivery@amazon-shipment.net",
+    "subject": "Your Amazon package delivery failed",
+    "subject_soc": "PACKAGE_DELIVERY_FAILED",
+    "preview": "We attempted to deliver your package today but were unable...",
+    "risk": "CRITICAL",
+    "indicators": 4,
+    "isSpam": true
+  },
+  {
+    "id": 3,
+    "from": "notifications@linkedin.com",
+    "subject": "You have 3 new connection requests",
+    "subject_soc": "NEW_CONNECTION_REQUESTS",
+    "preview": "You have 3 new connection requests waiting for your response...",
+    "risk": "SAFE",
+    "indicators": 0,
+    "isSpam": false
+  },
+  {
+    "id": 4,
+    "from": "microsoft365@outlook.cn",
+    "subject": "Your Microsoft password will expire today",
+    "subject_soc": "PASSWORD_EXPIRATION_URGENT",
+    "preview": "URGENT: Your Microsoft password will expire in 12 hours...",
+    "risk": "HIGH",
+    "indicators": 2,
+    "isSpam": true
+  },
+  {
+    "id": 5,
+    "from": "newsletter@nytimes.com",
+    "subject": "Your Weekly News Digest from The New York Times",
+    "subject_soc": "WEEKLY_NEWS_DIGEST",
+    "preview": "This Week's Top Stories: Global Climate Summit Concludes...",
+    "risk": "SAFE",
+    "indicators": 0,
+    "isSpam": false
+  }
+]

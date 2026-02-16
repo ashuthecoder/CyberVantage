@@ -335,3 +335,113 @@ def send_notification_email(to_email: str, username: str, notification_type: str
         subject=f"CyberVantage - {notification_type}",
         html_content=html_content
     )
+
+
+def send_otp_email(to_email: str, otp: str, username: str) -> dict:
+    """
+    Send an OTP email for password reset
+    
+    Args:
+        to_email: User's email address
+        otp: 6-digit OTP code
+        username: User's username
+    
+    Returns:
+        dict: Response from send_email function
+    """
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {{
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+            }}
+            .container {{
+                max-width: 600px;
+                margin: 20px auto;
+                background-color: #ffffff;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }}
+            .header {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 30px;
+                text-align: center;
+                color: #ffffff;
+            }}
+            .content {{
+                padding: 40px 30px;
+                text-align: center;
+            }}
+            .otp-box {{
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: #ffffff;
+                font-size: 32px;
+                font-weight: bold;
+                letter-spacing: 8px;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 30px 0;
+                font-family: 'Courier New', monospace;
+            }}
+            .warning {{
+                background-color: #fff3cd;
+                border-left: 4px solid #ffc107;
+                padding: 15px;
+                margin: 20px 0;
+                border-radius: 4px;
+                text-align: left;
+            }}
+            .footer {{
+                background-color: #f8f9fa;
+                padding: 20px;
+                text-align: center;
+                font-size: 12px;
+                color: #6c757d;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🛡️ CyberVantage</h1>
+                <p>Password Reset Verification</p>
+            </div>
+            <div class="content">
+                <h2>Password Reset OTP</h2>
+                <p>Hello {username},</p>
+                <p>You requested to reset your password. Use the OTP code below to complete the process:</p>
+                
+                <div class="otp-box">{otp}</div>
+                
+                <p><strong>This code will expire in 15 minutes.</strong></p>
+                
+                <div class="warning">
+                    <p style="margin: 0;"><strong>⚠️ Security Notice:</strong></p>
+                    <p style="margin: 5px 0 0 0;">Never share this code with anyone. CyberVantage staff will never ask for your OTP.</p>
+                </div>
+                
+                <p>If you didn't request a password reset, please ignore this email or contact support immediately if you have concerns.</p>
+            </div>
+            <div class="footer">
+                <p>© 2024 CyberVantage. All rights reserved.</p>
+                <p>This is an automated email. Please do not reply.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return send_email(
+        to_email=to_email,
+        subject="CyberVantage - Password Reset OTP",
+        html_content=html_content
+    )

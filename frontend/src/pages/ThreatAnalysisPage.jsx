@@ -37,10 +37,19 @@ export default function ThreatAnalysisPage() {
   const [error, setError] = useState('');
   const [history, setHistory] = useState([]);
   const [serviceOnline, setServiceOnline] = useState(null);
+  const [scanLines, setScanLines] = useState(0);
 
   const t = theme;
   const isSoc = themeName === 'soc';
   const radius = isSoc ? '0' : '12px';
+
+  // Scanning line animation (SOC mode)
+  useEffect(() => {
+    if (isSoc) {
+      const interval = setInterval(() => setScanLines(prev => (prev + 1) % 100), 50);
+      return () => clearInterval(interval);
+    }
+  }, [isSoc]);
 
   const handleViewResult = (item) => {
     setResult(item);
@@ -154,7 +163,21 @@ export default function ThreatAnalysisPage() {
   const statusColorMap = { clean: t.success, warning: t.warning || '#f59e0b', danger: t.danger };
 
   return (
-    <div style={{ minHeight: '100vh', background: t.bg, fontFamily: t.fontFamily, color: t.text, padding: '2rem' }}>
+    <div style={{ minHeight: '100vh', background: t.bg, fontFamily: t.fontFamily, color: t.text, padding: '2rem', position: 'relative', overflow: 'hidden' }}>
+      {/* Scanning line animation */}
+      {isSoc && (
+        <div style={{
+          position: 'absolute',
+          top: `${scanLines}%`,
+          left: 0,
+          right: 0,
+          height: '2px',
+          background: 'linear-gradient(to bottom, transparent, #00d9ff80, transparent)',
+          pointerEvents: 'none',
+          zIndex: 100
+        }} />
+      )}
+      
       {/* Pulse animation for service dot */}
       <style>{`@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }`}</style>
 
