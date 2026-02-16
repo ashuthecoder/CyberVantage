@@ -34,20 +34,41 @@
     </svg>
 
     <nav class="glass-nav">
-        <a href="{{ url_for('dashboard') if session.get('token') else url_for('welcome') }}"
+        <a href="{{ url_for('dashboard') if session.get('token') else url_for('index') }}"
             class="logo">CyberVantage</a>
 
         <div class="nav-links">
             {% if session.get('token') %}
             <a href="{{ url_for('dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('analysis.learn') }}">Learn</a>
+            <div class="nav-dropdown">
+                <a href="{{ url_for('analysis.learn') }}" class="nav-dropdown-toggle">Learn <i class="fas fa-chevron-down" style="font-size: 0.65rem; margin-left: 4px;"></i></a>
+                <div class="nav-dropdown-menu">
+                    <a href="{{ url_for('analysis.learn_phishing') }}"><i class="fas fa-fish"></i> Learn Phishing</a>
+                    <a href="{{ url_for('analysis.learn_compliances') }}"><i class="fas fa-clipboard-check"></i> Learn Compliances</a>
+                </div>
+            </div>
             <a href="{{ url_for('threat.get_phishing_assignment') }}">Assignment</a>
             <a href="{{ url_for('simulation.simulate') }}">Simulate</a>
             <a href="{{ url_for('analysis.analysis') }}">Analysis</a>
             <a href="{{ url_for('threat.check_threats') }}">Check Threats</a>
+            <div class="nav-dropdown">
+                <a href="#" class="nav-dropdown-toggle" onclick="return false;">About <i class="fas fa-chevron-down" style="font-size: 0.65rem; margin-left: 4px;"></i></a>
+                <div class="nav-dropdown-menu">
+                    <a href="{{ url_for('about') }}"><i class="fas fa-info-circle"></i> About CyberVantage</a>
+                    <a href="{{ url_for('about') }}#compliance"><i class="fas fa-shield-alt"></i> Security & Compliance</a>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.profile') }}"><i class="fas fa-user"></i> Profile</a>
             <a href="{{ url_for('auth.logout') }}" class="btn-primary" style="margin-left: 2rem;">Logout</a>
             {% else %}
-            <a href="{{ url_for('welcome') }}">Home</a>
+            <a href="{{ url_for('index') }}">Home</a>
+            <div class="nav-dropdown">
+                <a href="#" class="nav-dropdown-toggle" onclick="return false;">About <i class="fas fa-chevron-down" style="font-size: 0.65rem; margin-left: 4px;"></i></a>
+                <div class="nav-dropdown-menu">
+                    <a href="{{ url_for('about') }}"><i class="fas fa-info-circle"></i> About CyberVantage</a>
+                    <a href="{{ url_for('about') }}#compliance"><i class="fas fa-shield-alt"></i> Security & Compliance</a>
+                </div>
+            </div>
             <a href="{{ url_for('auth.login') }}">Login</a>
             <a href="{{ url_for('auth.register') }}" class="btn-primary">Get Started</a>
             {% endif %}
@@ -58,9 +79,11 @@
         {% block content %}{% endblock %}
     </div>
 
+    {% block footer %}
     <footer>
         <p>&copy; 2026 CyberVantage. All rights reserved.</p>
     </footer>
+    {% endblock %}
 
     <script src="{{ url_for('static', filename='modern_script.js') }}"></script>
     {% block scripts %}{% endblock %}

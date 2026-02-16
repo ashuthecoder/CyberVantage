@@ -1,5 +1,5 @@
 """
-Email Generation Module - Azure OpenAI Only (Gemini removed as requested)
+Email Generation Module - Gemini primary, Azure OpenAI fallback
 
 This module handles AI-powered email generation for security training simulations
 and evaluation of user explanations about phishing emails.
@@ -29,19 +29,30 @@ except ImportError:
     def create_cache_key(prefix, content): return f"{prefix}_{hash(content)}"
     def get_log_dir(): return None
 
-# Import Azure OpenAI helper functions with fallback
+# Import AI provider with fallback support
 try:
-    from .azure_openai_helper import (
-        azure_openai_completion, test_azure_openai_connection, 
-        extract_text_from_response, call_azure_openai_with_retry
+    from .ai_provider import (
+        ai_completion_with_fallback,
+        ai_chat_completion_with_fallback,
+        extract_text_from_ai_response,
+        get_provider_status
     )
-    AZURE_HELPERS_AVAILABLE = True
+    AI_PROVIDER_AVAILABLE = True
 except ImportError:
-    AZURE_HELPERS_AVAILABLE = False
-    def azure_openai_completion(*args, **kwargs): return None, "IMPORT_ERROR"
-    def test_azure_openai_connection(*args, **kwargs): return {"status": "IMPORT_ERROR"}
-    def extract_text_from_response(*args, **kwargs): return ""
-    def call_azure_openai_with_retry(*args, **kwargs): return None, "IMPORT_ERROR"
+    AI_PROVIDER_AVAILABLE = False
+    def ai_completion_with_fallback(*args, **kwargs): return None, "IMPORT_ERROR", "none"
+    def ai_chat_completion_with_fallback(*args, **kwargs): return None, "IMPORT_ERROR", "none"
+    def extract_text_from_ai_response(*args, **kwargs): return ""
+    def get_provider_status(): return {}
+
+# Import Google Generative AI (Gemini) with fallback
+try:
+    import google.generativeai as genai
+    from google.generativeai.types import HarmCategory, HarmBlockThreshold
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    genai = None
 
 # Import template email fallback
 try:
@@ -57,6 +68,14 @@ except ImportError:
 
 # Determine writable log directory (may be None on serverless)
 LOG_DIR = get_log_dir()
+
+# Gemini model configuration
+DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+DEFAULT_GEMINI_FALLBACK_MODELS = [
+    m.strip()
+    for m in os.getenv("GEMINI_FALLBACK_MODELS", "gemini-1.5-pro").split(",")
+    if m.strip()
+]
 
 # =============================================================================
 # HELPER FUNCTIONS
@@ -107,45 +126,76 @@ def result_has_valid_content(result):
 # =============================================================================
 
 def generate_ai_email(user_name, previous_responses, GOOGLE_API_KEY=None, genai=None, app=None):
-    """Generate an AI email with robust error handling - Azure OpenAI only"""
+    """Generate an AI email with robust error handling - Gemini primary, Azure fallback"""
     call_count = getattr(generate_ai_email, 'call_count', 0) + 1
     generate_ai_email.call_count = call_count
     
     print(f"[GENERATE] Starting email generation (call #{call_count})")
     log_api_key_info(app, call_count)
     
-    # Try Azure OpenAI first
-    if AZURE_HELPERS_AVAILABLE:
+    # ── 1. Try Gemini (primary) ──────────────────────────────────────────
+    gemini_key = GOOGLE_API_KEY or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if gemini_key and GEMINI_AVAILABLE:
         try:
-            print("[GENERATE] Attempting Azure OpenAI generation")
-            result = multi_approach_generation_azure(user_name, previous_responses, app)
+            print("[GENERATE] Attempting Gemini generation (primary)")
+            result = multi_approach_generation_gemini(user_name, previous_responses, gemini_key)
             if result_has_valid_content(result):
-                print("[GENERATE] Azure OpenAI generation succeeded")
+                print("[GENERATE] Gemini generation succeeded")
                 return result
             else:
-                print("[GENERATE] Azure OpenAI generation failed, falling back to template")
+                print("[GENERATE] Gemini generation returned empty result, falling back")
         except Exception as e:
-            print(f"[GENERATE] Azure OpenAI error: {e}")
-            log_api_request("generate_ai_email", 0, False, error=str(e), api_source="AZURE")
+            print(f"[GENERATE] Gemini error: {e}")
+            log_api_request("generate_ai_email", 0, False, error=str(e), api_source="GEMINI")
+    else:
+        if not gemini_key:
+            print("[GENERATE] No Gemini API key configured, skipping Gemini")
+        if not GEMINI_AVAILABLE:
+            print("[GENERATE] google-generativeai package not installed, skipping Gemini")
+
+    # ── 2. Try Azure OpenAI (fallback) ───────────────────────────────────
+    if AZURE_HELPERS_AVAILABLE:
+        try:
+            print("[GENERATE] Attempting Azure OpenAI generation (fallback)")
+            result = multi_approach_generation_azure(user_name, previous_responses, app)
+            if result_has_valid_content(result):
+                print("[GENERATE] AI generation succeeded")
+                return result
+            else:
+                print("[GENERATE] AI generation failed, falling back to template")
+        except Exception as e:
+            print(f"[GENERATE] AI error: {e}")
+            log_api_request("generate_ai_email", 0, False, error=str(e), api_source="AI")
     
-    # Fallback to template email
+    # ── 3. Fallback to template email ────────────────────────────────────
     print("[GENERATE] Using template email fallback")
     return get_template_email()
 
 def evaluate_explanation(email_content, is_spam, user_response, user_explanation, GOOGLE_API_KEY=None, genai=None, app=None):
-    """Evaluate the user's explanation of why an email is phishing/legitimate - Azure OpenAI only"""
+    """Evaluate the user's explanation of why an email is phishing/legitimate - Gemini primary, Azure fallback"""
     try:
         print("[EVALUATE] Starting explanation evaluation")
         
-        # Try Azure OpenAI first
-        if AZURE_HELPERS_AVAILABLE:
+        # ── 1. Try Gemini (primary) ──────────────────────────────────────
+        gemini_key = GOOGLE_API_KEY or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        if gemini_key and GEMINI_AVAILABLE:
             try:
-                result = evaluate_with_azure(email_content, is_spam, user_response, user_explanation, app)
+                result = evaluate_with_gemini(email_content, is_spam, user_response, user_explanation, gemini_key)
                 if result:
                     return result
             except Exception as e:
-                print(f"[EVALUATE] Azure OpenAI error: {e}")
-                log_api_request("evaluate_explanation", 0, False, error=str(e), api_source="AZURE")
+                print(f"[EVALUATE] Gemini error: {e}")
+                log_api_request("evaluate_explanation", 0, False, error=str(e), api_source="GEMINI")
+
+        # ── 2. Try Azure OpenAI (fallback) ───────────────────────────────
+        if AZURE_HELPERS_AVAILABLE:
+            try:
+                result = evaluate_with_ai_fallback(email_content, is_spam, user_response, user_explanation, app)
+                if result:
+                    return result
+            except Exception as e:
+                print(f"[EVALUATE] AI error: {e}")
+                log_api_request("evaluate_explanation", 0, False, error=str(e), api_source="AI")
         
         # Fallback evaluation
         print("[EVALUATE] Using fallback evaluation")
@@ -157,12 +207,117 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
         return get_fallback_evaluation(is_spam, user_response)
 
 # =============================================================================
+# GEMINI IMPLEMENTATION
+# =============================================================================
+
+def _configure_gemini(api_key):
+    """Configure the Gemini SDK with the provided API key."""
+    import google.generativeai as _genai
+    _genai.configure(api_key=api_key)
+    return _genai
+
+def _call_gemini_with_retry(api_key, prompt, max_attempts=3, initial_delay=0.5):
+    """Call Gemini API with retry logic and model fallback."""
+    _genai = _configure_gemini(api_key)
+
+    models_to_try = [DEFAULT_GEMINI_MODEL] + DEFAULT_GEMINI_FALLBACK_MODELS
+
+    safety_settings = {
+        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+    }
+
+    for model_name in models_to_try:
+        for attempt in range(max_attempts):
+            try:
+                print(f"[GEMINI] Attempt {attempt + 1}/{max_attempts} with {model_name}")
+                model = _genai.GenerativeModel(model_name, safety_settings=safety_settings)
+                response = model.generate_content(prompt)
+
+                if hasattr(response, 'text') and response.text and response.text.strip():
+                    print(f"[GEMINI] Success with {model_name}")
+                    return response.text
+            except Exception as e:
+                print(f"[GEMINI] Error with {model_name} attempt {attempt + 1}: {e}")
+                if attempt < max_attempts - 1:
+                    time.sleep(initial_delay * (2 ** attempt))
+
+    return None
+
+
+def multi_approach_generation_gemini(user_name, previous_responses, api_key):
+    """Generate email using Gemini with multiple prompt approaches."""
+    print("[GEMINI] Starting multi-approach generation")
+
+    approaches = [
+        "Generate a realistic training email (either phishing or legitimate) for cybersecurity education.",
+        "Create a simulated email for security awareness training purposes.",
+        "Produce an educational email example for phishing detection training."
+    ]
+
+    for i, base_prompt in enumerate(approaches):
+        try:
+            prompt = build_generation_prompt(base_prompt, user_name, previous_responses)
+            text = _call_gemini_with_retry(api_key, prompt)
+            if text:
+                parsed = parse_email_response(text)
+                if parsed and result_has_valid_content(parsed):
+                    print(f"[GEMINI] Success with approach {i + 1}")
+                    return parsed
+        except Exception as e:
+            print(f"[GEMINI] Error with approach {i + 1}: {e}")
+            continue
+
+    print("[GEMINI] All approaches failed")
+    return None
+
+
+def evaluate_with_gemini(email_content, is_spam, user_response, user_explanation, api_key):
+    """Evaluate user explanation using Gemini."""
+    correct_answer = "phishing" if is_spam else "legitimate"
+    user_answer = "phishing" if user_response else "legitimate"
+
+    prompt = f"""You are a cybersecurity expert evaluating a student's analysis of an email for phishing detection training.
+
+Email Content: {email_content[:500]}...
+
+Correct Classification: {correct_answer}
+User Classification: {user_answer}
+User Explanation: {user_explanation}
+
+Evaluate the student's explanation considering:
+1. Accuracy (40%): Did they correctly identify the email type?
+2. Analysis Quality (30%): How well did they explain their reasoning?
+3. Security Awareness (20%): Did they identify relevant security indicators?
+4. Learning Progress (10%): Evidence of cybersecurity understanding
+
+Provide detailed, constructive feedback.
+
+Format as JSON: {{"feedback": "detailed HTML feedback", "score": 7}}"""
+
+    text = _call_gemini_with_retry(api_key, prompt)
+    if text:
+        text = clean_html_code_blocks(text)
+        try:
+            result = json.loads(text.strip())
+            if "feedback" in result and "score" in result:
+                result["feedback"] = clean_html_code_blocks(result["feedback"])
+                return result
+        except json.JSONDecodeError:
+            extracted_score = extract_score_from_feedback(text, is_spam, user_response)
+            return {"feedback": text, "score": extracted_score}
+
+    return None
+
+# =============================================================================
 # AZURE OPENAI IMPLEMENTATION
 # =============================================================================
 
-def multi_approach_generation_azure(user_name, previous_responses, app):
-    """Generate email using Azure OpenAI with multiple prompt approaches"""
-    print("[AZURE] Starting multi-approach generation")
+def multi_approach_generation_with_fallback(user_name, previous_responses, app):
+    """Generate email using AI with multiple prompt approaches and automatic fallback"""
+    print("[AI] Starting multi-approach generation with fallback")
     
     approaches = [
         "Generate a realistic training email (either phishing or legitimate) for cybersecurity education.",
@@ -172,13 +327,13 @@ def multi_approach_generation_azure(user_name, previous_responses, app):
     
     for i, base_prompt in enumerate(approaches):
         try:
-            print(f"[AZURE] Trying approach {i+1}: {base_prompt[:50]}...")
+            print(f"[AI] Trying approach {i+1}: {base_prompt[:50]}...")
             
             # Build full prompt
             prompt = build_generation_prompt(base_prompt, user_name, previous_responses)
             
-            # Call Azure OpenAI
-            response, status = call_azure_openai_with_retry(
+            # Call AI with automatic fallback
+            response, status, provider = ai_chat_completion_with_fallback(
                 messages=[{"role": "user", "content": prompt}],
                 app=app,
                 max_tokens=512,
@@ -187,20 +342,20 @@ def multi_approach_generation_azure(user_name, previous_responses, app):
             
             if response and status == "SUCCESS":
                 # Extract and parse response
-                text_content = extract_text_from_response(response)
+                text_content = extract_text_from_ai_response(response, provider)
                 if text_content:
                     parsed = parse_email_response(text_content)
                     if parsed and result_has_valid_content(parsed):
-                        print(f"[AZURE] Success with approach {i+1}")
+                        print(f"[AI] Success with approach {i+1} using provider: {provider}")
                         return parsed
             
-            print(f"[AZURE] Approach {i+1} failed")
+            print(f"[AI] Approach {i+1} failed with status: {status}")
             
         except Exception as e:
-            print(f"[AZURE] Error with approach {i+1}: {e}")
+            print(f"[AI] Error with approach {i+1}: {e}")
             continue
     
-    print("[AZURE] All approaches failed")
+    print("[AI] All approaches failed")
     return None
 
 def extract_score_from_feedback(feedback_text, is_spam, user_response):
@@ -254,10 +409,10 @@ def extract_score_from_feedback(feedback_text, is_spam, user_response):
         # Return fallback score
         return 7 if user_response == is_spam else 3
 
-def evaluate_with_azure(email_content, is_spam, user_response, user_explanation, app):
-    """Evaluate user explanation using Azure OpenAI"""
+def evaluate_with_ai_fallback(email_content, is_spam, user_response, user_explanation, app):
+    """Evaluate user explanation using AI with automatic fallback"""
     try:
-        print("[AZURE] Starting evaluation")
+        print("[AI] Starting evaluation with fallback")
         
         # Build evaluation prompt
         correct_answer = "phishing" if is_spam else "legitimate"
@@ -290,8 +445,8 @@ Provide detailed, constructive feedback that helps them improve their phishing d
 
 Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendations", "score": 7}}"""
         
-        # Call Azure OpenAI
-        response, status = call_azure_openai_with_retry(
+        # Call AI with automatic fallback
+        response, status, provider = ai_chat_completion_with_fallback(
             messages=[{"role": "user", "content": prompt}],
             app=app,
             max_tokens=1024,  # Increased from 256 to prevent feedback truncation
@@ -299,7 +454,7 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
         )
         
         if response and status == "SUCCESS":
-            text_content = extract_text_from_response(response)
+            text_content = extract_text_from_ai_response(response, provider)
             if text_content:
                 # Clean HTML code blocks from AI response
                 text_content = clean_html_code_blocks(text_content)
@@ -311,6 +466,7 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
                         # Clean HTML code blocks from feedback if it exists
                         if "feedback" in result:
                             result["feedback"] = clean_html_code_blocks(result["feedback"])
+                        print(f"[AI] Evaluation successful using provider: {provider}")
                         return result
                 except json.JSONDecodeError:
                     # Fallback parsing - extract score from text content
@@ -323,7 +479,7 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
         return None
         
     except Exception as e:
-        print(f"[AZURE] Evaluation error: {e}")
+        print(f"[AI] Evaluation error: {e}")
         return None
 
 # =============================================================================
