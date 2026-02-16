@@ -22,6 +22,12 @@ class User(db.Model):
     password_reset_otp = db.Column(db.String(6), nullable=True)  # 6-digit OTP
     otp_expires = db.Column(db.DateTime, nullable=True)  # OTP expiration
     otp_attempts = db.Column(db.Integer, default=0)  # Failed OTP attempts counter
+    # Demographics fields
+    demographics_completed = db.Column(db.Boolean, default=False, nullable=False)
+    tech_confidence = db.Column(db.String(50), nullable=True)
+    cybersecurity_experience = db.Column(db.String(50), nullable=True)
+    age_group = db.Column(db.String(50), nullable=True)
+    industry = db.Column(db.String(100), nullable=True)
 
     def set_password(self, password):
         # Hash password with Werkzeug
@@ -149,24 +155,42 @@ class SimulationSession(db.Model):
 
 # Database helper functions
 def update_database_schema(app):
-    """Add the simulation_id column to the SimulationEmail table if it exists and the column is missing."""
+    """Add missing columns to database tables if they exist and the columns are missing."""
     try:
         with app.app_context():
             inspector = inspect(db.engine)
             
-            # Check if table exists
-            if not inspector.has_table('simulation_email'):
-                print("[DB] simulation_email table does not exist yet. Skipping schema update.")
-                return True
+            # Update simulation_email table
+            if inspector.has_table('simulation_email'):
+                columns = [col['name'] for col in inspector.get_columns('simulation_email')]
+                
+                if 'simulation_id' not in columns:
+                    print("[DB] Adding simulation_id column to SimulationEmail table")
+                    with db.engine.begin() as conn:
+                        conn.execute(text("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT"))
+                    print("[DB] Column added successfully")
             
-            # Check existing columns
-            columns = [col['name'] for col in inspector.get_columns('simulation_email')]
-            
-            if 'simulation_id' not in columns:
-                print("[DB] Adding simulation_id column to SimulationEmail table")
-                with db.engine.begin() as conn:
-                    conn.execute(text("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT"))
-                print("[DB] Column added successfully")
+            # Update user table with demographics fields
+            if inspector.has_table('user'):
+                columns = [col['name'] for col in inspector.get_columns('user')]
+                
+                new_user_columns = {
+                    'demographics_completed': "ALTER TABLE user ADD COLUMN demographics_completed BOOLEAN DEFAULT FALSE NOT NULL",
+                    'tech_confidence': "ALTER TABLE user ADD COLUMN tech_confidence VARCHAR(50)",
+                    'cybersecurity_experience': "ALTER TABLE user ADD COLUMN cybersecurity_experience VARCHAR(50)",
+                    'age_group': "ALTER TABLE user ADD COLUMN age_group VARCHAR(50)",
+                    'industry': "ALTER TABLE user ADD COLUMN industry VARCHAR(100)",
+                }
+                
+                for col_name, alter_sql in new_user_columns.items():
+                    if col_name not in columns:
+                        print(f"[DB] Adding {col_name} column to User table")
+                        try:
+                            with db.engine.begin() as conn:
+                                conn.execute(text(alter_sql))
+                            print(f"[DB] Column {col_name} added successfully")
+                        except Exception as col_err:
+                            print(f"[DB] Warning: Could not add {col_name}: {col_err}")
             
             return True
     except Exception as e:
