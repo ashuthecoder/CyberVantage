@@ -20,5 +20,22 @@ wheels/
 .installed.cfg
 *.egg
 logs/
+
+# Frontend build artifacts
+static/react-build/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Node modules
+node_modules/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Flask log
+flask.log
+venv
 .venv
-venv/

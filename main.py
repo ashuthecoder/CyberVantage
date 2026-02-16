@@ -34,10 +34,10 @@ def index():
     """Landing page with detailed CyberVantage information"""
     return render_template("index.html")
 
-@app.route('/about')
-def about():
-    """About page with CyberVantage information and compliance details"""
-    return render_template("about.html")
+@app.route('/landing-new')
+def landing_new():
+    """New React-based landing page"""
+    return render_template("landing_new.html")
 
 @app.route('/dashboard')
 @token_required
@@ -45,6 +45,13 @@ def dashboard(current_user):
     # Make sure database schema is updated
     update_database_schema(app)
     return render_template('dashboard.html', username=current_user.name, current_user=current_user)
+
+@app.route('/dashboard-new')
+@token_required
+def dashboard_new(current_user):
+    """New React-based themeable dashboard"""
+    update_database_schema(app)
+    return render_template('dashboard_new.html', username=current_user.name, current_user=current_user)
 
 # Initialize database for serverless environments
 with app.app_context():
