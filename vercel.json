@@ -2,11 +2,11 @@
   "version": 2,
   "builds": [
     {
-      "src": "app.py",
+      "src": "main.py",
       "use": "@vercel/python"
     },
     {
-      "src": "frontend/dist/assets/**",
+      "src": "frontend/dist/**",
       "use": "@vercel/static"
     }
   ],
@@ -20,7 +20,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "app.py",
+      "dest": "main.py",
       "headers": {
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
