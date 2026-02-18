@@ -2,6 +2,13 @@
 
 **CyberVantage** is an educational web platform designed to teach school students about spam emails, phishing, and basic cyber safety in a fun and interactive way.
 
+## ⚠️ Prerequisites
+
+**Azure PostgreSQL Database Required**: This application requires an Azure PostgreSQL database. SQLite is not supported.
+
+- See [Database Setup Guide](docs/DATABASE_REQUIRED.md) for quick setup
+- See [Azure Database Setup](docs/AZURE_DATABASE_SETUP.md) for detailed instructions
+
 ## 📚 Project Overview
 
 The project is divided into **four phases**:  

@@ -1,8 +1,31 @@
 # CyberVantage Deployment Guide
 
-This guide covers deploying CyberVantage to production with Azure database support.
+This guide covers deploying CyberVantage to production with Azure PostgreSQL database (required).
+
+## ⚠️ IMPORTANT: Azure Database Required
+
+CyberVantage **requires** an Azure PostgreSQL database. SQLite is not supported.
+
+You must configure one of these environment variables:
+- `DATABASE_URL`
+- `POSTGRES_URL`  
+- `POSTGRES_PRISMA_URL`
+- `POSTGRES_URL_NON_POOLING`
+
+See [Azure Database Setup Guide](./AZURE_DATABASE_SETUP.md) for instructions.
 
 ## Quick Start
+
+### Prerequisites
+
+1. **Azure PostgreSQL Database** (Required)
+   - Create an Azure PostgreSQL server
+   - Or use Vercel Postgres (Neon)
+   - Get connection string
+
+2. **API Keys**
+   - Google Gemini API key (required for AI features)
+   - Azure OpenAI key (optional fallback)
 
 ### Local Development
 
@@ -12,21 +35,28 @@ This guide covers deploying CyberVantage to production with Azure database suppo
    cd CyberVantage
    ```
 
-2. **Install dependencies**
+2. **Setup Azure PostgreSQL**
+   
+   Follow [Azure Database Setup Guide](./AZURE_DATABASE_SETUP.md) to create your database.
+
+3. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Configure environment**
+4. **Configure environment**
    ```bash
    cp .env.example .env
-   # Edit .env with your configuration
+   # Edit .env with your Azure database connection string
+   # REQUIRED: Set DATABASE_URL or POSTGRES_URL
    ```
 
-4. **Run the application**
+5. **Run the application**
    ```bash
    python main.py
    ```
+   
+   If you see an error about database configuration, ensure you've set DATABASE_URL in your .env file.
 
 ### Production Deployment (Vercel + Azure Database)
 

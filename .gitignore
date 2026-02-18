@@ -40,3 +40,5 @@ flask.log
 venv
 .venv
 react-ui-backup/
+*.db
+instance/
