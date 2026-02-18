@@ -38,7 +38,7 @@ else
 fi
 
 # Install backend requirements into the selected environment
-echo "Installing Python dependencies into environment: $($PY -V 2>&1)"
+echo "Installing Python dependencies into environment: $("$PY" -V 2>&1)"
 "$PY" -m pip install --upgrade pip setuptools wheel
 "$PY" -m pip install -r requirements-fastapi.txt
 
