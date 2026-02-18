@@ -141,7 +141,6 @@ def update_database_schema(app):
                     
                     if 'otp_attempts' not in user_columns:
                         print("[DB] Adding otp_attempts column to User table")
-                        default_value = 'FALSE' if is_postgres else '0'
                         conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN otp_attempts INTEGER DEFAULT 0 NOT NULL"))
             
             # Update simulation_email table - add simulation_id column if missing
