@@ -26,6 +26,8 @@ class User(db.Model):
     demographics_completed = db.Column(db.Boolean, default=False, nullable=False)
     tech_confidence = db.Column(db.String(50), nullable=True)  # beginner, intermediate, advanced
     cybersecurity_experience = db.Column(db.String(50), nullable=True)  # none, some, experienced
+    age_group = db.Column(db.String(50), nullable=True)
+    industry = db.Column(db.String(100), nullable=True)
 
     def set_password(self, password):
         # Hash password with Werkzeug
@@ -172,9 +174,37 @@ def update_database_schema(app):
                         conn.execute(text("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT"))
                     print("[DB] Column added successfully")
             
-            # Check if user table exists and add demographics fields
+            # Check if user table exists and add missing fields
             if inspector.has_table('user'):
                 user_columns = [col['name'] for col in inspector.get_columns('user')]
+
+                # OTP fields for password reset
+                if 'password_reset_otp' not in user_columns:
+                    print("[DB] Adding password_reset_otp column to User table")
+                    with db.engine.begin() as conn:
+                        if db_type == 'postgresql':
+                            conn.execute(text('ALTER TABLE "user" ADD COLUMN password_reset_otp VARCHAR(6)'))
+                        else:
+                            conn.execute(text('ALTER TABLE user ADD COLUMN password_reset_otp VARCHAR(6)'))
+                    print("[DB] Column added successfully")
+
+                if 'otp_expires' not in user_columns:
+                    print("[DB] Adding otp_expires column to User table")
+                    with db.engine.begin() as conn:
+                        if db_type == 'postgresql':
+                            conn.execute(text('ALTER TABLE "user" ADD COLUMN otp_expires TIMESTAMP'))
+                        else:
+                            conn.execute(text('ALTER TABLE user ADD COLUMN otp_expires DATETIME'))
+                    print("[DB] Column added successfully")
+
+                if 'otp_attempts' not in user_columns:
+                    print("[DB] Adding otp_attempts column to User table")
+                    with db.engine.begin() as conn:
+                        if db_type == 'postgresql':
+                            conn.execute(text('ALTER TABLE "user" ADD COLUMN otp_attempts INTEGER DEFAULT 0 NOT NULL'))
+                        else:
+                            conn.execute(text('ALTER TABLE user ADD COLUMN otp_attempts INTEGER DEFAULT 0 NOT NULL'))
+                    print("[DB] Column added successfully")
                 
                 if 'demographics_completed' not in user_columns:
                     print("[DB] Adding demographics_completed column to User table")
@@ -202,6 +232,24 @@ def update_database_schema(app):
                             conn.execute(text("ALTER TABLE \"user\" ADD COLUMN cybersecurity_experience VARCHAR(50)"))
                         else:
                             conn.execute(text("ALTER TABLE user ADD COLUMN cybersecurity_experience VARCHAR(50)"))
+                    print("[DB] Column added successfully")
+
+                if 'age_group' not in user_columns:
+                    print("[DB] Adding age_group column to User table")
+                    with db.engine.begin() as conn:
+                        if db_type == 'postgresql':
+                            conn.execute(text('ALTER TABLE "user" ADD COLUMN age_group VARCHAR(50)'))
+                        else:
+                            conn.execute(text('ALTER TABLE user ADD COLUMN age_group VARCHAR(50)'))
+                    print("[DB] Column added successfully")
+
+                if 'industry' not in user_columns:
+                    print("[DB] Adding industry column to User table")
+                    with db.engine.begin() as conn:
+                        if db_type == 'postgresql':
+                            conn.execute(text('ALTER TABLE "user" ADD COLUMN industry VARCHAR(100)'))
+                        else:
+                            conn.execute(text('ALTER TABLE user ADD COLUMN industry VARCHAR(100)'))
                     print("[DB] Column added successfully")
             
             return True

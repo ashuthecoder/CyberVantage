@@ -105,7 +105,17 @@ def create_app():
         separator = "&" if "?" in database_url else "?"
         database_url = f"{database_url}{separator}sslmode=require"
     
-    print(f"✓ Database configured: {database_url.split('@')[0]}@***")
+    # Avoid leaking credentials in logs
+    try:
+        from urllib.parse import urlsplit
+
+        parts = urlsplit(database_url)
+        safe_user = parts.username or "<user>"
+        safe_host = parts.hostname or "<host>"
+        safe_port = f":{parts.port}" if parts.port else ""
+        print(f"✓ Database configured: {parts.scheme}://{safe_user}@{safe_host}{safe_port}{parts.path}")
+    except Exception:
+        print("✓ Database configured")
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['WTF_CSRF_SECRET_KEY'] = csrf_secret
