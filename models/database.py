@@ -22,6 +22,10 @@ class User(db.Model):
     password_reset_otp = db.Column(db.String(6), nullable=True)  # 6-digit OTP
     otp_expires = db.Column(db.DateTime, nullable=True)  # OTP expiration
     otp_attempts = db.Column(db.Integer, default=0)  # Failed OTP attempts counter
+    # Demographics fields for personalized learning
+    demographics_completed = db.Column(db.Boolean, default=False, nullable=False)
+    tech_confidence = db.Column(db.String(50), nullable=True)  # beginner, intermediate, advanced
+    cybersecurity_experience = db.Column(db.String(50), nullable=True)  # none, some, experienced
 
     def set_password(self, password):
         # Hash password with Werkzeug
@@ -149,28 +153,48 @@ class SimulationSession(db.Model):
 
 # Database helper functions
 def update_database_schema(app):
-    """Add the simulation_id column to the SimulationEmail table if it exists and the column is missing."""
+    """Update database schema to add missing columns."""
     try:
         with app.app_context():
             inspector = inspect(db.engine)
             
-            # Check if table exists
-            if not inspector.has_table('simulation_email'):
-                print("[DB] simulation_email table does not exist yet. Skipping schema update.")
-                return True
+            # Check if simulation_email table exists and update
+            if inspector.has_table('simulation_email'):
+                columns = [col['name'] for col in inspector.get_columns('simulation_email')]
+                
+                if 'simulation_id' not in columns:
+                    print("[DB] Adding simulation_id column to SimulationEmail table")
+                    with db.engine.begin() as conn:
+                        conn.execute(text("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT"))
+                    print("[DB] Column added successfully")
             
-            # Check existing columns
-            columns = [col['name'] for col in inspector.get_columns('simulation_email')]
-            
-            if 'simulation_id' not in columns:
-                print("[DB] Adding simulation_id column to SimulationEmail table")
-                with db.engine.begin() as conn:
-                    conn.execute(text("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT"))
-                print("[DB] Column added successfully")
+            # Check if user table exists and add demographics fields
+            if inspector.has_table('user'):
+                user_columns = [col['name'] for col in inspector.get_columns('user')]
+                
+                if 'demographics_completed' not in user_columns:
+                    print("[DB] Adding demographics_completed column to User table")
+                    with db.engine.begin() as conn:
+                        conn.execute(text("ALTER TABLE user ADD COLUMN demographics_completed BOOLEAN DEFAULT 0 NOT NULL"))
+                    print("[DB] Column added successfully")
+                
+                if 'tech_confidence' not in user_columns:
+                    print("[DB] Adding tech_confidence column to User table")
+                    with db.engine.begin() as conn:
+                        conn.execute(text("ALTER TABLE user ADD COLUMN tech_confidence VARCHAR(50)"))
+                    print("[DB] Column added successfully")
+                
+                if 'cybersecurity_experience' not in user_columns:
+                    print("[DB] Adding cybersecurity_experience column to User table")
+                    with db.engine.begin() as conn:
+                        conn.execute(text("ALTER TABLE user ADD COLUMN cybersecurity_experience VARCHAR(50)"))
+                    print("[DB] Column added successfully")
             
             return True
     except Exception as e:
         print(f"[DB] Error updating database schema: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def group_responses_into_sessions(responses):
