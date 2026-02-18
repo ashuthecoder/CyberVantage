@@ -115,6 +115,32 @@ class SimulationSession(db.Model):
     user = db.relationship('User', backref=db.backref('simulation_sessions', lazy=True))
 
 # Database helper functions
+def reset_sequence_for_table(table_name, app):
+    """
+    Reset PostgreSQL sequence for a table to the max ID + 1.
+    This prevents duplicate key errors when auto-incrementing after manual inserts.
+    Only affects PostgreSQL databases; SQLite uses a different mechanism.
+    """
+    try:
+        with app.app_context():
+            db_type = db.engine.dialect.name
+            if db_type == 'postgresql':
+                # Get the sequence name (usually table_name_id_seq)
+                sequence_name = f"{table_name}_id_seq"
+                with db.engine.begin() as conn:
+                    # Get the maximum ID currently in the table
+                    result = conn.execute(text(f"SELECT COALESCE(MAX(id), 0) FROM {table_name}")).fetchone()
+                    max_id = result[0] if result else 0
+                    
+                    # Reset the sequence to max_id + 1
+                    conn.execute(text(f"SELECT setval('{sequence_name}', :max_id, true)"), {"max_id": max_id})
+                    print(f"[DB] Reset sequence {sequence_name} to {max_id + 1}")
+                return True
+            return True  # Non-PostgreSQL databases don't need this
+    except Exception as e:
+        print(f"[DB] Error resetting sequence for {table_name}: {str(e)}")
+        return False
+
 def update_database_schema(app):
     """Add missing columns to tables if they exist and columns are missing."""
     try:

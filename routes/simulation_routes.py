@@ -8,8 +8,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from routes.auth_routes import token_required
 from models.database import (
     SimulationEmail, SimulationResponse, predefined_emails, db,
-    update_database_schema, get_simulation_id_for_email, set_simulation_id_for_email,
-    get_emails_for_simulation
+    update_database_schema, reset_sequence_for_table, get_simulation_id_for_email, 
+    set_simulation_id_for_email, get_emails_for_simulation
 )
 from pyFunctions.email_generation import generate_ai_email, evaluate_explanation
 from pyFunctions.template_emails import get_template_email
@@ -64,6 +64,10 @@ def simulate(current_user):
                     )
                     db.session.add(new_email)
             db.session.commit()
+            
+            # Reset sequence after inserting predefined emails with explicit IDs
+            # This prevents duplicate key errors in PostgreSQL
+            reset_sequence_for_table('simulation_email', current_app)
 
         # Read state
         phase = session.get('simulation_phase', 1)
@@ -162,24 +166,39 @@ def simulate(current_user):
                     email_data = get_template_email()
 
                 # Create and persist the email
-                email = SimulationEmail(
-                    sender=email_data['sender'],
-                    subject=email_data['subject'],
-                    date=email_data.get('date', datetime.datetime.utcnow().strftime("%B %d, %Y")),
-                    content=email_data['content'],
-                    is_spam=email_data['is_spam'],
-                    is_predefined=False
-                )
-                db.session.add(email)
-                db.session.commit()
+                try:
+                    email = SimulationEmail(
+                        sender=email_data['sender'],
+                        subject=email_data['subject'],
+                        date=email_data.get('date', datetime.datetime.utcnow().strftime("%B %d, %Y")),
+                        content=email_data['content'],
+                        is_spam=email_data['is_spam'],
+                        is_predefined=False
+                    )
+                    db.session.add(email)
+                    db.session.commit()
 
-                # Tag email with this simulation_id if the column exists
-                set_simulation_id_for_email(email.id, simulation_id, current_app)
+                    # Tag email with this simulation_id if the column exists
+                    set_simulation_id_for_email(email.id, simulation_id, current_app)
 
-                # Track active Phase 2 email ID
-                session['active_phase2_email_id'] = email.id
-                session.modified = True
-                print(f"[SIMULATE] Created new Phase 2 email with ID {email.id} for simulation {simulation_id}")
+                    # Track active Phase 2 email ID
+                    session['active_phase2_email_id'] = email.id
+                    session.modified = True
+                    print(f"[SIMULATE] Created new Phase 2 email with ID {email.id} for simulation {simulation_id}")
+                except Exception as db_error:
+                    # Rollback on database error to prevent pending transaction issues
+                    db.session.rollback()
+                    print(f"[SIMULATE] Database error creating Phase 2 email: {str(db_error)}")
+                    traceback.print_exc()
+                    # Return error message to user
+                    return render_template(
+                        'system_message.html',
+                        title="Error",
+                        message="Unable to generate a new email. Please try again.",
+                        action_text="Try Again",
+                        action_url=url_for('simulation.simulate'),
+                        username=current_user.name
+                    )
 
         if not email:
             return render_template(
@@ -204,6 +223,11 @@ def simulate(current_user):
     except Exception as e:
         print(f"[SIMULATE] Exception in simulate route: {str(e)}")
         traceback.print_exc()
+        # Rollback any pending database transaction
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         # Emergency reset
         session['simulation_phase'] = 1
         session['current_email_id'] = 1
