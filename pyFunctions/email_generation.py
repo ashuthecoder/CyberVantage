@@ -70,7 +70,7 @@ except ImportError:
 LOG_DIR = get_log_dir()
 
 # Gemini model configuration
-DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3-pro-preview")
 DEFAULT_GEMINI_FALLBACK_MODELS = [
     m.strip()
     for m in os.getenv("GEMINI_FALLBACK_MODELS", "gemini-1.5-pro").split(",")

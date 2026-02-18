@@ -22,6 +22,9 @@ def generate_simulation_analysis(user_responses, api_key, genai, app):
     try:
         if not api_key:
             return {"error": "API key not available for analysis"}
+
+        # Import safety types lazily to avoid module-level import issues
+        from google.generativeai.types import HarmCategory, HarmBlockThreshold
             
         # Configure safety settings
         safety_settings = {
@@ -60,8 +63,11 @@ def generate_simulation_analysis(user_responses, api_key, genai, app):
         Format the response as HTML with appropriate headings (<h3>) and paragraphs (<p>).
         """
         
-        model = genai.GenerativeModel('gemini-1.5-pro', 
-                                     safety_settings=safety_settings)
+        model_name = os.getenv("GEMINI_MODEL", "gemini-3-pro-preview").strip()
+        if model_name.startswith("models/"):
+            model_name = model_name[len("models/"):]
+
+        model = genai.GenerativeModel(model_name, safety_settings=safety_settings)
         
         function_name = "generate_simulation_analysis"
         start_time = datetime.datetime.now()
@@ -71,7 +77,7 @@ def generate_simulation_analysis(user_responses, api_key, genai, app):
         # Log API request
         log_api_request(
             function_name=function_name,
-            model="gemini-1.5-pro",
+            model=model_name,
             prompt_length=len(prompt),
             response_length=len(response.text) if hasattr(response, 'text') else 0,
             start_time=start_time,
@@ -97,7 +103,7 @@ def generate_simulation_analysis(user_responses, api_key, genai, app):
         # Log the error
         log_api_request(
             function_name="generate_simulation_analysis",
-            model="gemini-1.5-pro",
+            model=model_name if 'model_name' in locals() else os.getenv("GEMINI_MODEL", "gemini-3-pro-preview"),
             prompt_length=len(prompt) if 'prompt' in locals() else 0,
             response_length=0,
             start_time=start_time if 'start_time' in locals() else datetime.datetime.now(),

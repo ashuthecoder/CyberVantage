@@ -255,8 +255,11 @@ IMPORTANT: Always express the overall score as "X/10" where X is the actual scor
 
 Format your response as HTML with clear headings and organized content. Be constructive and educational in your feedback."""
         
-        model = genai.GenerativeModel('gemini-1.5-pro', 
-                                     safety_settings=safety_settings)
+        model_name = os.getenv("GEMINI_MODEL", "gemini-3-pro-preview").strip()
+        if model_name.startswith("models/"):
+            model_name = model_name[len("models/"):]
+
+        model = genai.GenerativeModel(model_name, safety_settings=safety_settings)
         
         function_name = "evaluate_phishing_creation"
         start_time = datetime.datetime.now()
@@ -266,7 +269,7 @@ Format your response as HTML with clear headings and organized content. Be const
         # Log API request
         log_api_request(
             function_name=function_name,
-            model="gemini-1.5-pro",
+            model=model_name,
             prompt_length=len(prompt),
             response_length=len(response.text) if hasattr(response, 'text') else 0,
             start_time=start_time,
@@ -296,7 +299,7 @@ Format your response as HTML with clear headings and organized content. Be const
         # Log the error
         log_api_request(
             function_name="evaluate_phishing_creation",
-            model="gemini-1.5-pro",
+            model=model_name if 'model_name' in locals() else os.getenv("GEMINI_MODEL", "gemini-3-pro-preview"),
             prompt_length=len(prompt) if 'prompt' in locals() else 0,
             response_length=0,
             start_time=start_time if 'start_time' in locals() else datetime.datetime.now(),

@@ -65,6 +65,21 @@ except ImportError:
     _gemini_configured = False
     print("[AI_PROVIDER] Google Gemini not available")
 
+
+def _normalize_gemini_model_name(model_name: Optional[str]) -> str:
+    """Normalize Gemini model names.
+
+    The Gemini SDK sometimes returns model ids like `models/gemini-...` from list_models().
+    GenerativeModel() typically expects `gemini-...`.
+    """
+    name = (model_name or "").strip()
+    if not name:
+        name = os.getenv("GEMINI_MODEL", "gemini-3-pro-preview")
+    name = name.strip()
+    if name.startswith("models/"):
+        name = name[len("models/"):]
+    return name
+
 def configure_gemini(api_key: Optional[str] = None) -> bool:
     """
     Configure Google Gemini API
@@ -105,7 +120,7 @@ def gemini_completion(
     user_prompt: Optional[str] = None,
     max_tokens: int = 512,
     temperature: float = 0.7,
-    model_name: str = "gemini-pro"
+    model_name: Optional[str] = None
 ) -> Tuple[Optional[str], str]:
     """
     Get completion from Google Gemini
@@ -145,7 +160,7 @@ def gemini_completion(
         # Combine system and user prompts
         full_prompt = f"{system_prompt}\n\n{user_prompt}"
         
-        model = genai.GenerativeModel(model_name, generation_config=generation_config)
+        model = genai.GenerativeModel(_normalize_gemini_model_name(model_name), generation_config=generation_config)
         response = model.generate_content(full_prompt)
         
         if response and response.text:
@@ -172,7 +187,7 @@ def gemini_chat_completion(
     messages: List[Dict[str, str]],
     max_tokens: int = 512,
     temperature: float = 0.7,
-    model_name: str = "gemini-pro"
+    model_name: Optional[str] = None
 ) -> Tuple[Optional[Any], str]:
     """
     Get chat completion from Google Gemini (compatible with Azure format)
