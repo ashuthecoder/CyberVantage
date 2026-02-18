@@ -19,7 +19,7 @@ class User(db.Model):
     password_reset_token = db.Column(db.String(255), nullable=True)  # For password reset
     password_reset_expires = db.Column(db.DateTime, nullable=True)
     # OTP-based password reset
-    password_reset_otp = db.Column(db.String(10), nullable=True)  # OTP code (typically 6 digits)
+    password_reset_otp = db.Column(db.String(10), nullable=True)  # OTP code (typically 6 digits, allows up to 10 for flexibility)
     otp_expires = db.Column(db.DateTime, nullable=True)  # OTP expiration time
     otp_attempts = db.Column(db.Integer, default=0, nullable=False)  # Track failed OTP attempts
     # User demographics for personalized learning
