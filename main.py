@@ -31,12 +31,17 @@ app.register_blueprint(threat_bp)
 # Main routes that don't fit into specific categories
 @app.route('/')
 def index():
-    """Landing page with detailed CyberVantage information"""
-    return render_template("index.html")
+    """Landing page with terminal/SOC theme"""
+    return render_template("landing_terminal.html")
 
 @app.route('/landing')
 def landing():
     """Alternative landing page route"""
+    return render_template("landing_terminal.html")
+
+@app.route('/landing-old')
+def landing_old():
+    """Old landing page (glassmorphism theme)"""
     return render_template("index.html")
 
 @app.route('/about')
