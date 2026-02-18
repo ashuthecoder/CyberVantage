@@ -18,6 +18,10 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     password_reset_token = db.Column(db.String(255), nullable=True)  # For password reset
     password_reset_expires = db.Column(db.DateTime, nullable=True)
+    # OTP-based password reset
+    password_reset_otp = db.Column(db.String(10), nullable=True)  # 6-digit OTP
+    otp_expires = db.Column(db.DateTime, nullable=True)  # OTP expiration time
+    otp_attempts = db.Column(db.Integer, default=0, nullable=False)  # Track failed OTP attempts
     # User demographics for personalized learning
     tech_confidence = db.Column(db.String(20), nullable=True)  # beginner, intermediate, advanced
     cybersecurity_experience = db.Column(db.String(20), nullable=True)  # none, some, experienced
@@ -112,24 +116,43 @@ class SimulationSession(db.Model):
 
 # Database helper functions
 def update_database_schema(app):
-    """Add the simulation_id column to the SimulationEmail table if it exists and the column is missing."""
+    """Add missing columns to tables if they exist and columns are missing."""
     try:
         with app.app_context():
             inspector = inspect(db.engine)
             
-            # Check if table exists
-            if not inspector.has_table('simulation_email'):
-                print("[DB] simulation_email table does not exist yet. Skipping schema update.")
-                return True
-            
-            # Check existing columns
-            columns = [col['name'] for col in inspector.get_columns('simulation_email')]
-            
-            if 'simulation_id' not in columns:
-                print("[DB] Adding simulation_id column to SimulationEmail table")
+            # Update user table - add OTP columns if missing
+            if inspector.has_table('user'):
+                user_columns = [col['name'] for col in inspector.get_columns('user')]
+                
+                # Detect database type for appropriate SQL syntax
+                db_type = db.engine.dialect.name
+                is_postgres = db_type == 'postgresql'
+                table_name = '"user"' if is_postgres else 'user'
+                
                 with db.engine.begin() as conn:
-                    conn.execute(text("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT"))
-                print("[DB] Column added successfully")
+                    if 'password_reset_otp' not in user_columns:
+                        print("[DB] Adding password_reset_otp column to User table")
+                        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN password_reset_otp VARCHAR(10)"))
+                    
+                    if 'otp_expires' not in user_columns:
+                        print("[DB] Adding otp_expires column to User table")
+                        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN otp_expires TIMESTAMP"))
+                    
+                    if 'otp_attempts' not in user_columns:
+                        print("[DB] Adding otp_attempts column to User table")
+                        default_value = 'FALSE' if is_postgres else '0'
+                        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN otp_attempts INTEGER DEFAULT 0 NOT NULL"))
+            
+            # Update simulation_email table - add simulation_id column if missing
+            if inspector.has_table('simulation_email'):
+                se_columns = [col['name'] for col in inspector.get_columns('simulation_email')]
+                
+                if 'simulation_id' not in se_columns:
+                    print("[DB] Adding simulation_id column to SimulationEmail table")
+                    with db.engine.begin() as conn:
+                        conn.execute(text("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT"))
+                    print("[DB] Column added successfully")
             
             return True
     except Exception as e:
