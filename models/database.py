@@ -19,7 +19,7 @@ class User(db.Model):
     password_reset_token = db.Column(db.String(255), nullable=True)  # For password reset
     password_reset_expires = db.Column(db.DateTime, nullable=True)
     # OTP-based password reset
-    password_reset_otp = db.Column(db.String(10), nullable=True)  # 6-digit OTP
+    password_reset_otp = db.Column(db.String(10), nullable=True)  # OTP code (typically 6 digits)
     otp_expires = db.Column(db.DateTime, nullable=True)  # OTP expiration time
     otp_attempts = db.Column(db.Integer, default=0, nullable=False)  # Track failed OTP attempts
     # User demographics for personalized learning
@@ -141,7 +141,8 @@ def update_database_schema(app):
                     
                     if 'otp_attempts' not in user_columns:
                         print("[DB] Adding otp_attempts column to User table")
-                        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN otp_attempts INTEGER DEFAULT 0 NOT NULL"))
+                        # Add as nullable first for SQLite compatibility, then set default for new rows
+                        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN otp_attempts INTEGER DEFAULT 0"))
             
             # Update simulation_email table - add simulation_id column if missing
             if inspector.has_table('simulation_email'):
