@@ -34,5 +34,6 @@
   ],
   "env": {
     "FLASK_ENV": "production"
-  }
+  },
+  "regions": ["iad1"]
 }

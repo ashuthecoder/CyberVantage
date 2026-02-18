@@ -158,6 +158,10 @@ def update_database_schema(app):
         with app.app_context():
             inspector = inspect(db.engine)
             
+            # Detect database type
+            db_type = db.engine.dialect.name
+            print(f"[DB] Database type: {db_type}")
+            
             # Check if simulation_email table exists and update
             if inspector.has_table('simulation_email'):
                 columns = [col['name'] for col in inspector.get_columns('simulation_email')]
@@ -175,19 +179,29 @@ def update_database_schema(app):
                 if 'demographics_completed' not in user_columns:
                     print("[DB] Adding demographics_completed column to User table")
                     with db.engine.begin() as conn:
-                        conn.execute(text("ALTER TABLE user ADD COLUMN demographics_completed BOOLEAN DEFAULT 0 NOT NULL"))
+                        # Use database-agnostic syntax
+                        if db_type == 'postgresql':
+                            conn.execute(text("ALTER TABLE \"user\" ADD COLUMN demographics_completed BOOLEAN DEFAULT FALSE NOT NULL"))
+                        else:
+                            conn.execute(text("ALTER TABLE user ADD COLUMN demographics_completed BOOLEAN DEFAULT 0 NOT NULL"))
                     print("[DB] Column added successfully")
                 
                 if 'tech_confidence' not in user_columns:
                     print("[DB] Adding tech_confidence column to User table")
                     with db.engine.begin() as conn:
-                        conn.execute(text("ALTER TABLE user ADD COLUMN tech_confidence VARCHAR(50)"))
+                        if db_type == 'postgresql':
+                            conn.execute(text("ALTER TABLE \"user\" ADD COLUMN tech_confidence VARCHAR(50)"))
+                        else:
+                            conn.execute(text("ALTER TABLE user ADD COLUMN tech_confidence VARCHAR(50)"))
                     print("[DB] Column added successfully")
                 
                 if 'cybersecurity_experience' not in user_columns:
                     print("[DB] Adding cybersecurity_experience column to User table")
                     with db.engine.begin() as conn:
-                        conn.execute(text("ALTER TABLE user ADD COLUMN cybersecurity_experience VARCHAR(50)"))
+                        if db_type == 'postgresql':
+                            conn.execute(text("ALTER TABLE \"user\" ADD COLUMN cybersecurity_experience VARCHAR(50)"))
+                        else:
+                            conn.execute(text("ALTER TABLE user ADD COLUMN cybersecurity_experience VARCHAR(50)"))
                     print("[DB] Column added successfully")
             
             return True
