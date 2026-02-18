@@ -71,6 +71,8 @@ def create_app():
     
     app.config['SECRET_KEY'] = flask_secret
     app.config['JWT_SECRET_KEY'] = jwt_secret
+    
+    # Database configuration - Azure PostgreSQL required
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
         database_url = (
@@ -78,17 +80,32 @@ def create_app():
             or os.getenv("POSTGRES_PRISMA_URL")
             or os.getenv("POSTGRES_URL_NON_POOLING")
             or os.getenv("DATABASE_URL_UNPOOLED")
-            or os.getenv("DATABASE_URL")
         )
+    
+    # Require database configuration - no SQLite fallback
     if not database_url:
-        database_url = "sqlite:///users.db"
+        raise ValueError(
+            "❌ ERROR: No database configuration found!\n"
+            "   Please set one of the following environment variables:\n"
+            "   - DATABASE_URL\n"
+            "   - POSTGRES_URL\n"
+            "   - POSTGRES_PRISMA_URL\n"
+            "   - POSTGRES_URL_NON_POOLING\n"
+            "   See docs/AZURE_DATABASE_SETUP.md for setup instructions."
+        )
+    
+    # Convert postgres:// to postgresql+psycopg2://
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql+psycopg2://", 1)
     elif database_url.startswith("postgresql://"):
         database_url = database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    
+    # Ensure SSL is enabled for PostgreSQL connections
     if database_url.startswith("postgresql+psycopg2://") and "sslmode=" not in database_url:
         separator = "&" if "?" in database_url else "?"
         database_url = f"{database_url}{separator}sslmode=require"
+    
+    print(f"✓ Database configured: {database_url.split('@')[0]}@***")
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['WTF_CSRF_SECRET_KEY'] = csrf_secret

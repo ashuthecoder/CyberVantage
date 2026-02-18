@@ -94,19 +94,24 @@ def assign_phishing_creation(api_key, genai, app):
 def evaluate_phishing_creation(phishing_email, api_key, genai, app):
     """
     Evaluate user-created phishing email and provide detailed scoring and feedback
+    Uses Gemini as primary, Azure OpenAI as fallback
     """
     try:
-        # Try Azure OpenAI first if available
+        # Try Gemini first (primary) if API key is available
+        gemini_key = api_key or (app.config.get('GOOGLE_API_KEY') if app else None)
+        if gemini_key and genai:
+            print("[PHISHING_EVAL] Attempting Gemini evaluation (primary)")
+            result = evaluate_phishing_creation_gemini(phishing_email, gemini_key, genai, app)
+            if result:
+                return result
+            print("[PHISHING_EVAL] Gemini evaluation failed, falling back to Azure")
+        
+        # Try Azure OpenAI as fallback if available
         if AZURE_HELPERS_AVAILABLE and app and app.config.get('AZURE_OPENAI_KEY'):
-            print("[PHISHING_EVAL] Attempting Azure OpenAI evaluation")
+            print("[PHISHING_EVAL] Attempting Azure OpenAI evaluation (fallback)")
             result = evaluate_phishing_creation_azure(phishing_email, app)
             if result:
                 return result
-        
-        # Try Gemini if API key is available
-        if api_key and genai:
-            print("[PHISHING_EVAL] Attempting Gemini evaluation")
-            return evaluate_phishing_creation_gemini(phishing_email, api_key, genai, app)
         
         # Use enhanced fallback evaluation
         print("[PHISHING_EVAL] Using enhanced fallback evaluation")
