@@ -70,12 +70,31 @@ except ImportError:
 LOG_DIR = get_log_dir()
 
 # Gemini model configuration
-DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3-pro-preview")
-DEFAULT_GEMINI_FALLBACK_MODELS = [
+# Default to a stable model with typically less restrictive preview quotas.
+_DEPRECATED_GEMINI_MODELS = {
+    "gemini-1.5-pro",
+    "gemini-1.5-pro-latest",
+    "models/gemini-1.5-pro",
+    "models/gemini-1.5-pro-latest",
+}
+
+DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro").strip()
+if DEFAULT_GEMINI_MODEL in _DEPRECATED_GEMINI_MODELS:
+    DEFAULT_GEMINI_MODEL = "gemini-2.5-pro"
+
+_raw_fallback_models = [
     m.strip()
-    for m in os.getenv("GEMINI_FALLBACK_MODELS", "gemini-1.5-pro").split(",")
+    for m in os.getenv("GEMINI_FALLBACK_MODELS", "gemini-2.5-pro,gemini-2.0-flash").split(",")
     if m.strip()
 ]
+
+# Remove deprecated entries and de-dupe while preserving order.
+DEFAULT_GEMINI_FALLBACK_MODELS = []
+for _m in _raw_fallback_models:
+    if _m in _DEPRECATED_GEMINI_MODELS:
+        continue
+    if _m not in DEFAULT_GEMINI_FALLBACK_MODELS:
+        DEFAULT_GEMINI_FALLBACK_MODELS.append(_m)
 
 # =============================================================================
 # HELPER FUNCTIONS
@@ -210,17 +229,62 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
 # GEMINI IMPLEMENTATION
 # =============================================================================
 
+# If Gemini quota/daily limit is hit, avoid hammering the API on subsequent calls.
+_GEMINI_QUOTA_EXHAUSTED_UNTIL = None
+
 def _configure_gemini(api_key):
     """Configure the Gemini SDK with the provided API key."""
     import google.generativeai as _genai
     _genai.configure(api_key=api_key)
     return _genai
 
+
+def _is_gemini_quota_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return any(term in msg for term in [
+        "resource_exhausted",
+        "quota",
+        "daily",
+        "limit",
+        "rate limit",
+        "too many requests",
+        "429",
+    ])
+
+
+def _is_gemini_invalid_model_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return any(term in msg for term in [
+        "model not found",
+        "not found",
+        "unknown model",
+        "does not exist",
+        "deprecated",
+        "invalid argument",
+    ]) and "quota" not in msg
+
 def _call_gemini_with_retry(api_key, prompt, max_attempts=3, initial_delay=0.5):
     """Call Gemini API with retry logic and model fallback."""
+    global _GEMINI_QUOTA_EXHAUSTED_UNTIL
+
+    # If we recently hit a quota/daily-limit error, skip Gemini to avoid wasting calls.
+    try:
+        if _GEMINI_QUOTA_EXHAUSTED_UNTIL is not None:
+            now_ts = time.time()
+            if now_ts < _GEMINI_QUOTA_EXHAUSTED_UNTIL:
+                remaining = int(_GEMINI_QUOTA_EXHAUSTED_UNTIL - now_ts)
+                print(f"[GEMINI] Skipping Gemini due to recent quota exhaustion (cooldown {remaining}s remaining)")
+                return None
+    except Exception:
+        # If anything goes wrong, don't block calls.
+        _GEMINI_QUOTA_EXHAUSTED_UNTIL = None
+
     _genai = _configure_gemini(api_key)
 
-    models_to_try = [DEFAULT_GEMINI_MODEL] + DEFAULT_GEMINI_FALLBACK_MODELS
+    models_to_try = []
+    for _m in ([DEFAULT_GEMINI_MODEL] + DEFAULT_GEMINI_FALLBACK_MODELS):
+        if _m and _m not in models_to_try:
+            models_to_try.append(_m)
 
     safety_settings = {
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -232,15 +296,83 @@ def _call_gemini_with_retry(api_key, prompt, max_attempts=3, initial_delay=0.5):
     for model_name in models_to_try:
         for attempt in range(max_attempts):
             try:
+                # Local per-minute limiter to avoid accidental retry storms.
+                if not check_rate_limit():
+                    log_api_request(
+                        "gemini_generate_content",
+                        len(prompt) if prompt else 0,
+                        False,
+                        error="Local rate limiter blocked Gemini call",
+                        fallback_reason="local_rate_limited",
+                        model_used=model_name,
+                        api_source="GEMINI",
+                    )
+                    return None
+
                 print(f"[GEMINI] Attempt {attempt + 1}/{max_attempts} with {model_name}")
                 model = _genai.GenerativeModel(model_name, safety_settings=safety_settings)
                 response = model.generate_content(prompt)
 
                 if hasattr(response, 'text') and response.text and response.text.strip():
                     print(f"[GEMINI] Success with {model_name}")
+                    log_api_request(
+                        "gemini_generate_content",
+                        len(prompt) if prompt else 0,
+                        True,
+                        response_length=len(response.text),
+                        model_used=model_name,
+                        api_source="GEMINI",
+                    )
                     return response.text
             except Exception as e:
                 print(f"[GEMINI] Error with {model_name} attempt {attempt + 1}: {e}")
+                # If we hit a quota/daily-limit error, do NOT keep retrying (it just burns more requests).
+                if _is_gemini_quota_error(e):
+                    # Cool down until next local midnight (or a configurable minimum cooldown),
+                    # so the app doesn't keep retrying Gemini on every request.
+                    try:
+                        cooldown_seconds = int(os.getenv("GEMINI_QUOTA_COOLDOWN_SECONDS", "21600"))  # 6h
+                        now = datetime.datetime.now()
+                        next_midnight = (now + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+                        until_midnight = max(0, int((next_midnight - now).total_seconds()))
+                        _GEMINI_QUOTA_EXHAUSTED_UNTIL = time.time() + min(until_midnight, cooldown_seconds)
+                    except Exception:
+                        _GEMINI_QUOTA_EXHAUSTED_UNTIL = time.time() + 21600
+
+                    log_api_request(
+                        "gemini_generate_content",
+                        len(prompt) if prompt else 0,
+                        False,
+                        error=str(e),
+                        fallback_reason="quota_exhausted",
+                        model_used=model_name,
+                        api_source="GEMINI",
+                    )
+                    return None
+
+                # If the model is invalid/deprecated, skip retries on it and try the next model in the list.
+                if _is_gemini_invalid_model_error(e):
+                    log_api_request(
+                        "gemini_generate_content",
+                        len(prompt) if prompt else 0,
+                        False,
+                        error=str(e),
+                        fallback_reason="invalid_model",
+                        model_used=model_name,
+                        api_source="GEMINI",
+                    )
+                    break
+
+                log_api_request(
+                    "gemini_generate_content",
+                    len(prompt) if prompt else 0,
+                    False,
+                    error=str(e),
+                    fallback_reason="exception",
+                    model_used=model_name,
+                    api_source="GEMINI",
+                )
+
                 if attempt < max_attempts - 1:
                     time.sleep(initial_delay * (2 ** attempt))
 

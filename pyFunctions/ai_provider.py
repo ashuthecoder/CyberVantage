@@ -74,10 +74,14 @@ def _normalize_gemini_model_name(model_name: Optional[str]) -> str:
     """
     name = (model_name or "").strip()
     if not name:
-        name = os.getenv("GEMINI_MODEL", "gemini-3-pro-preview")
+        name = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
     name = name.strip()
     if name.startswith("models/"):
         name = name[len("models/"):]
+
+    # Hard block deprecated models even if still present in env/config.
+    if name in {"gemini-1.5-pro", "gemini-1.5-pro-latest"}:
+        name = "gemini-2.5-pro"
     return name
 
 def configure_gemini(api_key: Optional[str] = None) -> bool:
@@ -176,9 +180,10 @@ def gemini_completion(
         traceback.print_exc()
         
         # Check for specific error types
-        if "quota" in error_msg.lower() or "limit" in error_msg.lower():
+        lowered = error_msg.lower()
+        if any(term in lowered for term in ["quota", "limit", "rate limit", "resource_exhausted", "too many requests", "429", "daily"]):
             return None, "RATE_LIMITED"
-        elif "api key" in error_msg.lower() or "authentication" in error_msg.lower():
+        elif "api key" in lowered or "authentication" in lowered or "unauthorized" in lowered:
             return None, "AUTH_ERROR"
         else:
             return None, f"ERROR: {error_msg}"

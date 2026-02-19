@@ -255,7 +255,7 @@ IMPORTANT: Always express the overall score as "X/10" where X is the actual scor
 
 Format your response as HTML with clear headings and organized content. Be constructive and educational in your feedback."""
         
-        model_name = os.getenv("GEMINI_MODEL", "gemini-3-pro-preview").strip()
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-pro").strip()
         if model_name.startswith("models/"):
             model_name = model_name[len("models/"):]
 
@@ -299,7 +299,7 @@ Format your response as HTML with clear headings and organized content. Be const
         # Log the error
         log_api_request(
             function_name="evaluate_phishing_creation",
-            model=model_name if 'model_name' in locals() else os.getenv("GEMINI_MODEL", "gemini-3-pro-preview"),
+            model=model_name if 'model_name' in locals() else os.getenv("GEMINI_MODEL", "gemini-2.5-pro"),
             prompt_length=len(prompt) if 'prompt' in locals() else 0,
             response_length=0,
             start_time=start_time if 'start_time' in locals() else datetime.datetime.now(),

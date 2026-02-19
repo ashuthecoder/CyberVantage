@@ -63,7 +63,7 @@ def generate_simulation_analysis(user_responses, api_key, genai, app):
         Format the response as HTML with appropriate headings (<h3>) and paragraphs (<p>).
         """
         
-        model_name = os.getenv("GEMINI_MODEL", "gemini-3-pro-preview").strip()
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-pro").strip()
         if model_name.startswith("models/"):
             model_name = model_name[len("models/"):]
 
@@ -103,7 +103,7 @@ def generate_simulation_analysis(user_responses, api_key, genai, app):
         # Log the error
         log_api_request(
             function_name="generate_simulation_analysis",
-            model=model_name if 'model_name' in locals() else os.getenv("GEMINI_MODEL", "gemini-3-pro-preview"),
+            model=model_name if 'model_name' in locals() else os.getenv("GEMINI_MODEL", "gemini-2.5-pro"),
             prompt_length=len(prompt) if 'prompt' in locals() else 0,
             response_length=0,
             start_time=start_time if 'start_time' in locals() else datetime.datetime.now(),
