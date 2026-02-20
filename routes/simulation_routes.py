@@ -417,6 +417,22 @@ def skip_email(current_user):
         traceback.print_exc()
         return redirect(url_for('simulation.reset_stuck_simulation'))
 
+@simulation_bp.route('/skip_to_phase2')
+@token_required
+def skip_to_phase2(current_user):
+    """Testing helper: jump directly to Phase 2."""
+    try:
+        session['simulation_phase'] = 2
+        session['phase2_emails_completed'] = 0
+        session.pop('active_phase2_email_id', None)
+        session.modified = True
+        print("[SKIP_TO_PHASE2] Jumped to Phase 2")
+        return redirect(url_for('simulation.simulate'))
+    except Exception as e:
+        print(f"[SKIP_TO_PHASE2] Error: {e}")
+        traceback.print_exc()
+        return redirect(url_for('simulation.reset_stuck_simulation'))
+
 @simulation_bp.route('/simulation_results')
 @token_required
 def simulation_results(current_user):
