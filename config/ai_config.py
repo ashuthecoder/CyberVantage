@@ -24,7 +24,7 @@ def configure_azure_openai(app):
             deployment_name = deployment_parts[1].split('/')[0]
         
         app.config['AZURE_OPENAI_DEPLOYMENT'] = deployment_name
-        print(f"✓ Azure OpenAI API key loaded successfully: {AZURE_OPENAI_KEY[:4]}...{AZURE_OPENAI_KEY[-4:]}")
+        print("✓ Azure OpenAI API key loaded successfully")
         print(f"✓ Azure OpenAI deployment: {deployment_name}")
     else:
         print("Warning: AZURE_OPENAI_KEY or AZURE_OPENAI_ENDPOINT not found.")
@@ -40,7 +40,7 @@ def configure_ai_providers(app):
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
     if GOOGLE_API_KEY:
         app.config['GOOGLE_API_KEY'] = GOOGLE_API_KEY
-        print(f"✓ Google Gemini API key loaded successfully: {GOOGLE_API_KEY[:4]}...{GOOGLE_API_KEY[-4:]}")
+        print("✓ Google Gemini API key loaded successfully")
     else:
         print("Warning: GOOGLE_API_KEY not found.")
     

@@ -112,7 +112,7 @@ def configure_gemini(api_key: Optional[str] = None) -> bool:
         
         genai.configure(api_key=api_key)
         _gemini_configured = True
-        print(f"[AI_PROVIDER] Gemini configured successfully with key: {api_key[:4]}...{api_key[-4:]}")
+        print("[AI_PROVIDER] Gemini configured successfully")
         return True
     except Exception as e:
         print(f"[AI_PROVIDER] Error configuring Gemini: {e}")
