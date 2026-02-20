@@ -309,11 +309,21 @@ def simulation_feedback(current_user, email_id):
             print(f"[FEEDBACK] No response found for email {email_id}")
             return redirect(url_for('simulation.simulate'))
 
-        # Ensure the feedback is treated as HTML
+        # Ensure the feedback is treated as HTML (or safely rendered if it's plain text)
         if response.ai_feedback:
-            if not response.ai_feedback.strip().startswith('<'):
-                print(f"[FEEDBACK] Warning: Feedback doesn't appear to be HTML: {response.ai_feedback[:50]}...")
-                response.ai_feedback = f"<p>{response.ai_feedback}</p>"
+            import re
+            import html as _html
+
+            feedback_text = response.ai_feedback.strip()
+            looks_like_html = bool(re.search(r"<\s*\w+[^>]*>", feedback_text))
+
+            if not looks_like_html:
+                print(f"[FEEDBACK] Feedback is plain text; rendering with preserved line breaks")
+                response.ai_feedback = (
+                    "<div style='white-space: pre-wrap;'>"
+                    f"{_html.escape(feedback_text)}"
+                    "</div>"
+                )
 
         return render_template(
             'simulation_feedback.html',

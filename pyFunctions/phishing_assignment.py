@@ -1,7 +1,6 @@
 import random
 import datetime
 import re
-import markdown
 import traceback
 from pyFunctions.api_logging import log_api_request
 

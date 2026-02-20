@@ -42,6 +42,34 @@
 .email-body {
     color: rgba(255, 255, 255, 0.85);
     line-height: 1.7;
+    width: 100%;
+}
+
+/* Phase 2 emails are AI-generated and often include a fixed-width wrapper (e.g. max-width:600px).
+   These overrides make the rendered email use the same full-width container as Phase 1. */
+.email-body table,
+.email-body tbody,
+.email-body tr,
+.email-body td {
+    max-width: 100% !important;
+}
+
+.email-body table {
+    width: 100% !important;
+}
+
+.email-body img {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+.email-body [style*="max-width" i] {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.email-body [width] {
+    max-width: 100% !important;
 }
 
 .progress {

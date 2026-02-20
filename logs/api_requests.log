@@ -6,3 +6,6 @@
 [2025-09-17 22:08:41] [AZURE] azure_evaluation - SUCCESS - Prompt: 1185 chars, Response: 0 chars
 [2025-09-17 22:08:41] [AZURE] azure_openai_completion - SUCCESS - Prompt: 1185 chars, Response: 0 chars, Model: gpt-4.1-nano
 [2025-09-20 11:56:20] [AZURE] azure_openai_completion - SUCCESS - Prompt: 51 chars, Response: 0 chars, Model: gpt-4.1-nano
+[2026-02-20 09:20:38] [GEMINI] gemini_generate_content - SUCCESS - Prompt: 761 chars, Response: 1585 chars, Model: gemini-2.5-pro
+[2026-02-20 09:22:33] [GEMINI] gemini_generate_content - SUCCESS - Prompt: 1170 chars, Response: 3157 chars, Model: gemini-2.5-pro
+[2026-02-20 09:23:32] [GEMINI] gemini_generate_content - SUCCESS - Prompt: 761 chars, Response: 1845 chars, Model: gemini-2.5-pro

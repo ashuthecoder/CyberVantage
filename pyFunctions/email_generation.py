@@ -9,7 +9,6 @@ import random
 import traceback
 import datetime
 import re
-import markdown
 import json
 import os
 import time
@@ -432,14 +431,13 @@ Format as JSON: {{"feedback": "detailed HTML feedback", "score": 7}}"""
     text = _call_gemini_with_retry(api_key, prompt)
     if text:
         text = clean_html_code_blocks(text)
-        try:
-            result = json.loads(text.strip())
-            if "feedback" in result and "score" in result:
-                result["feedback"] = clean_html_code_blocks(result["feedback"])
-                return result
-        except json.JSONDecodeError:
-            extracted_score = extract_score_from_feedback(text, is_spam, user_response)
-            return {"feedback": text, "score": extracted_score}
+        result = _parse_ai_evaluation_result(text)
+        if result and "feedback" in result and "score" in result:
+            result["feedback"] = clean_html_code_blocks(result["feedback"])
+            return result
+
+        extracted_score = extract_score_from_feedback(text, is_spam, user_response)
+        return {"feedback": text, "score": extracted_score}
 
     return None
 
@@ -590,23 +588,19 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
             if text_content:
                 # Clean HTML code blocks from AI response
                 text_content = clean_html_code_blocks(text_content)
-                
-                try:
-                    # Try to parse JSON response
-                    result = json.loads(text_content.strip())
-                    if "feedback" in result and "score" in result:
-                        # Clean HTML code blocks from feedback if it exists
-                        if "feedback" in result:
-                            result["feedback"] = clean_html_code_blocks(result["feedback"])
-                        print(f"[AI] Evaluation successful using provider: {provider}")
-                        return result
-                except json.JSONDecodeError:
-                    # Fallback parsing - extract score from text content
-                    extracted_score = extract_score_from_feedback(text_content, is_spam, user_response)
-                    return {
-                        "feedback": text_content,
-                        "score": extracted_score
-                    }
+
+                result = _parse_ai_evaluation_result(text_content)
+                if result and "feedback" in result and "score" in result:
+                    result["feedback"] = clean_html_code_blocks(result["feedback"])
+                    print(f"[AI] Evaluation successful using provider: {provider}")
+                    return result
+
+                # Fallback parsing - extract score from text content
+                extracted_score = extract_score_from_feedback(text_content, is_spam, user_response)
+                return {
+                    "feedback": text_content,
+                    "score": extracted_score
+                }
         
         return None
         
@@ -728,6 +722,105 @@ def clean_html_code_blocks(text):
     text = re.sub(r'```html\s*\n?(.*?)(?=\n\s*\n|\n[A-Z]|$)', replace_malformed_block, text, flags=re.IGNORECASE | re.DOTALL)
     
     return text.strip()
+
+
+def _strip_markdown_code_fences(text: str) -> str:
+    """Return the first fenced block content if present, else return the original text."""
+    if not text:
+        return text
+
+    import re
+
+    # Prefer ```json ... ``` but accept any language tag.
+    match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", text, flags=re.IGNORECASE | re.DOTALL)
+    if match:
+        return match.group(1).strip()
+
+    return text.strip()
+
+
+def _parse_ai_evaluation_result(text: str):
+    """Parse AI evaluation output into {'feedback': str, 'score': int}.
+
+    The models sometimes return JSON wrapped in ```json fences, or JSON-like content
+    where the feedback string contains raw newlines (invalid JSON). This parser is
+    intentionally tolerant.
+    """
+    if not text:
+        return None
+
+    import re
+
+    candidate = _strip_markdown_code_fences(text)
+
+    # 1) Try strict JSON parsing on the full candidate.
+    try:
+        parsed = json.loads(candidate)
+        if isinstance(parsed, dict):
+            return _normalize_evaluation_dict(parsed)
+    except Exception:
+        pass
+
+    # 2) Try strict JSON parsing on the first {...} block we can find.
+    json_start = candidate.find('{')
+    json_end = candidate.rfind('}') + 1
+    if json_start >= 0 and json_end > json_start:
+        json_str = candidate[json_start:json_end]
+        try:
+            parsed = json.loads(json_str)
+            if isinstance(parsed, dict):
+                return _normalize_evaluation_dict(parsed)
+        except Exception:
+            pass
+
+    # 3) Tolerant extraction for JSON-like blobs with invalid string escaping.
+    # Extract score first.
+    score = None
+    score_match = re.search(r'"score"\s*:\s*(\d+)', candidate)
+    if score_match:
+        try:
+            score = int(score_match.group(1))
+        except Exception:
+            score = None
+
+    # Extract feedback as everything between the feedback key and the score key.
+    feedback = None
+    feedback_key_pos = candidate.lower().find('"feedback"')
+    score_key_pos = candidate.lower().find('"score"')
+    if feedback_key_pos != -1 and score_key_pos != -1 and score_key_pos > feedback_key_pos:
+        # Find the first quote after the ':' following "feedback".
+        colon_pos = candidate.find(':', feedback_key_pos)
+        if colon_pos != -1:
+            first_quote = candidate.find('"', colon_pos)
+            if first_quote != -1 and first_quote < score_key_pos:
+                raw_feedback_region = candidate[first_quote + 1:score_key_pos]
+                # Trim trailing characters like ", or whitespace before the next key.
+                raw_feedback_region = raw_feedback_region.rstrip()
+                raw_feedback_region = re.sub(r'\s*,\s*$', '', raw_feedback_region)
+                # Remove a trailing quote if the model closed it right before the score key.
+                raw_feedback_region = raw_feedback_region.rstrip('"')
+                feedback = raw_feedback_region.strip()
+
+    if feedback is not None and score is not None:
+        return {"feedback": feedback, "score": score}
+
+    return None
+
+
+def _normalize_evaluation_dict(result: dict) -> dict:
+    """Coerce score to int when possible and ensure feedback is a string."""
+    if not isinstance(result, dict):
+        return result
+
+    normalized = dict(result)
+    if "score" in normalized:
+        try:
+            normalized["score"] = int(normalized["score"])
+        except Exception:
+            pass
+    if "feedback" in normalized and normalized["feedback"] is not None:
+        normalized["feedback"] = str(normalized["feedback"])
+    return normalized
 
 def get_fallback_evaluation(is_spam, user_response):
     """Generate a dynamic evaluation when AI isn't available"""
