@@ -47,29 +47,56 @@
 
 /* Phase 2 emails are AI-generated and often include a fixed-width wrapper (e.g. max-width:600px).
    These overrides make the rendered email use the same full-width container as Phase 1. */
-.email-body table,
-.email-body tbody,
-.email-body tr,
-.email-body td {
+.phase2 .email-body table,
+.phase2 .email-body tbody,
+.phase2 .email-body tr,
+.phase2 .email-body td {
     max-width: 100% !important;
 }
 
-.email-body table {
+.phase2 .email-body table {
     width: 100% !important;
 }
 
-.email-body img {
+.phase2 .email-body img {
     max-width: 100% !important;
     height: auto !important;
 }
 
-.email-body [style*="max-width" i] {
+.phase2 .email-body [style*="max-width" i] {
     max-width: 100% !important;
     width: 100% !important;
 }
 
-.email-body [width] {
+.phase2 .email-body [width] {
     max-width: 100% !important;
+}
+
+.phase2 .email-body {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    padding: 0;
+}
+
+.phase2-email-frame {
+    width: 100%;
+    border: 0;
+    display: block;
+    background: #fff;
+    min-height: 520px;
+}
+
+.small-btn {
+    padding: 0.45rem 1rem;
+    font-size: 0.8rem;
+    border-radius: 50px;
+}
+
+.bottom-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
 }
 
 .progress {
@@ -281,13 +308,17 @@ textarea {
                 <div class="progress-fill" style="width: {{ (current_email / 5) * 100 }}%"></div>
             </div>
         </div>
+
+        <div class="bottom-actions">
+            <a href="{{ url_for('simulation.skip_to_phase2') }}" class="btn secondary small-btn">Skip to Phase 2</a>
+        </div>
     </div>
 
 {# Phase 2: advanced analysis #}
 {% elif phase == 2 %}
     {% set p2_completed = session.get('phase2_emails_completed', 0) %}
     {% set p2_index = p2_completed + 1 %}
-    <div class="simulation-phase">
+    <div class="simulation-phase phase2">
         <h2>Phase 2: Advanced Analysis</h2>
         <p>Now let's test your reasoning skills. Analyze the email, determine if it's legitimate or phishing, and explain your reasoning.</p>
 
@@ -303,16 +334,24 @@ textarea {
         {% else %}
             <h3 style="color: var(--accent-color);">Advanced Email #{{ p2_index }}</h3>
 
-            <div class="email-container">
-                <div class="email-header">
-                    <p><strong>From:</strong> {{ email.sender }}</p>
-                    <p><strong>Subject:</strong> {{ email.subject }}</p>
-                    <p><strong>Date:</strong> {{ email.date }}</p>
-                </div>
-                <div class="email-body">
-                    {{ email.content|safe }}
-                </div>
-            </div>
+             <div class="email-container">
+                 <div class="email-header">
+                     <p><strong>From:</strong> {{ email.sender }}</p>
+                     <p><strong>Subject:</strong> {{ email.subject }}</p>
+                     <p><strong>Date:</strong> {{ email.date }}</p>
+                 </div>
+                 <div class="email-body">
+                     <iframe
+                         class="phase2-email-frame"
+                         sandbox="allow-same-origin"
+                         referrerpolicy="no-referrer"
+                         title="Email content preview"
+                     ></iframe>
+                     <script>
+                         window.__PHASE2_EMAIL_HTML__ = {{ (email.content or '')|tojson|safe }};
+                     </script>
+                 </div>
+             </div>
 
             <form method="POST" action="{{ url_for('simulation.submit_simulation') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -392,6 +431,51 @@ textarea {
                 '<p>Error loading email content. Please try again.</p>' +
                 '<button onclick="location.reload()" class="btn secondary">Reload Email</button>' +
                 '</div>';
+        }
+
+        const frame = document.querySelector('.phase2-email-frame');
+        if (frame && typeof window.__PHASE2_EMAIL_HTML__ === 'string') {
+            const baseCss = `
+                html, body { margin: 0; padding: 0; width: 100%; background: #ffffff; color: #111111; }
+                img { max-width: 100% !important; height: auto !important; }
+                table { width: 100% !important; max-width: 100% !important; }
+                [width="600"], [style*="width:600px" i], [style*="width: 600px" i],
+                [style*="max-width:600px" i], [style*="max-width: 600px" i] { width: 100% !important; max-width: 100% !important; }
+            `;
+
+            const injectStyle = (html) => {
+                const styleTag = `<style>${baseCss}</style><base target="_blank">`;
+                if (/<\/head\s*>/i.test(html)) {
+                    return html.replace(/<\/head\s*>/i, `${styleTag}</head>`);
+                }
+                if (/<html[\s>]/i.test(html)) {
+                    return html.replace(/<html([\s>])/i, `<html$1<head>${styleTag}</head>`);
+                }
+                return `<!doctype html><html><head><meta charset="utf-8">${styleTag}</head><body>${html}</body></html>`;
+            };
+
+            frame.srcdoc = injectStyle(window.__PHASE2_EMAIL_HTML__);
+
+            const resizeFrame = () => {
+                try {
+                    const doc = frame.contentDocument;
+                    if (!doc) return;
+                    const height = Math.max(
+                        doc.body?.scrollHeight || 0,
+                        doc.documentElement?.scrollHeight || 0
+                    );
+                    if (height) frame.style.height = `${height}px`;
+                } catch (e) {
+                    // ignore cross-origin/sandbox access issues
+                }
+            };
+
+            frame.addEventListener('load', () => {
+                resizeFrame();
+                // One extra resize after fonts/images settle
+                setTimeout(resizeFrame, 250);
+                setTimeout(resizeFrame, 1000);
+            });
         }
     });
 </script>
