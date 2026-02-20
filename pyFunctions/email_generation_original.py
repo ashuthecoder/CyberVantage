@@ -53,10 +53,10 @@ os.makedirs('logs', exist_ok=True)
 
 # Model configuration from environment variables
 DEFAULT_PRIMARY_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
-DEFAULT_FALLBACK_MODELS = [m.strip() for m in os.getenv("GEMINI_FALLBACK_MODELS", "gemini-2.0-flash,gemini-1.5-pro").split(",") if m.strip()]
+DEFAULT_FALLBACK_MODELS = [m.strip() for m in os.getenv("GEMINI_FALLBACK_MODELS", "gemini-2.5-pro,gemini-2.0-flash").split(",") if m.strip()]
 
-# Legacy fallback list for backward compatibility (now uses stable models)
-DEFAULT_MODEL_FALLBACK_LIST = ["gemini-2.0-flash", "gemini-1.5-pro"]
+# Legacy fallback list for backward compatibility (stable, non-deprecated models)
+DEFAULT_MODEL_FALLBACK_LIST = ["gemini-2.5-pro", "gemini-2.0-flash"]
 
 def call_gemini_with_retry(model_name, prompt, generation_config, max_attempts=3, 
                           fallback_models=None, initial_delay=0.5):

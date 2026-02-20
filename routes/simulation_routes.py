@@ -333,11 +333,21 @@ def simulation_feedback(current_user, email_id):
             print(f"[FEEDBACK] No response found for email {email_id}")
             return redirect(url_for('simulation.simulate'))
 
-        # Ensure the feedback is treated as HTML
+        # Ensure the feedback is treated as HTML (or safely rendered if it's plain text)
         if response.ai_feedback:
-            if not response.ai_feedback.strip().startswith('<'):
-                print(f"[FEEDBACK] Warning: Feedback doesn't appear to be HTML: {response.ai_feedback[:50]}...")
-                response.ai_feedback = f"<p>{response.ai_feedback}</p>"
+            import re
+            import html as _html
+
+            feedback_text = response.ai_feedback.strip()
+            looks_like_html = bool(re.search(r"<\s*\w+[^>]*>", feedback_text))
+
+            if not looks_like_html:
+                print(f"[FEEDBACK] Feedback is plain text; rendering with preserved line breaks")
+                response.ai_feedback = (
+                    "<div style='white-space: pre-wrap;'>"
+                    f"{_html.escape(feedback_text)}"
+                    "</div>"
+                )
 
         return render_template(
             'simulation_feedback.html',
@@ -428,6 +438,22 @@ def skip_email(current_user):
         return redirect(url_for('simulation.simulate'))
     except Exception as e:
         print(f"[SKIP] Error in skip_email: {e}")
+        traceback.print_exc()
+        return redirect(url_for('simulation.reset_stuck_simulation'))
+
+@simulation_bp.route('/skip_to_phase2')
+@token_required
+def skip_to_phase2(current_user):
+    """Testing helper: jump directly to Phase 2."""
+    try:
+        session['simulation_phase'] = 2
+        session['phase2_emails_completed'] = 0
+        session.pop('active_phase2_email_id', None)
+        session.modified = True
+        print("[SKIP_TO_PHASE2] Jumped to Phase 2")
+        return redirect(url_for('simulation.simulate'))
+    except Exception as e:
+        print(f"[SKIP_TO_PHASE2] Error: {e}")
         traceback.print_exc()
         return redirect(url_for('simulation.reset_stuck_simulation'))
 

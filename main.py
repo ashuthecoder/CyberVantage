@@ -31,18 +31,28 @@ app.register_blueprint(threat_bp)
 # Main routes that don't fit into specific categories
 @app.route('/')
 def index():
-    """Landing page with detailed CyberVantage information"""
+    """Landing page with terminal/SOC theme"""
+    return render_template("landing_terminal.html")
+
+@app.route('/landing')
+def landing():
+    """Alternative landing page route"""
+    return render_template("landing_terminal.html")
+
+@app.route('/landing-old')
+def landing_old():
+    """Old landing page (glassmorphism theme)"""
     return render_template("index.html")
 
 @app.route('/about')
 def about():
-    """About page with CyberVantage information and compliance details"""
+    """About page"""
     return render_template("about.html")
 
 @app.route('/dashboard')
 @token_required
 def dashboard(current_user):
-    # Make sure database schema is updated
+    """Main dashboard - Flask UI"""
     update_database_schema(app)
     return render_template('dashboard.html', username=current_user.name, current_user=current_user)
 

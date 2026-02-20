@@ -142,7 +142,7 @@ def generate_simulation_analysis(user_responses, api_key, genai, app):
         Format the response as HTML with appropriate headings (<h3>) and paragraphs (<p>).
         """
         
-        model = genai.GenerativeModel('gemini-1.5-pro', 
+        model = genai.GenerativeModel('gemini-2.5-pro', 
                                      safety_settings={
                                          HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
                                          HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
@@ -393,7 +393,7 @@ def generate_simulation_analysis(user_responses, api_key, genai, app):
         Format the response as HTML with appropriate headings (<h3>) and paragraphs (<p>).
         """
         
-        model = genai.GenerativeModel('gemini-1.5-pro', 
+        model = genai.GenerativeModel('gemini-2.5-pro', 
                                      safety_settings=safety_settings)
         
         function_name = "generate_simulation_analysis"
@@ -404,7 +404,7 @@ def generate_simulation_analysis(user_responses, api_key, genai, app):
         # Log API request
         log_api_request(
             function_name=function_name,
-            model="gemini-1.5-pro",
+            model="gemini-2.5-pro",
             prompt_length=len(prompt),
             response_length=len(response.text) if hasattr(response, 'text') else 0,
             start_time=start_time,
@@ -430,7 +430,7 @@ def generate_simulation_analysis(user_responses, api_key, genai, app):
         # Log the error
         log_api_request(
             function_name="generate_simulation_analysis",
-            model="gemini-1.5-pro",
+            model="gemini-2.5-pro",
             prompt_length=len(prompt) if 'prompt' in locals() else 0,
             response_length=0,
             start_time=start_time if 'start_time' in locals() else datetime.datetime.now(),

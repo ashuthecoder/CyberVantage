@@ -2,8 +2,11 @@
   "version": 2,
   "builds": [
     {
-      "src": "wsgi.py",
-      "use": "@vercel/python"
+      "src": "main.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb"
+      }
     },
     {
       "src": "static/**",
@@ -19,12 +22,8 @@
       }
     },
     {
-      "src": "/favicon.ico",
-      "dest": "/static/images/favicon.ico"
-    },
-    {
       "src": "/(.*)",
-      "dest": "wsgi.py",
+      "dest": "main.py",
       "headers": {
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
@@ -32,5 +31,9 @@
         "Referrer-Policy": "strict-origin-when-cross-origin"
       }
     }
-  ]
+  ],
+  "env": {
+    "FLASK_ENV": "production"
+  },
+  "regions": ["iad1"]
 }

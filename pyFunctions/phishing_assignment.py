@@ -1,7 +1,6 @@
 import random
 import datetime
 import re
-import markdown
 import traceback
 from pyFunctions.api_logging import log_api_request
 
@@ -94,19 +93,24 @@ def assign_phishing_creation(api_key, genai, app):
 def evaluate_phishing_creation(phishing_email, api_key, genai, app):
     """
     Evaluate user-created phishing email and provide detailed scoring and feedback
+    Uses Gemini as primary, Azure OpenAI as fallback
     """
     try:
-        # Try Azure OpenAI first if available
+        # Try Gemini first (primary) if API key is available
+        gemini_key = api_key or (app.config.get('GOOGLE_API_KEY') if app else None)
+        if gemini_key and genai:
+            print("[PHISHING_EVAL] Attempting Gemini evaluation (primary)")
+            result = evaluate_phishing_creation_gemini(phishing_email, gemini_key, genai, app)
+            if result:
+                return result
+            print("[PHISHING_EVAL] Gemini evaluation failed, falling back to Azure")
+        
+        # Try Azure OpenAI as fallback if available
         if AZURE_HELPERS_AVAILABLE and app and app.config.get('AZURE_OPENAI_KEY'):
-            print("[PHISHING_EVAL] Attempting Azure OpenAI evaluation")
+            print("[PHISHING_EVAL] Attempting Azure OpenAI evaluation (fallback)")
             result = evaluate_phishing_creation_azure(phishing_email, app)
             if result:
                 return result
-        
-        # Try Gemini if API key is available
-        if api_key and genai:
-            print("[PHISHING_EVAL] Attempting Gemini evaluation")
-            return evaluate_phishing_creation_gemini(phishing_email, api_key, genai, app)
         
         # Use enhanced fallback evaluation
         print("[PHISHING_EVAL] Using enhanced fallback evaluation")
@@ -250,8 +254,11 @@ IMPORTANT: Always express the overall score as "X/10" where X is the actual scor
 
 Format your response as HTML with clear headings and organized content. Be constructive and educational in your feedback."""
         
-        model = genai.GenerativeModel('gemini-1.5-pro', 
-                                     safety_settings=safety_settings)
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-pro").strip()
+        if model_name.startswith("models/"):
+            model_name = model_name[len("models/"):]
+
+        model = genai.GenerativeModel(model_name, safety_settings=safety_settings)
         
         function_name = "evaluate_phishing_creation"
         start_time = datetime.datetime.now()
@@ -261,7 +268,7 @@ Format your response as HTML with clear headings and organized content. Be const
         # Log API request
         log_api_request(
             function_name=function_name,
-            model="gemini-1.5-pro",
+            model=model_name,
             prompt_length=len(prompt),
             response_length=len(response.text) if hasattr(response, 'text') else 0,
             start_time=start_time,
@@ -291,7 +298,7 @@ Format your response as HTML with clear headings and organized content. Be const
         # Log the error
         log_api_request(
             function_name="evaluate_phishing_creation",
-            model="gemini-1.5-pro",
+            model=model_name if 'model_name' in locals() else os.getenv("GEMINI_MODEL", "gemini-2.5-pro"),
             prompt_length=len(prompt) if 'prompt' in locals() else 0,
             response_length=0,
             start_time=start_time if 'start_time' in locals() else datetime.datetime.now(),

@@ -1,5 +1,5 @@
 """
-Email Generation Module - Azure OpenAI Only (Gemini removed as requested)
+Email Generation Module - Gemini primary, Azure OpenAI fallback
 
 This module handles AI-powered email generation for security training simulations
 and evaluation of user explanations about phishing emails.
@@ -9,7 +9,6 @@ import random
 import traceback
 import datetime
 import re
-import markdown
 import json
 import os
 import time
@@ -45,6 +44,15 @@ except ImportError:
     def extract_text_from_ai_response(*args, **kwargs): return ""
     def get_provider_status(): return {}
 
+# Import Google Generative AI (Gemini) with fallback
+try:
+    import google.generativeai as genai
+    from google.generativeai.types import HarmCategory, HarmBlockThreshold
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    genai = None
+
 # Import template email fallback
 try:
     from .template_emails import get_template_email
@@ -59,6 +67,33 @@ except ImportError:
 
 # Determine writable log directory (may be None on serverless)
 LOG_DIR = get_log_dir()
+
+# Gemini model configuration
+# Default to a stable model with typically less restrictive preview quotas.
+_DEPRECATED_GEMINI_MODELS = {
+    "gemini-1.5-pro",
+    "gemini-1.5-pro-latest",
+    "models/gemini-1.5-pro",
+    "models/gemini-1.5-pro-latest",
+}
+
+DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro").strip()
+if DEFAULT_GEMINI_MODEL in _DEPRECATED_GEMINI_MODELS:
+    DEFAULT_GEMINI_MODEL = "gemini-2.5-pro"
+
+_raw_fallback_models = [
+    m.strip()
+    for m in os.getenv("GEMINI_FALLBACK_MODELS", "gemini-2.5-pro,gemini-2.0-flash").split(",")
+    if m.strip()
+]
+
+# Remove deprecated entries and de-dupe while preserving order.
+DEFAULT_GEMINI_FALLBACK_MODELS = []
+for _m in _raw_fallback_models:
+    if _m in _DEPRECATED_GEMINI_MODELS:
+        continue
+    if _m not in DEFAULT_GEMINI_FALLBACK_MODELS:
+        DEFAULT_GEMINI_FALLBACK_MODELS.append(_m)
 
 # =============================================================================
 # HELPER FUNCTIONS
@@ -109,18 +144,38 @@ def result_has_valid_content(result):
 # =============================================================================
 
 def generate_ai_email(user_name, previous_responses, GOOGLE_API_KEY=None, genai=None, app=None):
-    """Generate an AI email with robust error handling - Multi-AI with fallback"""
+    """Generate an AI email with robust error handling - Gemini primary, Azure fallback"""
     call_count = getattr(generate_ai_email, 'call_count', 0) + 1
     generate_ai_email.call_count = call_count
     
     print(f"[GENERATE] Starting email generation (call #{call_count})")
     log_api_key_info(app, call_count)
     
-    # Try AI generation with automatic fallback
-    if AI_PROVIDER_AVAILABLE:
+    # ── 1. Try Gemini (primary) ──────────────────────────────────────────
+    gemini_key = GOOGLE_API_KEY or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if gemini_key and GEMINI_AVAILABLE:
         try:
-            print("[GENERATE] Attempting AI generation with fallback support")
-            result = multi_approach_generation_with_fallback(user_name, previous_responses, app)
+            print("[GENERATE] Attempting Gemini generation (primary)")
+            result = multi_approach_generation_gemini(user_name, previous_responses, gemini_key)
+            if result_has_valid_content(result):
+                print("[GENERATE] Gemini generation succeeded")
+                return result
+            else:
+                print("[GENERATE] Gemini generation returned empty result, falling back")
+        except Exception as e:
+            print(f"[GENERATE] Gemini error: {e}")
+            log_api_request("generate_ai_email", 0, False, error=str(e), api_source="GEMINI")
+    else:
+        if not gemini_key:
+            print("[GENERATE] No Gemini API key configured, skipping Gemini")
+        if not GEMINI_AVAILABLE:
+            print("[GENERATE] google-generativeai package not installed, skipping Gemini")
+
+    # ── 2. Try Azure OpenAI (fallback) ───────────────────────────────────
+    if AZURE_HELPERS_AVAILABLE:
+        try:
+            print("[GENERATE] Attempting Azure OpenAI generation (fallback)")
+            result = multi_approach_generation_azure(user_name, previous_responses, app)
             if result_has_valid_content(result):
                 print("[GENERATE] AI generation succeeded")
                 return result
@@ -130,17 +185,28 @@ def generate_ai_email(user_name, previous_responses, GOOGLE_API_KEY=None, genai=
             print(f"[GENERATE] AI error: {e}")
             log_api_request("generate_ai_email", 0, False, error=str(e), api_source="AI")
     
-    # Fallback to template email
+    # ── 3. Fallback to template email ────────────────────────────────────
     print("[GENERATE] Using template email fallback")
     return get_template_email()
 
 def evaluate_explanation(email_content, is_spam, user_response, user_explanation, GOOGLE_API_KEY=None, genai=None, app=None):
-    """Evaluate the user's explanation of why an email is phishing/legitimate - Multi-AI with fallback"""
+    """Evaluate the user's explanation of why an email is phishing/legitimate - Gemini primary, Azure fallback"""
     try:
         print("[EVALUATE] Starting explanation evaluation")
         
-        # Try AI evaluation with automatic fallback
-        if AI_PROVIDER_AVAILABLE:
+        # ── 1. Try Gemini (primary) ──────────────────────────────────────
+        gemini_key = GOOGLE_API_KEY or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        if gemini_key and GEMINI_AVAILABLE:
+            try:
+                result = evaluate_with_gemini(email_content, is_spam, user_response, user_explanation, gemini_key)
+                if result:
+                    return result
+            except Exception as e:
+                print(f"[EVALUATE] Gemini error: {e}")
+                log_api_request("evaluate_explanation", 0, False, error=str(e), api_source="GEMINI")
+
+        # ── 2. Try Azure OpenAI (fallback) ───────────────────────────────
+        if AZURE_HELPERS_AVAILABLE:
             try:
                 result = evaluate_with_ai_fallback(email_content, is_spam, user_response, user_explanation, app)
                 if result:
@@ -159,7 +225,224 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
         return get_fallback_evaluation(is_spam, user_response)
 
 # =============================================================================
-# AI IMPLEMENTATION WITH MULTI-PROVIDER FALLBACK
+# GEMINI IMPLEMENTATION
+# =============================================================================
+
+# If Gemini quota/daily limit is hit, avoid hammering the API on subsequent calls.
+_GEMINI_QUOTA_EXHAUSTED_UNTIL = None
+
+def _configure_gemini(api_key):
+    """Configure the Gemini SDK with the provided API key."""
+    import google.generativeai as _genai
+    _genai.configure(api_key=api_key)
+    return _genai
+
+
+def _is_gemini_quota_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return any(term in msg for term in [
+        "resource_exhausted",
+        "quota",
+        "daily",
+        "limit",
+        "rate limit",
+        "too many requests",
+        "429",
+    ])
+
+
+def _is_gemini_invalid_model_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return any(term in msg for term in [
+        "model not found",
+        "not found",
+        "unknown model",
+        "does not exist",
+        "deprecated",
+        "invalid argument",
+    ]) and "quota" not in msg
+
+def _call_gemini_with_retry(api_key, prompt, max_attempts=3, initial_delay=0.5):
+    """Call Gemini API with retry logic and model fallback."""
+    global _GEMINI_QUOTA_EXHAUSTED_UNTIL
+
+    # If we recently hit a quota/daily-limit error, skip Gemini to avoid wasting calls.
+    try:
+        if _GEMINI_QUOTA_EXHAUSTED_UNTIL is not None:
+            now_ts = time.time()
+            if now_ts < _GEMINI_QUOTA_EXHAUSTED_UNTIL:
+                remaining = int(_GEMINI_QUOTA_EXHAUSTED_UNTIL - now_ts)
+                print(f"[GEMINI] Skipping Gemini due to recent quota exhaustion (cooldown {remaining}s remaining)")
+                return None
+    except Exception:
+        # If anything goes wrong, don't block calls.
+        _GEMINI_QUOTA_EXHAUSTED_UNTIL = None
+
+    _genai = _configure_gemini(api_key)
+
+    models_to_try = []
+    for _m in ([DEFAULT_GEMINI_MODEL] + DEFAULT_GEMINI_FALLBACK_MODELS):
+        if _m and _m not in models_to_try:
+            models_to_try.append(_m)
+
+    safety_settings = {
+        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+    }
+
+    for model_name in models_to_try:
+        for attempt in range(max_attempts):
+            try:
+                # Local per-minute limiter to avoid accidental retry storms.
+                if not check_rate_limit():
+                    log_api_request(
+                        "gemini_generate_content",
+                        len(prompt) if prompt else 0,
+                        False,
+                        error="Local rate limiter blocked Gemini call",
+                        fallback_reason="local_rate_limited",
+                        model_used=model_name,
+                        api_source="GEMINI",
+                    )
+                    return None
+
+                print(f"[GEMINI] Attempt {attempt + 1}/{max_attempts} with {model_name}")
+                model = _genai.GenerativeModel(model_name, safety_settings=safety_settings)
+                response = model.generate_content(prompt)
+
+                if hasattr(response, 'text') and response.text and response.text.strip():
+                    print(f"[GEMINI] Success with {model_name}")
+                    log_api_request(
+                        "gemini_generate_content",
+                        len(prompt) if prompt else 0,
+                        True,
+                        response_length=len(response.text),
+                        model_used=model_name,
+                        api_source="GEMINI",
+                    )
+                    return response.text
+            except Exception as e:
+                print(f"[GEMINI] Error with {model_name} attempt {attempt + 1}: {e}")
+                # If we hit a quota/daily-limit error, do NOT keep retrying (it just burns more requests).
+                if _is_gemini_quota_error(e):
+                    # Cool down until next local midnight (or a configurable minimum cooldown),
+                    # so the app doesn't keep retrying Gemini on every request.
+                    try:
+                        cooldown_seconds = int(os.getenv("GEMINI_QUOTA_COOLDOWN_SECONDS", "21600"))  # 6h
+                        now = datetime.datetime.now()
+                        next_midnight = (now + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+                        until_midnight = max(0, int((next_midnight - now).total_seconds()))
+                        _GEMINI_QUOTA_EXHAUSTED_UNTIL = time.time() + min(until_midnight, cooldown_seconds)
+                    except Exception:
+                        _GEMINI_QUOTA_EXHAUSTED_UNTIL = time.time() + 21600
+
+                    log_api_request(
+                        "gemini_generate_content",
+                        len(prompt) if prompt else 0,
+                        False,
+                        error=str(e),
+                        fallback_reason="quota_exhausted",
+                        model_used=model_name,
+                        api_source="GEMINI",
+                    )
+                    return None
+
+                # If the model is invalid/deprecated, skip retries on it and try the next model in the list.
+                if _is_gemini_invalid_model_error(e):
+                    log_api_request(
+                        "gemini_generate_content",
+                        len(prompt) if prompt else 0,
+                        False,
+                        error=str(e),
+                        fallback_reason="invalid_model",
+                        model_used=model_name,
+                        api_source="GEMINI",
+                    )
+                    break
+
+                log_api_request(
+                    "gemini_generate_content",
+                    len(prompt) if prompt else 0,
+                    False,
+                    error=str(e),
+                    fallback_reason="exception",
+                    model_used=model_name,
+                    api_source="GEMINI",
+                )
+
+                if attempt < max_attempts - 1:
+                    time.sleep(initial_delay * (2 ** attempt))
+
+    return None
+
+
+def multi_approach_generation_gemini(user_name, previous_responses, api_key):
+    """Generate email using Gemini with multiple prompt approaches."""
+    print("[GEMINI] Starting multi-approach generation")
+
+    approaches = [
+        "Generate a realistic training email (either phishing or legitimate) for cybersecurity education.",
+        "Create a simulated email for security awareness training purposes.",
+        "Produce an educational email example for phishing detection training."
+    ]
+
+    for i, base_prompt in enumerate(approaches):
+        try:
+            prompt = build_generation_prompt(base_prompt, user_name, previous_responses)
+            text = _call_gemini_with_retry(api_key, prompt)
+            if text:
+                parsed = parse_email_response(text)
+                if parsed and result_has_valid_content(parsed):
+                    print(f"[GEMINI] Success with approach {i + 1}")
+                    return parsed
+        except Exception as e:
+            print(f"[GEMINI] Error with approach {i + 1}: {e}")
+            continue
+
+    print("[GEMINI] All approaches failed")
+    return None
+
+
+def evaluate_with_gemini(email_content, is_spam, user_response, user_explanation, api_key):
+    """Evaluate user explanation using Gemini."""
+    correct_answer = "phishing" if is_spam else "legitimate"
+    user_answer = "phishing" if user_response else "legitimate"
+
+    prompt = f"""You are a cybersecurity expert evaluating a student's analysis of an email for phishing detection training.
+
+Email Content: {email_content[:500]}...
+
+Correct Classification: {correct_answer}
+User Classification: {user_answer}
+User Explanation: {user_explanation}
+
+Evaluate the student's explanation considering:
+1. Accuracy (40%): Did they correctly identify the email type?
+2. Analysis Quality (30%): How well did they explain their reasoning?
+3. Security Awareness (20%): Did they identify relevant security indicators?
+4. Learning Progress (10%): Evidence of cybersecurity understanding
+
+Provide detailed, constructive feedback.
+
+Format as JSON: {{"feedback": "detailed HTML feedback", "score": 7}}"""
+
+    text = _call_gemini_with_retry(api_key, prompt)
+    if text:
+        text = clean_html_code_blocks(text)
+        result = _parse_ai_evaluation_result(text)
+        if result and "feedback" in result and "score" in result:
+            result["feedback"] = clean_html_code_blocks(result["feedback"])
+            return result
+
+        extracted_score = extract_score_from_feedback(text, is_spam, user_response)
+        return {"feedback": text, "score": extracted_score}
+
+    return None
+
+# =============================================================================
+# AZURE OPENAI IMPLEMENTATION
 # =============================================================================
 
 def multi_approach_generation_with_fallback(user_name, previous_responses, app):
@@ -305,23 +588,19 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
             if text_content:
                 # Clean HTML code blocks from AI response
                 text_content = clean_html_code_blocks(text_content)
-                
-                try:
-                    # Try to parse JSON response
-                    result = json.loads(text_content.strip())
-                    if "feedback" in result and "score" in result:
-                        # Clean HTML code blocks from feedback if it exists
-                        if "feedback" in result:
-                            result["feedback"] = clean_html_code_blocks(result["feedback"])
-                        print(f"[AI] Evaluation successful using provider: {provider}")
-                        return result
-                except json.JSONDecodeError:
-                    # Fallback parsing - extract score from text content
-                    extracted_score = extract_score_from_feedback(text_content, is_spam, user_response)
-                    return {
-                        "feedback": text_content,
-                        "score": extracted_score
-                    }
+
+                result = _parse_ai_evaluation_result(text_content)
+                if result and "feedback" in result and "score" in result:
+                    result["feedback"] = clean_html_code_blocks(result["feedback"])
+                    print(f"[AI] Evaluation successful using provider: {provider}")
+                    return result
+
+                # Fallback parsing - extract score from text content
+                extracted_score = extract_score_from_feedback(text_content, is_spam, user_response)
+                return {
+                    "feedback": text_content,
+                    "score": extracted_score
+                }
         
         return None
         
@@ -443,6 +722,105 @@ def clean_html_code_blocks(text):
     text = re.sub(r'```html\s*\n?(.*?)(?=\n\s*\n|\n[A-Z]|$)', replace_malformed_block, text, flags=re.IGNORECASE | re.DOTALL)
     
     return text.strip()
+
+
+def _strip_markdown_code_fences(text: str) -> str:
+    """Return the first fenced block content if present, else return the original text."""
+    if not text:
+        return text
+
+    import re
+
+    # Prefer ```json ... ``` but accept any language tag.
+    match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", text, flags=re.IGNORECASE | re.DOTALL)
+    if match:
+        return match.group(1).strip()
+
+    return text.strip()
+
+
+def _parse_ai_evaluation_result(text: str):
+    """Parse AI evaluation output into {'feedback': str, 'score': int}.
+
+    The models sometimes return JSON wrapped in ```json fences, or JSON-like content
+    where the feedback string contains raw newlines (invalid JSON). This parser is
+    intentionally tolerant.
+    """
+    if not text:
+        return None
+
+    import re
+
+    candidate = _strip_markdown_code_fences(text)
+
+    # 1) Try strict JSON parsing on the full candidate.
+    try:
+        parsed = json.loads(candidate)
+        if isinstance(parsed, dict):
+            return _normalize_evaluation_dict(parsed)
+    except Exception:
+        pass
+
+    # 2) Try strict JSON parsing on the first {...} block we can find.
+    json_start = candidate.find('{')
+    json_end = candidate.rfind('}') + 1
+    if json_start >= 0 and json_end > json_start:
+        json_str = candidate[json_start:json_end]
+        try:
+            parsed = json.loads(json_str)
+            if isinstance(parsed, dict):
+                return _normalize_evaluation_dict(parsed)
+        except Exception:
+            pass
+
+    # 3) Tolerant extraction for JSON-like blobs with invalid string escaping.
+    # Extract score first.
+    score = None
+    score_match = re.search(r'"score"\s*:\s*(\d+)', candidate)
+    if score_match:
+        try:
+            score = int(score_match.group(1))
+        except Exception:
+            score = None
+
+    # Extract feedback as everything between the feedback key and the score key.
+    feedback = None
+    feedback_key_pos = candidate.lower().find('"feedback"')
+    score_key_pos = candidate.lower().find('"score"')
+    if feedback_key_pos != -1 and score_key_pos != -1 and score_key_pos > feedback_key_pos:
+        # Find the first quote after the ':' following "feedback".
+        colon_pos = candidate.find(':', feedback_key_pos)
+        if colon_pos != -1:
+            first_quote = candidate.find('"', colon_pos)
+            if first_quote != -1 and first_quote < score_key_pos:
+                raw_feedback_region = candidate[first_quote + 1:score_key_pos]
+                # Trim trailing characters like ", or whitespace before the next key.
+                raw_feedback_region = raw_feedback_region.rstrip()
+                raw_feedback_region = re.sub(r'\s*,\s*$', '', raw_feedback_region)
+                # Remove a trailing quote if the model closed it right before the score key.
+                raw_feedback_region = raw_feedback_region.rstrip('"')
+                feedback = raw_feedback_region.strip()
+
+    if feedback is not None and score is not None:
+        return {"feedback": feedback, "score": score}
+
+    return None
+
+
+def _normalize_evaluation_dict(result: dict) -> dict:
+    """Coerce score to int when possible and ensure feedback is a string."""
+    if not isinstance(result, dict):
+        return result
+
+    normalized = dict(result)
+    if "score" in normalized:
+        try:
+            normalized["score"] = int(normalized["score"])
+        except Exception:
+            pass
+    if "feedback" in normalized and normalized["feedback"] is not None:
+        normalized["feedback"] = str(normalized["feedback"])
+    return normalized
 
 def get_fallback_evaluation(is_spam, user_response):
     """Generate a dynamic evaluation when AI isn't available"""
