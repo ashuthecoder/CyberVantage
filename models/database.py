@@ -22,6 +22,12 @@ class User(db.Model):
     password_reset_otp = db.Column(db.String(6), nullable=True)  # 6-digit OTP
     otp_expires = db.Column(db.DateTime, nullable=True)  # OTP expiration
     otp_attempts = db.Column(db.Integer, default=0)  # Failed OTP attempts counter
+    # Demographics fields for personalized learning
+    demographics_completed = db.Column(db.Boolean, default=False, nullable=False)
+    tech_confidence = db.Column(db.String(50), nullable=True)  # beginner, intermediate, advanced
+    cybersecurity_experience = db.Column(db.String(50), nullable=True)  # none, some, experienced
+    age_group = db.Column(db.String(50), nullable=True)
+    industry = db.Column(db.String(100), nullable=True)
 
     def set_password(self, password):
         # Hash password with Werkzeug
@@ -148,29 +154,135 @@ class SimulationSession(db.Model):
     user = db.relationship('User', backref=db.backref('simulation_sessions', lazy=True))
 
 # Database helper functions
+def reset_sequence_for_table(table_name, app):
+    """
+    Reset PostgreSQL sequence for a table to the max ID + 1.
+    This prevents duplicate key errors when auto-incrementing after manual inserts.
+    Only affects PostgreSQL databases; SQLite uses a different mechanism.
+    """
+    try:
+        with app.app_context():
+            db_type = db.engine.dialect.name
+            if db_type == 'postgresql':
+                # Get the sequence name (usually table_name_id_seq)
+                sequence_name = f"{table_name}_id_seq"
+                with db.engine.begin() as conn:
+                    # Get the maximum ID currently in the table
+                    result = conn.execute(text(f"SELECT COALESCE(MAX(id), 0) FROM {table_name}")).fetchone()
+                    max_id = result[0] if result else 0
+                    
+                    # Reset the sequence to max_id + 1
+                    conn.execute(text(f"SELECT setval('{sequence_name}', :max_id, true)"), {"max_id": max_id})
+                    print(f"[DB] Reset sequence {sequence_name} to {max_id + 1}")
+                return True
+            return True  # Non-PostgreSQL databases don't need this
+    except Exception as e:
+        print(f"[DB] Error resetting sequence for {table_name}: {str(e)}")
+        return False
+
 def update_database_schema(app):
-    """Add the simulation_id column to the SimulationEmail table if it exists and the column is missing."""
+    """Update database schema to add missing columns."""
     try:
         with app.app_context():
             inspector = inspect(db.engine)
             
-            # Check if table exists
-            if not inspector.has_table('simulation_email'):
-                print("[DB] simulation_email table does not exist yet. Skipping schema update.")
-                return True
+            # Detect database type
+            db_type = db.engine.dialect.name
+            print(f"[DB] Database type: {db_type}")
             
-            # Check existing columns
-            columns = [col['name'] for col in inspector.get_columns('simulation_email')]
+            # Check if simulation_email table exists and update
+            if inspector.has_table('simulation_email'):
+                columns = [col['name'] for col in inspector.get_columns('simulation_email')]
+                
+                if 'simulation_id' not in columns:
+                    print("[DB] Adding simulation_id column to SimulationEmail table")
+                    with db.engine.begin() as conn:
+                        conn.execute(text("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT"))
+                    print("[DB] Column added successfully")
             
-            if 'simulation_id' not in columns:
-                print("[DB] Adding simulation_id column to SimulationEmail table")
-                with db.engine.begin() as conn:
-                    conn.execute(text("ALTER TABLE simulation_email ADD COLUMN simulation_id TEXT"))
-                print("[DB] Column added successfully")
+            # Check if user table exists and add missing fields
+            if inspector.has_table('user'):
+                user_columns = [col['name'] for col in inspector.get_columns('user')]
+
+                # OTP fields for password reset
+                if 'password_reset_otp' not in user_columns:
+                    print("[DB] Adding password_reset_otp column to User table")
+                    with db.engine.begin() as conn:
+                        if db_type == 'postgresql':
+                            conn.execute(text('ALTER TABLE "user" ADD COLUMN password_reset_otp VARCHAR(6)'))
+                        else:
+                            conn.execute(text('ALTER TABLE user ADD COLUMN password_reset_otp VARCHAR(6)'))
+                    print("[DB] Column added successfully")
+
+                if 'otp_expires' not in user_columns:
+                    print("[DB] Adding otp_expires column to User table")
+                    with db.engine.begin() as conn:
+                        if db_type == 'postgresql':
+                            conn.execute(text('ALTER TABLE "user" ADD COLUMN otp_expires TIMESTAMP'))
+                        else:
+                            conn.execute(text('ALTER TABLE user ADD COLUMN otp_expires DATETIME'))
+                    print("[DB] Column added successfully")
+
+                if 'otp_attempts' not in user_columns:
+                    print("[DB] Adding otp_attempts column to User table")
+                    with db.engine.begin() as conn:
+                        if db_type == 'postgresql':
+                            conn.execute(text('ALTER TABLE "user" ADD COLUMN otp_attempts INTEGER DEFAULT 0 NOT NULL'))
+                        else:
+                            conn.execute(text('ALTER TABLE user ADD COLUMN otp_attempts INTEGER DEFAULT 0 NOT NULL'))
+                    print("[DB] Column added successfully")
+                
+                if 'demographics_completed' not in user_columns:
+                    print("[DB] Adding demographics_completed column to User table")
+                    with db.engine.begin() as conn:
+                        # Use database-agnostic syntax
+                        if db_type == 'postgresql':
+                            conn.execute(text("ALTER TABLE \"user\" ADD COLUMN demographics_completed BOOLEAN DEFAULT FALSE NOT NULL"))
+                        else:
+                            conn.execute(text("ALTER TABLE user ADD COLUMN demographics_completed BOOLEAN DEFAULT 0 NOT NULL"))
+                    print("[DB] Column added successfully")
+                
+                if 'tech_confidence' not in user_columns:
+                    print("[DB] Adding tech_confidence column to User table")
+                    with db.engine.begin() as conn:
+                        if db_type == 'postgresql':
+                            conn.execute(text("ALTER TABLE \"user\" ADD COLUMN tech_confidence VARCHAR(50)"))
+                        else:
+                            conn.execute(text("ALTER TABLE user ADD COLUMN tech_confidence VARCHAR(50)"))
+                    print("[DB] Column added successfully")
+                
+                if 'cybersecurity_experience' not in user_columns:
+                    print("[DB] Adding cybersecurity_experience column to User table")
+                    with db.engine.begin() as conn:
+                        if db_type == 'postgresql':
+                            conn.execute(text("ALTER TABLE \"user\" ADD COLUMN cybersecurity_experience VARCHAR(50)"))
+                        else:
+                            conn.execute(text("ALTER TABLE user ADD COLUMN cybersecurity_experience VARCHAR(50)"))
+                    print("[DB] Column added successfully")
+
+                if 'age_group' not in user_columns:
+                    print("[DB] Adding age_group column to User table")
+                    with db.engine.begin() as conn:
+                        if db_type == 'postgresql':
+                            conn.execute(text('ALTER TABLE "user" ADD COLUMN age_group VARCHAR(50)'))
+                        else:
+                            conn.execute(text('ALTER TABLE user ADD COLUMN age_group VARCHAR(50)'))
+                    print("[DB] Column added successfully")
+
+                if 'industry' not in user_columns:
+                    print("[DB] Adding industry column to User table")
+                    with db.engine.begin() as conn:
+                        if db_type == 'postgresql':
+                            conn.execute(text('ALTER TABLE "user" ADD COLUMN industry VARCHAR(100)'))
+                        else:
+                            conn.execute(text('ALTER TABLE user ADD COLUMN industry VARCHAR(100)'))
+                    print("[DB] Column added successfully")
             
             return True
     except Exception as e:
         print(f"[DB] Error updating database schema: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def group_responses_into_sessions(responses):

@@ -21,21 +21,28 @@ wheels/
 *.egg
 logs/
 
-# Frontend build artifacts
+# Frontend build artifacts (React UI backed up, app is Flask-only now)
 static/react-build/
-frontend/node_modules/
-frontend/dist/
-frontend/.vite/
+frontend/
+react-ui-backup/
 
 # Node modules
 node_modules/
+
+# React UI (backed up, app now uses Flask templates only)
+frontend/
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
 
+# React UI backup
+react-ui-backup/
+
 # Flask log
 flask.log
 venv
 .venv
+*.db
+instance/

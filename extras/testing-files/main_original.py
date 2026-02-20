@@ -57,7 +57,7 @@ if GOOGLE_API_KEY:
     
     # Log model configuration from environment variables
     primary_model = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
-    fallback_models = os.getenv("GEMINI_FALLBACK_MODELS", "gemini-2.0-flash,gemini-1.5-pro")
+    fallback_models = os.getenv("GEMINI_FALLBACK_MODELS", "gemini-2.5-pro,gemini-2.0-flash")
     print(f"✓ Primary model: {primary_model}")
     print(f"✓ Fallback models: {fallback_models}")
 else:

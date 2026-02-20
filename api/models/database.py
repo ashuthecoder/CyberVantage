@@ -20,6 +20,11 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     password_reset_token = Column(String(255), nullable=True)
     password_reset_expires = Column(DateTime, nullable=True)
+    tech_confidence = Column(String(50), nullable=True)
+    cybersecurity_experience = Column(String(50), nullable=True)
+    age_group = Column(String(50), nullable=True)
+    industry = Column(String(100), nullable=True)
+    demographics_completed = Column(Boolean, default=False, nullable=False)
     
     # Relationships
     simulation_responses = relationship("SimulationResponse", back_populates="user")

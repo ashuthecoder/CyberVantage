@@ -3,17 +3,20 @@
   "builds": [
     {
       "src": "main.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb"
+      }
     },
     {
-      "src": "frontend/dist/**",
+      "src": "static/**",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/assets/(.*)",
-      "dest": "/frontend/dist/assets/$1",
+      "src": "/static/(.*)",
+      "dest": "/static/$1",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
       }
@@ -28,5 +31,9 @@
         "Referrer-Policy": "strict-origin-when-cross-origin"
       }
     }
-  ]
+  ],
+  "env": {
+    "FLASK_ENV": "production"
+  },
+  "regions": ["iad1"]
 }

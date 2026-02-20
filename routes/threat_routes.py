@@ -146,16 +146,19 @@ def api_test_vt_connection(current_user):
         traceback.print_exc()
         return jsonify({"error": f"Connection test failed: {str(e)}"}), 500
 
-# Phishing Assignment Routes
 @threat_bp.route('/phishing_assignment')
 @token_required
 def get_phishing_assignment(current_user):
     """Display the phishing email creation assignment"""
     try:
         from flask import current_app
+        import google.generativeai as genai
+        
+        # Get Gemini API key from app config
+        gemini_key = current_app.config.get('GOOGLE_API_KEY')
+        
         # Get assignment from the phishing assignment module
-        # Note: Removed Gemini parameters as requested
-        assignment_data = assign_phishing_creation(None, None, current_app)
+        assignment_data = assign_phishing_creation(gemini_key, genai, current_app)
         
         return render_template(
             'phishing_assignment.html',
@@ -193,9 +196,13 @@ def evaluate_user_phishing(current_user):
             )
         
         from flask import current_app
-        # Evaluate the phishing email
-        # Note: Removed Gemini parameters as requested
-        evaluation_result = evaluate_phishing_creation(phishing_email, None, None, current_app)
+        import google.generativeai as genai
+        
+        # Get Gemini API key from app config
+        gemini_key = current_app.config.get('GOOGLE_API_KEY')
+        
+        # Evaluate the phishing email with Gemini as primary
+        evaluation_result = evaluate_phishing_creation(phishing_email, gemini_key, genai, current_app)
         
         return render_template(
             'phishing_evaluation.html',

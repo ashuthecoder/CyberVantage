@@ -71,6 +71,8 @@ def create_app():
     
     app.config['SECRET_KEY'] = flask_secret
     app.config['JWT_SECRET_KEY'] = jwt_secret
+    
+    # Database configuration - Azure PostgreSQL required
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
         database_url = (
@@ -78,17 +80,66 @@ def create_app():
             or os.getenv("POSTGRES_PRISMA_URL")
             or os.getenv("POSTGRES_URL_NON_POOLING")
             or os.getenv("DATABASE_URL_UNPOOLED")
-            or os.getenv("DATABASE_URL")
         )
+    
+    # Require database configuration - no SQLite fallback
     if not database_url:
-        database_url = "sqlite:///users.db"
+        raise ValueError(
+            "❌ ERROR: No database configuration found!\n"
+            "   Please set one of the following environment variables:\n"
+            "   - DATABASE_URL\n"
+            "   - POSTGRES_URL\n"
+            "   - POSTGRES_PRISMA_URL\n"
+            "   - POSTGRES_URL_NON_POOLING\n"
+            "   See docs/AZURE_DATABASE_SETUP.md for setup instructions."
+        )
+    
+    # Convert postgres:// to postgresql+psycopg2://
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql+psycopg2://", 1)
     elif database_url.startswith("postgresql://"):
         database_url = database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    
+    # Ensure SSL is enabled for PostgreSQL connections
     if database_url.startswith("postgresql+psycopg2://") and "sslmode=" not in database_url:
         separator = "&" if "?" in database_url else "?"
         database_url = f"{database_url}{separator}sslmode=require"
+
+    # Fail fast on DB connectivity issues (prevents hanging during db.create_all())
+    engine_connect_args = {}
+    if database_url.startswith("postgresql+psycopg2://"):
+        connect_timeout_s = int(os.getenv("DB_CONNECT_TIMEOUT", "5"))
+        statement_timeout_ms = int(os.getenv("DB_STATEMENT_TIMEOUT_MS", "10000"))
+        lock_timeout_ms = int(os.getenv("DB_LOCK_TIMEOUT_MS", "5000"))
+
+        engine_connect_args["connect_timeout"] = connect_timeout_s
+
+        options = []
+        if statement_timeout_ms > 0:
+            options.append(f"-c statement_timeout={statement_timeout_ms}")
+        if lock_timeout_ms > 0:
+            options.append(f"-c lock_timeout={lock_timeout_ms}")
+        if options:
+            engine_connect_args["options"] = " ".join(options)
+
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_pre_ping": True,
+        "pool_recycle": int(os.getenv("DB_POOL_RECYCLE", "300")),
+        "pool_timeout": int(os.getenv("DB_POOL_TIMEOUT", "5")),
+        "connect_args": engine_connect_args,
+    }
+    
+    # Avoid leaking credentials in logs
+    try:
+        from urllib.parse import urlsplit
+
+        parts = urlsplit(database_url)
+        safe_user = parts.username or "<user>"
+        safe_host = parts.hostname or "<host>"
+        safe_port = f":{parts.port}" if parts.port else ""
+        print(f"✓ Database configured: {parts.scheme}://{safe_user}@{safe_host}{safe_port}{parts.path}")
+    except Exception:
+        print("✓ Database configured")
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['WTF_CSRF_SECRET_KEY'] = csrf_secret
