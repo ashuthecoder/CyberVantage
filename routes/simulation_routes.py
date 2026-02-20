@@ -274,7 +274,10 @@ def submit_simulation(current_user):
                 explanation,
                 None,  # No Gemini key - removed as requested
                 None,  # No genai module - removed as requested
-                current_app
+                current_app,
+                email_sender=email.sender,
+                email_subject=email.subject,
+                email_date=email.date,
             )
             ai_feedback = eval_result["feedback"]
             score = eval_result["score"]

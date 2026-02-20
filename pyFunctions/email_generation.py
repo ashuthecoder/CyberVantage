@@ -13,6 +13,8 @@ import json
 import os
 import time
 
+from pathlib import Path
+
 # =============================================================================
 # INITIALIZATION AND IMPORTS
 # =============================================================================
@@ -189,16 +191,37 @@ def generate_ai_email(user_name, previous_responses, GOOGLE_API_KEY=None, genai=
     print("[GENERATE] Using template email fallback")
     return get_template_email()
 
-def evaluate_explanation(email_content, is_spam, user_response, user_explanation, GOOGLE_API_KEY=None, genai=None, app=None):
+def evaluate_explanation(
+    email_content,
+    is_spam,
+    user_response,
+    user_explanation,
+    GOOGLE_API_KEY=None,
+    genai=None,
+    app=None,
+    email_sender: str | None = None,
+    email_subject: str | None = None,
+    email_date: str | None = None,
+):
     """Evaluate the user's explanation of why an email is phishing/legitimate - Gemini primary, Azure fallback"""
     try:
         print("[EVALUATE] Starting explanation evaluation")
+
+        # Users view the email rendered in a sandbox; evaluate against what they can actually see.
+        visible_text = _strip_html_to_user_visible_text(email_content or "", max_chars=2000)
+        email_context = (
+            f"Sender: {email_sender or '(unknown)'}\n"
+            f"Subject: {email_subject or '(unknown)'}\n"
+            f"Date: {email_date or '(unknown)'}\n\n"
+            "Rendered email content (what the student saw):\n"
+            f"{visible_text}\n"
+        )
         
         # ── 1. Try Gemini (primary) ──────────────────────────────────────
         gemini_key = GOOGLE_API_KEY or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
         if gemini_key and GEMINI_AVAILABLE:
             try:
-                result = evaluate_with_gemini(email_content, is_spam, user_response, user_explanation, gemini_key)
+                result = evaluate_with_gemini(email_context, is_spam, user_response, user_explanation, gemini_key)
                 if result:
                     return result
             except Exception as e:
@@ -208,7 +231,7 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
         # ── 2. Try Azure OpenAI (fallback) ───────────────────────────────
         if AZURE_HELPERS_AVAILABLE:
             try:
-                result = evaluate_with_ai_fallback(email_content, is_spam, user_response, user_explanation, app)
+                result = evaluate_with_ai_fallback(email_context, is_spam, user_response, user_explanation, app)
                 if result:
                     return result
             except Exception as e:
@@ -223,6 +246,112 @@ def evaluate_explanation(email_content, is_spam, user_response, user_explanation
         print(f"[EVALUATE] Error in evaluate_explanation: {e}")
         traceback.print_exc()
         return get_fallback_evaluation(is_spam, user_response)
+
+
+def _strip_html_to_user_visible_text(html: str, max_chars: int = 2000) -> str:
+    """Convert HTML-ish email content into a user-visible plain-text summary.
+
+    Phase 2 emails are rendered in an iframe sandbox, so users see the *rendered* email,
+    not the raw HTML source. This helper prevents evaluation prompts from overfitting to
+    HTML boilerplate (e.g., <!doctype html>). It's intentionally lightweight (no deps).
+    """
+    if not html:
+        return ""
+
+    text = html
+    # Remove scripts/styles
+    text = re.sub(r"<\s*(script|style)[^>]*>.*?<\s*/\s*\1\s*>", " ", text, flags=re.I | re.S)
+    # Convert common block breaks into newlines
+    text = re.sub(r"<\s*br\s*/?\s*>", "\n", text, flags=re.I)
+    text = re.sub(r"<\s*/\s*(p|div|tr|li|h\d)\s*>", "\n", text, flags=re.I)
+    # Strip remaining tags
+    text = re.sub(r"<[^>]+>", " ", text)
+    # Decode a few common entities (avoid importing html module at top-level)
+    try:
+        import html as _html
+        text = _html.unescape(text)
+    except Exception:
+        pass
+    # Normalize whitespace
+    text = re.sub(r"\r\n?", "\n", text)
+    text = re.sub(r"[\t\f\v ]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = text.strip()
+    if max_chars and len(text) > max_chars:
+        return text[:max_chars].rstrip() + "…"
+    return text
+
+
+_DEFAULT_MAJOR_COMPANIES = [
+    "Apple", "Microsoft", "Alphabet (Google)", "Amazon", "NVIDIA", "Meta", "Tesla",
+    "Samsung", "TSMC", "Intel", "IBM", "Oracle", "Cisco", "SAP", "Sony", "Panasonic",
+    "Dell Technologies", "HP", "Lenovo", "ASUS", "Acer", "Qualcomm", "Broadcom", "AMD",
+    "Arm", "Siemens", "Bosch", "Philips", "LG", "Xiaomi", "ByteDance", "Tencent",
+    "Alibaba", "Baidu", "Huawei", "Netflix", "Adobe", "Salesforce", "ServiceNow",
+    "Palantir", "Snowflake", "Shopify", "Uber", "Airbnb", "PayPal", "Block", "Visa",
+    "Mastercard", "American Express", "JPMorgan Chase", "Bank of America", "Citigroup",
+    "Wells Fargo", "Goldman Sachs", "Morgan Stanley", "HSBC", "Barclays", "Deutsche Bank",
+    "BNP Paribas", "Santander", "UBS", "Credit Suisse", "ING", "UniCredit", "Intesa Sanpaolo",
+    "Royal Bank of Canada", "TD Bank", "Scotiabank", "ANZ", "Westpac", "Commonwealth Bank",
+    "ICBC", "China Construction Bank", "Bank of China", "Agricultural Bank of China",
+    "HDFC Bank", "ICICI Bank", "State Bank of India",
+    "Walmart", "Costco", "Target", "Home Depot", "Lowe's", "IKEA", "Carrefour", "Tesco",
+    "Ahold Delhaize", "Kroger", "Aldi", "Lidl",
+    "ExxonMobil", "Chevron", "Shell", "BP", "TotalEnergies", "Saudi Aramco", "PetroChina",
+    "Gazprom", "Equinor",
+    "Toyota", "Volkswagen", "BMW", "Mercedes-Benz", "Honda", "Ford", "General Motors",
+    "Stellantis", "Hyundai", "Kia", "Renault", "Nissan", "Volvo", "Geely", "BYD",
+    "Boeing", "Airbus", "Lockheed Martin", "Northrop Grumman", "Raytheon", "BAE Systems",
+    "SpaceX",
+    "United Airlines", "Delta Air Lines", "American Airlines", "Lufthansa", "Air France-KLM",
+    "Emirates", "Singapore Airlines", "Qantas",
+    "FedEx", "UPS", "DHL", "Maersk", "MSC", "DP World",
+    "Coca-Cola", "PepsiCo", "Nestlé", "Unilever", "Procter & Gamble", "Danone", "Mondelez",
+    "Kraft Heinz", "Mars", "AB InBev", "Heineken", "Diageo",
+    "McDonald's", "Starbucks", "KFC", "Burger King", "Subway", "Domino's",
+    "Pfizer", "Johnson & Johnson", "Merck", "Novartis", "Roche", "Sanofi", "AstraZeneca",
+    "GSK", "Bayer", "AbbVie", "Bristol Myers Squibb", "Amgen", "Eli Lilly", "Moderna",
+    "Takeda", "Novo Nordisk", "CSL", "Thermo Fisher Scientific", "Siemens Healthineers",
+    "Medtronic", "Stryker",
+    "UnitedHealth", "CVS Health", "Cigna", "Anthem (Elevance)", "Kaiser Permanente",
+    "Allianz", "AXA", "Zurich Insurance", "Prudential", "MetLife",
+    "ArcelorMittal", "Rio Tinto", "BHP", "Vale", "Glencore",
+    "LVMH", "Kering", "Hermès", "Nike", "Adidas", "Puma", "Inditex (Zara)", "H&M",
+    "Rolex", "Swatch Group",
+    "Comcast", "Disney", "Warner Bros. Discovery", "BBC", "Spotify",
+    "Accenture", "Deloitte", "PwC", "EY", "KPMG", "Capgemini", "Tata Consultancy Services",
+    "Infosys", "Wipro", "Cognizant",
+    "OpenAI", "Anthropic",
+]
+
+
+def _load_major_companies() -> list:
+    path = Path(__file__).resolve().parent.parent / "config" / "top_companies.json"
+    try:
+        if path.exists():
+            with path.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, list) and all(isinstance(x, str) for x in data) and len(data) >= 50:
+                return data
+    except Exception:
+        pass
+    return _DEFAULT_MAJOR_COMPANIES
+
+
+_MAJOR_COMPANIES = _load_major_companies()
+
+
+def _company_to_domain_hint(company_name: str) -> str:
+    """Create a safe, non-realistic but plausible domain hint using .example."""
+    base = (company_name or "company").lower()
+    base = re.sub(r"\(.*?\)", "", base)  # remove parentheticals
+    base = re.sub(r"[^a-z0-9]+", "-", base).strip("-")
+    base = re.sub(r"-+", "-", base)
+    if not base:
+        base = "company"
+    # Keep it short-ish
+    base = base[:40].strip("-")
+    return f"{base}.example"
 
 # =============================================================================
 # GEMINI IMPLEMENTATION
@@ -394,6 +523,8 @@ def multi_approach_generation_gemini(user_name, previous_responses, api_key):
             text = _call_gemini_with_retry(api_key, prompt)
             if text:
                 parsed = parse_email_response(text)
+                if parsed:
+                    parsed = _sanitize_generated_email(parsed)
                 if parsed and result_has_valid_content(parsed):
                     print(f"[GEMINI] Success with approach {i + 1}")
                     return parsed
@@ -405,14 +536,20 @@ def multi_approach_generation_gemini(user_name, previous_responses, api_key):
     return None
 
 
-def evaluate_with_gemini(email_content, is_spam, user_response, user_explanation, api_key):
+def evaluate_with_gemini(email_context, is_spam, user_response, user_explanation, api_key):
     """Evaluate user explanation using Gemini."""
     correct_answer = "phishing" if is_spam else "legitimate"
     user_answer = "phishing" if user_response else "legitimate"
 
     prompt = f"""You are a cybersecurity expert evaluating a student's analysis of an email for phishing detection training.
 
-Email Content: {email_content[:500]}...
+Important constraints (must follow):
+- The student saw the email rendered in a sandbox. Do NOT reference raw HTML/source code (e.g., doctype/html/head tags) and do NOT mention that the email "starts with <!DOCTYPE".
+- Only reference indicators visible in the rendered email: sender address/domain, display name, subject, wording, requests, link destinations, tone, and inconsistencies.
+- If you are tempted to mention HTML/source code, replace it with a visible indicator instead.
+
+Email (student-visible context):
+{str(email_context)[:1800]}
 
 Correct Classification: {correct_answer}
 User Classification: {user_answer}
@@ -433,11 +570,11 @@ Format as JSON: {{"feedback": "detailed HTML feedback", "score": 7}}"""
         text = clean_html_code_blocks(text)
         result = _parse_ai_evaluation_result(text)
         if result and "feedback" in result and "score" in result:
-            result["feedback"] = clean_html_code_blocks(result["feedback"])
+            result["feedback"] = _sanitize_phase2_feedback(clean_html_code_blocks(result["feedback"]))
             return result
 
         extracted_score = extract_score_from_feedback(text, is_spam, user_response)
-        return {"feedback": text, "score": extracted_score}
+        return {"feedback": _sanitize_phase2_feedback(text), "score": extracted_score}
 
     return None
 
@@ -475,6 +612,8 @@ def multi_approach_generation_with_fallback(user_name, previous_responses, app):
                 text_content = extract_text_from_ai_response(response, provider)
                 if text_content:
                     parsed = parse_email_response(text_content)
+                    if parsed:
+                        parsed = _sanitize_generated_email(parsed)
                     if parsed and result_has_valid_content(parsed):
                         print(f"[AI] Success with approach {i+1} using provider: {provider}")
                         return parsed
@@ -539,7 +678,7 @@ def extract_score_from_feedback(feedback_text, is_spam, user_response):
         # Return fallback score
         return 7 if user_response == is_spam else 3
 
-def evaluate_with_ai_fallback(email_content, is_spam, user_response, user_explanation, app):
+def evaluate_with_ai_fallback(email_context, is_spam, user_response, user_explanation, app):
     """Evaluate user explanation using AI with automatic fallback"""
     try:
         print("[AI] Starting evaluation with fallback")
@@ -550,7 +689,12 @@ def evaluate_with_ai_fallback(email_content, is_spam, user_response, user_explan
         
         prompt = f"""You are a cybersecurity expert evaluating a student's analysis of an email for phishing detection training.
 
-Email Content: {email_content[:500]}...
+    Important constraints (must follow):
+    - The student saw the email rendered in a sandbox. Do NOT reference raw HTML/source code (e.g., doctype/html/head tags) and do NOT mention that the email "starts with <!DOCTYPE".
+    - Only reference indicators visible in the rendered email: sender address/domain, display name, subject, wording, requests, link destinations, tone, and inconsistencies.
+
+    Email (student-visible context):
+    {str(email_context)[:1800]}
 
 Correct Classification: {correct_answer}
 User Classification: {user_answer}
@@ -591,14 +735,14 @@ Format as JSON: {{"feedback": "detailed HTML feedback with specific recommendati
 
                 result = _parse_ai_evaluation_result(text_content)
                 if result and "feedback" in result and "score" in result:
-                    result["feedback"] = clean_html_code_blocks(result["feedback"])
+                    result["feedback"] = _sanitize_phase2_feedback(clean_html_code_blocks(result["feedback"]))
                     print(f"[AI] Evaluation successful using provider: {provider}")
                     return result
 
                 # Fallback parsing - extract score from text content
                 extracted_score = extract_score_from_feedback(text_content, is_spam, user_response)
                 return {
-                    "feedback": text_content,
+                    "feedback": _sanitize_phase2_feedback(text_content),
                     "score": extracted_score
                 }
         
@@ -620,22 +764,34 @@ def build_generation_prompt(base_prompt, user_name, previous_responses):
     random_id = random.randint(10000, 99999)
     timestamp = datetime.datetime.now().strftime("%H%M%S")
     
+    company_name = random.choice(_MAJOR_COMPANIES)
+    company_domain = _company_to_domain_hint(company_name)
+    ref_id = f"{random_id}-{timestamp}"
+
     prompt = f"""{base_prompt}
 
-Requirements:
-- Create ONE realistic email (either phishing or legitimate)
-- Include sender, subject, date, and content
-- Make it appropriate for cybersecurity training
-- Performance context: {previous_responses}
-- Format as JSON with keys: sender, subject, date, content, is_spam
-- Content should be HTML formatted
-- Vary topics to keep training interesting
-- Do NOT use personal user information in email content
-- Use generic terms like "user", "customer", "subscriber" instead of specific names
-- Include unique reference ID {random_id}-{timestamp} for variety
-- Ensure content is unique and not repetitive
+Scenario requirements:
+- Create ONE realistic email (either phishing OR legitimate) themed around a major global company.
+- Use this company for the scenario: {company_name}
+- Use safe, non-real domains/links: base domains must end with .example (e.g., https://login.{company_domain}/...).
+- Make the email unique for this request using seed/reference: {ref_id}
+- Include the reference id exactly once in the subject OR as a small footer line (e.g., "Ref: {ref_id}"). It should look like a normal internal reference and not be a phishing tell by itself.
+- Difficulty: adapt subtlety based on this performance context: {previous_responses}
 
-Generate the email now:"""
+Output format requirements:
+- Output valid JSON only with keys: sender, subject, date, content, is_spam
+- sender must look like an email address (e.g., security@{company_domain} or alerts@{company_domain})
+- content must be an HTML *fragment* suitable for embedding inside an email body.
+  - Do NOT include <!DOCTYPE>, <html>, <head>, or <body> tags.
+  - Do NOT include <script>.
+  - Basic tags like <p>, <strong>, <ul>, <li>, <a>, <table> are OK.
+
+Training realism requirements:
+- If is_spam=true (phishing): include realistic social engineering (urgency/authority), and at least 2 visible red flags the student can cite (e.g., mismatched link text vs href, odd sender subdomain, unusual request, threatening tone, grammar, attachment pressure).
+- If is_spam=false (legitimate): make it professional, non-alarming, with safe CTA and no credential harvesting.
+- Do NOT use the student's real name or personal details.
+
+Generate the JSON now."""
     
     return prompt
 
@@ -656,13 +812,175 @@ def parse_email_response(text_content):
                 # Ensure date field
                 if 'date' not in parsed:
                     parsed['date'] = datetime.datetime.now().strftime("%B %d, %Y")
-                return parsed
+                return _sanitize_generated_email(parsed)
         
         return None
         
     except Exception as e:
         print(f"[PARSE] Error parsing response: {e}")
         return None
+
+
+def _sanitize_generated_email(email_data: dict) -> dict:
+    """Harden generated email payloads for Phase 2 rendering.
+
+    - Ensure `content` is an embeddable HTML fragment (no doctype/html/head/body wrappers).
+    - Ensure links/senders use safe `.example` domains.
+    """
+    if not isinstance(email_data, dict):
+        return email_data
+
+    sanitized = dict(email_data)
+
+    # Content
+    content = sanitized.get("content") or ""
+    content = clean_html_code_blocks(content)
+    content = _sanitize_email_html_fragment(content)
+    content = _sanitize_links_to_example_domains(content)
+    sanitized["content"] = content
+
+    # Sender
+    sender = (sanitized.get("sender") or "").strip()
+    sanitized["sender"] = _coerce_sender_to_example(sender)
+
+    # Subject: keep as-is but trim whitespace
+    if "subject" in sanitized and isinstance(sanitized["subject"], str):
+        sanitized["subject"] = sanitized["subject"].strip()
+
+    return sanitized
+
+
+def _sanitize_email_html_fragment(html: str) -> str:
+    if not html:
+        return ""
+    text = html
+    # Remove full-document wrappers if the model included them.
+    text = re.sub(r"<!\s*doctype[^>]*>", "", text, flags=re.I)
+    text = re.sub(r"<\s*head[^>]*>.*?<\s*/\s*head\s*>", "", text, flags=re.I | re.S)
+    text = re.sub(r"</?\s*html[^>]*>", "", text, flags=re.I)
+    text = re.sub(r"</?\s*body[^>]*>", "", text, flags=re.I)
+    # Strip scripts defensively.
+    text = re.sub(r"<\s*script[^>]*>.*?<\s*/\s*script\s*>", "", text, flags=re.I | re.S)
+    return text.strip()
+
+
+def _force_example_domain(domain: str) -> str:
+    d = (domain or "").strip().lower()
+    d = d.split("/")[0]
+    d = d.split(":")[0]
+    if not d:
+        return "training.example"
+    if d.endswith(".example"):
+        return d
+    # Replace last label with `.example` when possible.
+    if "." in d:
+        parts = [p for p in d.split(".") if p]
+        if len(parts) >= 2:
+            return ".".join(parts[:-1] + ["example"])
+    return f"{d}.example"
+
+
+def _coerce_sender_to_example(sender: str) -> str:
+    s = (sender or "").strip()
+    if not s:
+        return "notifications@training.example"
+
+    # Extract email if wrapped like "Name <a@b.com>"
+    m = re.search(r"<\s*([^>\s]+@[^>\s]+)\s*>", s)
+    if m:
+        s = m.group(1)
+
+    if "@" not in s:
+        # Not a valid-looking email; return a safe placeholder.
+        return "notifications@training.example"
+
+    local, domain = s.split("@", 1)
+    local = re.sub(r"[^a-zA-Z0-9._%+-]+", "", local) or "notifications"
+    return f"{local}@{_force_example_domain(domain)}"
+
+
+def _sanitize_links_to_example_domains(html: str) -> str:
+    """Rewrite http(s) links to `.example` domains (safe/non-realistic)."""
+    if not html:
+        return html
+    try:
+        from urllib.parse import urlsplit, urlunsplit
+    except Exception:
+        return html
+
+    def _rewrite(match: re.Match) -> str:
+        url = match.group(0)
+        try:
+            parts = urlsplit(url)
+            if parts.scheme not in {"http", "https"}:
+                return url
+            netloc = parts.netloc
+            if not netloc:
+                return url
+            if "@" in netloc:
+                # userinfo@host
+                userinfo, host = netloc.rsplit("@", 1)
+                host = _force_example_domain(host)
+                netloc2 = f"{userinfo}@{host}"
+            else:
+                netloc2 = _force_example_domain(netloc)
+            return urlunsplit((parts.scheme, netloc2, parts.path, parts.query, parts.fragment))
+        except Exception:
+            return url
+
+    return re.sub(r"https?://[^\s\"'<>]+", _rewrite, html)
+
+
+def _sanitize_phase2_feedback(feedback: str) -> str:
+    """Remove references to raw HTML/source code in Phase 2 feedback."""
+    if not feedback:
+        return feedback
+
+    text = feedback
+    invisible_markers = [
+        r"<!\s*doctype",
+        r"<\s*html\b",
+        r"<\s*head\b",
+        r"<\s*body\b",
+        r"raw\s+html",
+        r"source\s+code",
+    ]
+    if any(re.search(p, text, flags=re.I) for p in invisible_markers):
+        # Replace paragraphs/lines that mention raw HTML/source code with a sandbox-appropriate note.
+        replacement = (
+            "<p><strong>Note:</strong> In this simulation, the email is rendered in a sandbox preview, "
+            "so the underlying HTML markup isn’t shown. Focus on visible indicators like sender domain, link destination, "
+            "wording, urgency, and the specific action requested.</p>"
+        )
+        inserted_note = False
+        # HTML paragraph removal
+        def _replace_para(match: re.Match) -> str:
+            nonlocal inserted_note
+            if not inserted_note:
+                inserted_note = True
+                return replacement
+            return ""
+
+        text = re.sub(
+            r"(?is)<p>.*?(<!\s*doctype|raw\s+html|source\s+code).*?</p>",
+            _replace_para,
+            text,
+        )
+        # Plain-text line removal
+        text = re.sub(
+            r"(?im)^.*(<!\s*doctype|raw\s+html|source\s+code).*$\n?",
+            "",
+            text,
+        )
+        # Any remaining stray tag mentions
+        text = re.sub(r"(?i)<!\s*doctype[^\n]*", "", text)
+        text = re.sub(r"(?i)</?\s*(html|head|body)\b[^>]*>", "", text)
+
+        if not inserted_note:
+            # If we removed lines but didn't replace any HTML paragraph, prepend the note.
+            text = replacement + "\n" + text
+
+    return text
 
 def clean_html_code_blocks(text):
     """

@@ -104,6 +104,30 @@ def create_app():
     if database_url.startswith("postgresql+psycopg2://") and "sslmode=" not in database_url:
         separator = "&" if "?" in database_url else "?"
         database_url = f"{database_url}{separator}sslmode=require"
+
+    # Fail fast on DB connectivity issues (prevents hanging during db.create_all())
+    engine_connect_args = {}
+    if database_url.startswith("postgresql+psycopg2://"):
+        connect_timeout_s = int(os.getenv("DB_CONNECT_TIMEOUT", "5"))
+        statement_timeout_ms = int(os.getenv("DB_STATEMENT_TIMEOUT_MS", "10000"))
+        lock_timeout_ms = int(os.getenv("DB_LOCK_TIMEOUT_MS", "5000"))
+
+        engine_connect_args["connect_timeout"] = connect_timeout_s
+
+        options = []
+        if statement_timeout_ms > 0:
+            options.append(f"-c statement_timeout={statement_timeout_ms}")
+        if lock_timeout_ms > 0:
+            options.append(f"-c lock_timeout={lock_timeout_ms}")
+        if options:
+            engine_connect_args["options"] = " ".join(options)
+
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_pre_ping": True,
+        "pool_recycle": int(os.getenv("DB_POOL_RECYCLE", "300")),
+        "pool_timeout": int(os.getenv("DB_POOL_TIMEOUT", "5")),
+        "connect_args": engine_connect_args,
+    }
     
     # Avoid leaking credentials in logs
     try:
