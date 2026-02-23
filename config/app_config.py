@@ -138,6 +138,27 @@ def create_app():
         safe_host = parts.hostname or "<host>"
         safe_port = f":{parts.port}" if parts.port else ""
         print(f"✓ Database configured: {parts.scheme}://{safe_user}@{safe_host}{safe_port}{parts.path}")
+
+        # Azure Postgres frequently trips people up with username format and URL-encoding.
+        # Provide a safe, non-secret hint if we detect likely misconfiguration.
+        if safe_host.endswith(".postgres.database.azure.com") and parts.username:
+            # Username formats differ between Azure PostgreSQL offerings/configurations.
+            # Flexible Server commonly uses just `username`, while legacy Single Server often used `username@servername`.
+            # Don't guess: direct the operator to the Portal's connection string.
+            if "@" not in parts.username:
+                print(
+                    "⚠️  Azure Postgres hint: if you see `password authentication failed`, verify the username format "
+                    "in Azure Portal → your Postgres server → Connection strings. Some setups use `username`, others "
+                    "use `username@servername` (encode `@` as `%40` inside DATABASE_URL)."
+                )
+
+        # Another common pitfall: reserved characters in credentials must be percent-encoded.
+        # We can't inspect the actual password safely, but we can warn on obvious URL fragments.
+        if "#" in database_url:
+            print(
+                "⚠️  DATABASE_URL contains `#`. In URLs this starts a fragment and can truncate the password. "
+                "Percent-encode it as `%23` (and similarly encode other reserved characters in username/password)."
+            )
     except Exception:
         print("✓ Database configured")
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
