@@ -99,6 +99,161 @@
     transform: translateY(-2px);
 }
 
+.sandbox-section {
+    margin-top: 3rem;
+}
+
+.sandbox-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.sandbox-header h2 {
+    color: var(--accent-color);
+    margin-bottom: 0.5rem;
+}
+
+.sandbox-header p {
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 760px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.sandbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+}
+
+.sandbox-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    backdrop-filter: blur(var(--glass-blur));
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.sandbox-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent-color);
+    box-shadow: 0 10px 28px rgba(0, 242, 255, 0.12);
+}
+
+.sandbox-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sandbox-icon {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 242, 255, 0.4);
+    background: rgba(0, 242, 255, 0.1);
+    font-size: 1.15rem;
+}
+
+.sandbox-level {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.sandbox-level.low {
+    color: #5ddc7e;
+    border-color: rgba(40, 167, 69, 0.4);
+    background: rgba(40, 167, 69, 0.15);
+}
+
+.sandbox-level.medium {
+    color: #ffd166;
+    border-color: rgba(255, 193, 7, 0.45);
+    background: rgba(255, 193, 7, 0.15);
+}
+
+.sandbox-level.high {
+    color: #ff6b6b;
+    border-color: rgba(220, 53, 69, 0.45);
+    background: rgba(220, 53, 69, 0.15);
+}
+
+.sandbox-card h3 {
+    font-size: 1.05rem;
+}
+
+.sandbox-card p {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.6;
+    flex: 1;
+}
+
+.sandbox-actions {
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.sandbox-btn {
+    border: none;
+    padding: 0.45rem 1rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    font-size: 0.83rem;
+}
+
+.sandbox-btn.primary {
+    background: var(--accent-color);
+    color: #000;
+}
+
+.sandbox-btn.secondary {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.88);
+    border: 1px solid var(--glass-border);
+}
+
+.sandbox-btn:hover {
+    transform: translateY(-2px);
+}
+
+.sandbox-output {
+    margin-top: 1.5rem;
+    background: rgba(5, 5, 16, 0.45);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    min-height: 120px;
+}
+
+.sandbox-output-title {
+    color: var(--accent-color);
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+}
+
+.sandbox-log {
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
+.sandbox-log ul {
+    margin: 0.5rem 0 0 1rem;
+}
+
 @media (max-width: 768px) {
     .learn-paths {
         grid-template-columns: 1fr;
@@ -148,4 +303,95 @@
         </div>
     </a>
 </div>
+
+<section class="sandbox-section" aria-labelledby="sandbox-title">
+    <div class="sandbox-header">
+        <h2 id="sandbox-title">Cyber Threat Sandbox Environments</h2>
+        <p>Practice threat detection safely using guided, zero-risk simulations. Each sandbox mirrors common attacker behavior while keeping all actions contained inside CyberVantage.</p>
+    </div>
+
+    <div class="sandbox-grid">
+        <article class="sandbox-card" data-sandbox-id="email-phishing">
+            <div class="sandbox-top">
+                <span class="sandbox-icon" aria-hidden="true">📧</span>
+                <span class="sandbox-level medium">Medium Threat</span>
+            </div>
+            <h3>Email Phishing Inbox Sandbox</h3>
+            <p>Inspect suspicious senders, spoofed domains, and social-engineering prompts in a controlled inbox simulation.</p>
+            <div class="sandbox-actions">
+                <button type="button" class="sandbox-btn primary" data-action="launch">Launch Sandbox</button>
+                <button type="button" class="sandbox-btn secondary" data-action="preview">Preview Scenario</button>
+            </div>
+        </article>
+
+        <article class="sandbox-card" data-sandbox-id="link-inspection">
+            <div class="sandbox-top">
+                <span class="sandbox-icon" aria-hidden="true">🔗</span>
+                <span class="sandbox-level high">High Threat</span>
+            </div>
+            <h3>Malicious URL Inspection Sandbox</h3>
+            <p>Analyze deceptive links for typosquatting, fake login routes, and hidden redirect behavior before clicking.</p>
+            <div class="sandbox-actions">
+                <button type="button" class="sandbox-btn primary" data-action="launch">Launch Sandbox</button>
+                <button type="button" class="sandbox-btn secondary" data-action="preview">Preview Scenario</button>
+            </div>
+        </article>
+
+        <article class="sandbox-card" data-sandbox-id="endpoint-alerts">
+            <div class="sandbox-top">
+                <span class="sandbox-icon" aria-hidden="true">🛡️</span>
+                <span class="sandbox-level low">Low Threat</span>
+            </div>
+            <h3>Endpoint Alert Triage Sandbox</h3>
+            <p>Prioritize endpoint detections, separate noise from risk, and decide first-response actions for security events.</p>
+            <div class="sandbox-actions">
+                <button type="button" class="sandbox-btn primary" data-action="launch">Launch Sandbox</button>
+                <button type="button" class="sandbox-btn secondary" data-action="preview">Preview Scenario</button>
+            </div>
+        </article>
+    </div>
+
+    <div class="sandbox-output" aria-live="polite" id="sandbox-output">
+        <div class="sandbox-output-title">Sandbox Status</div>
+        <div class="sandbox-log">Select a sandbox to view threat indicators and simulation steps.</div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const sandboxOutput = document.getElementById('sandbox-output');
+    const sandboxLog = sandboxOutput ? sandboxOutput.querySelector('.sandbox-log') : null;
+
+    if (!sandboxLog) return;
+
+    const scenarios = {
+        'email-phishing': {
+            launch: '<strong>Email Phishing Inbox Sandbox launched.</strong><ul><li>Threat cue: sender domain mismatch detected.</li><li>Threat cue: urgency phrase "verify in 10 minutes".</li><li>Action: open headers and report as phishing.</li></ul>',
+            preview: 'Scenario preview: Payroll update request from lookalike domain with fake MFA reset link.'
+        },
+        'link-inspection': {
+            launch: '<strong>Malicious URL Inspection Sandbox launched.</strong><ul><li>Threat cue: punycode/typosquatted hostname.</li><li>Threat cue: redirect chain to credential collection page.</li><li>Action: isolate URL and submit to threat intel.</li></ul>',
+            preview: 'Scenario preview: "Account Recovery" URL hides a shortened redirect to a cloned login portal.'
+        },
+        'endpoint-alerts': {
+            launch: '<strong>Endpoint Alert Triage Sandbox launched.</strong><ul><li>Threat cue: unusual PowerShell command execution.</li><li>Threat cue: outbound connection to unknown IP.</li><li>Action: quarantine host and initiate incident response playbook.</li></ul>',
+            preview: 'Scenario preview: endpoint raises low-confidence malware alert with suspicious process tree.'
+        }
+    };
+
+    document.querySelectorAll('.sandbox-card .sandbox-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const card = btn.closest('.sandbox-card');
+            const sandboxId = card ? card.getAttribute('data-sandbox-id') : '';
+            const action = btn.getAttribute('data-action');
+            const message = scenarios[sandboxId] && scenarios[sandboxId][action];
+            if (message) {
+                sandboxLog.innerHTML = message;
+            }
+        });
+    });
+});
+</script>
 {% endblock %}
