@@ -2,12 +2,21 @@
 Flask app configuration and initialization
 """
 import os
+import sys
 import datetime
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
+
+# Fix Windows console encoding for Unicode characters (✓, ⚠️, etc.)
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 # Initialize extensions
 db = SQLAlchemy()

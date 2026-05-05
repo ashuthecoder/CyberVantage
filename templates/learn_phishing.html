@@ -377,7 +377,7 @@
 
 <div class="learning-content">
     <!-- Module 1 -->
-    <div class="module-card">
+    <div class="module-card" id="module1">
         <div class="module-header">
             <div>Module 1: Introduction to Phishing</div>
             <div>Progress: <span id="module1-progress">0%</span></div>
@@ -387,11 +387,41 @@
                 <div class="progress-fill" id="module1-progress-bar" style="width: 0%"></div>
             </div>
             
-            <div class="slides-container">
+            <div class="slides-container" id="module1-slides">
                 <div class="slide active" id="slide1">
                     <h3>What is Phishing?</h3>
                     <p>Phishing is a cybercrime in which targets are contacted by email, telephone or text message by someone posing as a legitimate institution to lure individuals into providing sensitive data.</p>
-                    <img src="{{ url_for('static', filename='images/phishing_example.svg') }}" alt="Phishing Example" style="max-width: 100%; margin-top: 1rem; border-radius: 8px; opacity: 0.9;">
+                    
+                    <!-- HTML Phishing Email Mockup -->
+                    <div style="background: rgba(10, 10, 26, 0.8); border: 1px solid rgba(220, 53, 69, 0.4); border-radius: 8px; margin-top: 1.5rem; overflow: hidden; font-family: 'JetBrains Mono', monospace;">
+                        <div style="background: rgba(220, 53, 69, 0.15); border-bottom: 1px solid rgba(220, 53, 69, 0.3); padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: #ff6b6b; font-size: 1.2rem;">⚠️</span>
+                            <span style="color: #ff6b6b; font-weight: 700; letter-spacing: 1px;">[URGENT: ACCOUNT_SUSPENSION_NOTICE]</span>
+                        </div>
+                        <div style="padding: 1.25rem;">
+                            <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed rgba(255,255,255,0.1);">
+                                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                    <span style="color: rgba(255,255,255,0.5);">FROM:</span>
+                                    <span style="color: #00d9ff;">security@yourbank-update.com</span>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <span style="color: rgba(255,255,255,0.5);">SUBJECT:</span>
+                                    <span style="color: #fff;">Immediate Action Required - Account Disabled</span>
+                                </div>
+                            </div>
+                            <div style="color: rgba(255,255,255,0.8); line-height: 1.6; margin-bottom: 1.5rem;">
+                                <p>Dear Customer,</p>
+                                <p style="margin-top: 0.75rem;">We have detected unauthorized login attempts on your account. For your security, your account has been temporarily restricted.</p>
+                                <p style="margin-top: 0.75rem;">You must verify your identity within <span style="color: #ff6b6b; font-weight: bold;">24 hours</span> or your account will be permanently closed.</p>
+                            </div>
+                            <div style="text-align: center;">
+                                <a href="#" onclick="event.preventDefault();" style="display: inline-block; background: rgba(220, 53, 69, 0.2); border: 1px solid #ff6b6b; color: #ff6b6b; padding: 0.75rem 2rem; border-radius: 4px; text-decoration: none; font-weight: bold; letter-spacing: 1px; transition: all 0.2s;">
+                                    > VERIFY_ACCOUNT_NOW_ <span style="animation: pulse 1s infinite;">█</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 
                 <div class="slide" id="slide2">
@@ -875,12 +905,33 @@
             const prevBtnId = prefix ? `${prefix}prev-slide` : 'prev-slide';
             const nextBtn = document.getElementById(nextBtnId);
             const prevBtn = document.getElementById(prevBtnId);
-            if (nextBtn) { const newBtn = nextBtn.cloneNode(true); newBtn.addEventListener('click', function() { if (module.currentSlide < module.totalSlides) { module.currentSlide++; updateSlide(); } }); nextBtn.parentNode.replaceChild(newBtn, nextBtn); }
-            if (prevBtn) { const newBtn = prevBtn.cloneNode(true); newBtn.addEventListener('click', function() { if (module.currentSlide > 1) { module.currentSlide--; updateSlide(); } }); prevBtn.parentNode.replaceChild(newBtn, prevBtn); }
+            
+            if (nextBtn) {
+                nextBtn.onclick = function() {
+                    if (module.currentSlide < module.totalSlides) {
+                        module.currentSlide++;
+                        updateSlide();
+                    }
+                };
+            }
+            if (prevBtn) {
+                prevBtn.onclick = function() {
+                    if (module.currentSlide > 1) {
+                        module.currentSlide--;
+                        updateSlide();
+                    }
+                };
+            }
+            
             const moduleContainer = document.getElementById(`module${moduleNum}-slides`) || document.querySelector('#module1 .slides-container');
             if (moduleContainer) {
                 const indicators = moduleContainer.querySelectorAll('.slide-indicator');
-                indicators.forEach(indicator => { const newInd = indicator.cloneNode(true); newInd.addEventListener('click', function() { module.currentSlide = parseInt(this.getAttribute('data-slide')); updateSlide(); }); indicator.parentNode.replaceChild(newInd, indicator); });
+                indicators.forEach(indicator => {
+                    indicator.onclick = function() {
+                        module.currentSlide = parseInt(this.getAttribute('data-slide'));
+                        updateSlide();
+                    };
+                });
             }
             updateSlide();
         }

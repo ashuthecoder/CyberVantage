@@ -324,7 +324,7 @@
             <h3>Email Phishing Inbox Sandbox</h3>
             <p>Inspect suspicious senders, spoofed domains, and social-engineering prompts in a controlled inbox simulation.</p>
             <div class="sandbox-actions">
-                <button type="button" class="sandbox-btn primary" data-action="launch">Launch Sandbox</button>
+                <a href="{{ url_for('analysis.learn_sandbox', sandbox_type='email') }}" class="sandbox-btn primary" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Launch Sandbox</a>
                 <button type="button" class="sandbox-btn secondary" data-action="preview">Preview Scenario</button>
             </div>
         </article>
@@ -337,7 +337,7 @@
             <h3>Malicious URL Inspection Sandbox</h3>
             <p>Analyze deceptive links for typosquatting, fake login routes, and hidden redirect behavior before clicking.</p>
             <div class="sandbox-actions">
-                <button type="button" class="sandbox-btn primary" data-action="launch">Launch Sandbox</button>
+                <a href="{{ url_for('analysis.learn_sandbox', sandbox_type='url') }}" class="sandbox-btn primary" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Launch Sandbox</a>
                 <button type="button" class="sandbox-btn secondary" data-action="preview">Preview Scenario</button>
             </div>
         </article>
@@ -350,7 +350,7 @@
             <h3>Endpoint Alert Triage Sandbox</h3>
             <p>Prioritize endpoint detections, separate noise from risk, and decide first-response actions for security events.</p>
             <div class="sandbox-actions">
-                <button type="button" class="sandbox-btn primary" data-action="launch">Launch Sandbox</button>
+                <a href="{{ url_for('analysis.learn_sandbox', sandbox_type='endpoint') }}" class="sandbox-btn primary" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Launch Sandbox</a>
                 <button type="button" class="sandbox-btn secondary" data-action="preview">Preview Scenario</button>
             </div>
         </article>
@@ -446,6 +446,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const sandboxId = card.getAttribute('data-sandbox-id');
             const action = btn.getAttribute('data-action');
+            
+            if (action === 'launch') {
+                let urlType = 'email';
+                if (sandboxId === 'link-inspection') urlType = 'url';
+                if (sandboxId === 'endpoint-alerts') urlType = 'endpoint';
+                window.location.href = `/learn/sandbox/${urlType}`;
+                return;
+            }
+            
             const scenario = scenarios[sandboxId] && scenarios[sandboxId][action];
             if (scenario) {
                 renderScenario(scenario);

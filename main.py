@@ -3,7 +3,7 @@ CyberVantage - Main application entry point
 Refactored to use modular structure with focused components
 """
 import os
-from flask import render_tuseemplate
+from flask import render_template
 from config.app_config import create_app, db
 from config.ai_config import configure_ai_providers
 from models.database import update_database_schema
