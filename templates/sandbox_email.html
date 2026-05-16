@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+{% block title %}Email Phishing Sandbox - CyberVantage{% endblock %}
+
+{% extends "base.html" %}
+{% block title %}Email Phishing Sandbox - CyberVantage{% endblock %}
+
+{% block extra_styles %}
+<style>
+/* Modern Glass UI overrides */
+.sandbox-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: slideUp 0.8s ease-out;
+}
+
+.sandbox-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sandbox-title { 
+    color: #fff; 
+    font-size: 2rem; 
+    font-weight: 800; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.sandbox-subtitle { color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-top: 0.5rem; }
+
+.return-link { color: #667eea; text-decoration: none; font-size: 0.9rem; transition: color 0.3s; font-weight: 500; }
+.return-link:hover { color: #764ba2; }
+
+.email-client {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 1.5rem;
+    min-height: 550px;
+}
+
+.client-header {
+    padding: 1rem;
+    font-weight: bold;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.email-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: transparent !important;
+    border: none !important;
+}
+
+.email-item {
+    padding: 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.email-item:hover, .email-item.active {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(5px);
+    border-left: 4px solid #667eea;
+}
+
+.email-item-sender { color: #667eea; font-weight: bold; font-size: 0.95rem; }
+.email-item-subject { color: #fff; font-size: 0.85rem; margin-top: 0.25rem; }
+
+.email-view {
+    padding: 2rem;
+    position: relative;
+}
+
+.email-meta {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.meta-row {
+    margin-bottom: 0.75rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.meta-label { color: rgba(255,255,255,0.5); width: 80px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+.meta-value { color: #fff; }
+
+.interactive-element {
+    display: inline-block;
+    cursor: crosshair;
+    position: relative;
+    border-bottom: 2px dotted #ffa502;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.interactive-element:hover {
+    background: rgba(255, 165, 2, 0.2);
+    color: #ffa502;
+    border-radius: 4px;
+}
+
+.interactive-element.inspected {
+    border-color: #ff4757;
+    background: rgba(255, 71, 87, 0.1);
+    color: #ff4757;
+}
+
+/* Tooltip for threat cues */
+.threat-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: rgba(20, 20, 30, 0.95);
+    border: 1px solid #ff4757;
+    border-radius: 8px;
+    color: #fff;
+    padding: 1rem;
+    width: 280px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 20px rgba(255, 71, 87, 0.2);
+    font-size: 0.85rem;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+    pointer-events: none;
+    line-height: 1.4;
+    font-family: 'Inter', sans-serif;
+}
+
+.interactive-element:hover .threat-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-5px);
+}
+
+.threat-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #ff4757 transparent transparent transparent;
+}
+
+.threat-title {
+    color: #ff4757;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 71, 87, 0.5);
+    padding-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.email-body {
+    color: rgba(255,255,255,0.9);
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+.action-bar {
+    margin-top: 3rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-action {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+.btn-action:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+
+.btn-action.danger { background: rgba(255, 71, 87, 0.1); border-color: rgba(255, 71, 87, 0.3); color: #ff4757; }
+.btn-action.danger:hover { background: rgba(255, 71, 87, 0.2); }
+
+.score-panel {
+    margin-top: 2rem;
+    background: rgba(46, 213, 115, 0.1);
+    border: 1px solid #2ed573;
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: none;
+    animation: slideUp 0.5s ease-out;
+}
+.score-panel.visible { display: block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sandbox-container">
+    <div class="sandbox-header">
+        <div>
+            <h1 class="sandbox-title">Email Phishing Sandbox</h1>
+            <p class="sandbox-subtitle">Inspect the email elements by hovering over them. Identify threat cues before taking action.</p>
+        </div>
+        <a href="{{ url_for('analysis.learn') }}" class="return-link">← Return to Learning Hub</a>
+    </div>
+
+    <div class="email-client glass-container">
+        <div class="email-list">
+            <div class="client-header">Inbox</div>
+            <div class="email-item active">
+                <div class="email-item-sender">IT Support Desk</div>
+                <div class="email-item-subject">URGENT: Password Expiry Notice</div>
+            </div>
+            <div class="email-item">
+                <div class="email-item-sender">HR Department</div>
+                <div class="email-item-subject">Q3 Performance Review Schedule</div>
+            </div>
+        </div>
+        
+        <div class="email-view glass-container" style="background: rgba(0,0,0,0.2);">
+            <div class="email-meta">
+                <div class="meta-row">
+                    <div class="meta-label">From:</div>
+                    <div class="meta-value">
+                        IT Support Desk <span class="interactive-element" data-threat="sender">&lt;admin@it-support-portal-update.com&gt;
+                            <div class="threat-tooltip">
+                                <div class="threat-title">Threat: Domain Spoofing</div>
+                                The domain "it-support-portal-update.com" is not your company's official IT domain. Attackers use lookalike domains to bypass casual inspection.
+                            </div>
+                        </span>
+                    </div>
+                </div>
+                <div class="meta-row">
+                    <div class="meta-label">To:</div>
+                    <div class="meta-value">employee@cybervantage.tech</div>
+                </div>
+                <div class="meta-row">
+                    <div class="meta-label">Date:</div>
+                    <div class="meta-value">Today, 09:14 AM</div>
+                </div>
+                <div class="meta-row">
+                    <div class="meta-label">Subject:</div>
+                    <div class="meta-value" style="color: #ffa502;">URGENT: Password Expiry Notice</div>
+                </div>
+            </div>
+
+            <div class="email-body">
+                <p>Dear Employee,</p>
+                <br>
+                <p>This is an automated notification that your corporate network password will expire in <span class="interactive-element" data-threat="urgency">2 hours<div class="threat-tooltip">
+                    <div class="threat-title">Threat: Artificial Urgency</div>
+                    Creating a short, fake deadline pressures the victim into acting quickly without thinking or verifying the request.
+                </div></span>.</p>
+                <br>
+                <p>To retain access to your Office 365, VPN, and internal systems, you must validate your credentials immediately.</p>
+                <br>
+                <p>Please click the secure link below to keep your current password:</p>
+                <br>
+                <p style="text-align: center; margin: 2rem 0;">
+                    <span class="interactive-element" data-threat="link">
+                        <a href="#" style="background: #667eea; color: #fff; padding: 0.75rem 2rem; text-decoration: none; font-weight: bold; border-radius: 8px; transition: all 0.3s; display: inline-block;">Keep Current Password</a>
+                        <div class="threat-tooltip" style="bottom: 120%;">
+                            <div class="threat-title">Threat: Malicious Payload</div>
+                            The underlying link points to "http://192.168.x.x/login.php" instead of the official company single-sign-on portal. It leads to a credential harvesting page.
+                        </div>
+                    </span>
+                </p>
+                <br>
+                <p>Failure to update your credentials will result in an automatic account lockout.</p>
+                <br>
+                <p style="color: rgba(255,255,255,0.4); font-size: 0.8rem;">
+                    --<br>
+                    Corporate IT Services<br>
+                    Reference ID: #REQ-99281A
+                </p>
+            </div>
+
+            <div class="action-bar">
+                <button class="btn-action danger" onclick="takeAction('report')">Report Phishing</button>
+                <button class="btn-action" onclick="takeAction('ignore')">Ignore</button>
+            </div>
+
+            <div class="score-panel" id="scorePanel">
+                <div style="color: #2ed573; font-weight: bold; margin-bottom: 0.5rem; font-size: 1.1rem;">Analysis Complete</div>
+                <div id="scoreMessage" style="color: rgba(255,255,255,0.9); line-height: 1.5;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let threatsFound = new Set();
+    
+    document.querySelectorAll('.interactive-element').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            el.classList.add('inspected');
+            threatsFound.add(el.getAttribute('data-threat'));
+        });
+    });
+
+    function takeAction(action) {
+        const panel = document.getElementById('scorePanel');
+        const msg = document.getElementById('scoreMessage');
+        
+        panel.classList.remove('visible');
+        
+        // Force reflow for animation
+        void panel.offsetWidth;
+        
+        if (action === 'report') {
+            if (threatsFound.size === 3) {
+                msg.innerHTML = "Perfect! You correctly identified all 3 threat cues and safely reported the email.<br><br>✓ Domain Spoofing Detected<br>✓ Artificial Urgency Detected<br>✓ Malicious Link Detected";
+                panel.style.borderColor = "var(--green)";
+                panel.style.background = "rgba(0, 255, 65, 0.1)";
+            } else {
+                msg.innerHTML = `Good job reporting the phishing email. However, you only found ${threatsFound.size} out of 3 threat indicators. Hover over the sender address, the time limit, and the button to find them all.`;
+                panel.style.borderColor = "var(--amber)";
+                panel.style.background = "rgba(255, 184, 0, 0.1)";
+            }
+        } else if (action === 'ignore') {
+            msg.innerHTML = "Incorrect action. This email poses a high risk and should be reported to the SOC team, not just ignored.";
+            panel.style.borderColor = "var(--red)";
+            panel.style.background = "rgba(255, 0, 85, 0.1)";
+        }
+        
+        panel.classList.add('visible');
+    }
+</script>
+{% endblock %}

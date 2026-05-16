@@ -36,6 +36,18 @@ def learn_compliances(current_user):
         return redirect(url_for('auth.demographics'))
     return render_template('learn_compliances.html', username=current_user.name, user=current_user)
 
+@analysis_bp.route('/learn/sandbox/<sandbox_type>')
+@token_required
+def learn_sandbox(current_user, sandbox_type):
+    if not current_user.demographics_completed:
+        return redirect(url_for('auth.demographics'))
+        
+    valid_sandboxes = ['email', 'url', 'endpoint']
+    if sandbox_type not in valid_sandboxes:
+        return redirect(url_for('analysis.learn'))
+        
+    return render_template(f'sandbox_{sandbox_type}.html', username=current_user.name, user=current_user)
+
 @analysis_bp.route('/analysis')
 @token_required
 def analysis(current_user):

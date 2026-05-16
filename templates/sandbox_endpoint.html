@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+{% block title %}Endpoint Sandbox - CyberVantage{% endblock %}
+
+{% block extra_styles %}
+<style>
+/* ── Scope everything under .sandbox-page to avoid collisions with base.html ── */
+
+.sandbox-page .glass-container {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.sandbox-page {
+    width: 100%;
+    max-width: 100%;
+}
+
+.sandbox-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sandbox-header h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.sandbox-header p {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+.sandbox-header .return-link {
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.3s;
+}
+.sandbox-header .return-link:hover {
+    color: #667eea;
+}
+
+/* ── SOC Dashboard Grid ── */
+.soc-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1.5rem;
+}
+
+/* ── Alert Queue (left sidebar) ── */
+.alert-queue-panel {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.queue-title {
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.alert-card {
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    border-left: 3px solid transparent;
+}
+.alert-card:last-child { border-bottom: none; }
+.alert-card:hover { background: rgba(255, 255, 255, 0.04); }
+.alert-card.active { background: rgba(102, 126, 234, 0.08); border-left-color: #667eea; }
+
+.alert-card.sev-critical { border-left-color: #ff4757; }
+.alert-card.sev-medium { border-left-color: #ffa502; }
+.alert-card.sev-low { border-left-color: #2ed573; }
+
+.alert-card .time { color: rgba(255,255,255,0.4); font-size: 0.7rem; margin-bottom: 0.25rem; }
+.alert-card .title { color: #fff; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.2rem; }
+.alert-card .host { color: #667eea; font-size: 0.75rem; }
+
+/* ── Alert Details (right panel) ── */
+.details-panel {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.details-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.details-top h2 {
+    color: #fff;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.details-top .rule {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.85rem;
+}
+
+.badge-critical {
+    background: rgba(255, 71, 87, 0.15);
+    color: #ff4757;
+    border: 1px solid rgba(255, 71, 87, 0.4);
+    padding: 0.3rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+/* ── Section labels ── */
+.section-label {
+    color: rgba(255,255,255,0.5) !important;
+    font-size: 0.8rem !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 0.75rem;
+    -webkit-text-fill-color: rgba(255,255,255,0.5);
+}
+
+/* ── Process Tree ── */
+.tree-box {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+}
+
+.tree-box .node { color: rgba(255,255,255,0.75); }
+.tree-box .node.bad { color: #ff4757; font-weight: 700; }
+.tree-box .indent { color: rgba(255,255,255,0.2); }
+
+/* ── Telemetry ── */
+.telemetry-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.tel-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 1.25rem;
+    overflow: hidden;
+}
+
+.tel-card .label {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.tel-card .value {
+    color: #fff;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+}
+
+.tel-card .value.warn { color: #ffa502; }
+.tel-card .value.danger { color: #ff4757; }
+
+/* ── Action Buttons ── */
+.action-row {
+    margin-top: auto;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.act-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255,255,255,0.8);
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.act-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+}
+
+.act-btn.warn {
+    background: rgba(255, 165, 2, 0.08);
+    border-color: rgba(255, 165, 2, 0.25);
+    color: #ffa502;
+}
+.act-btn.warn:hover { background: rgba(255, 165, 2, 0.15); }
+
+.act-btn.crit {
+    background: rgba(255, 71, 87, 0.08);
+    border-color: rgba(255, 71, 87, 0.25);
+    color: #ff4757;
+}
+.act-btn.crit:hover { background: rgba(255, 71, 87, 0.15); }
+
+/* ── Score result ── */
+.result-box {
+    margin-top: 1.5rem;
+    border-radius: 10px;
+    padding: 1.25rem;
+    display: none;
+    line-height: 1.6;
+    font-size: 0.9rem;
+}
+.result-box.show { display: block; animation: fadeSlide 0.4s ease-out; }
+
+.result-box.correct { background: rgba(46, 213, 115, 0.08); border: 1px solid rgba(46, 213, 115, 0.3); }
+.result-box.partial { background: rgba(255, 165, 2, 0.08); border: 1px solid rgba(255, 165, 2, 0.3); }
+.result-box.wrong   { background: rgba(255, 71, 87, 0.08); border: 1px solid rgba(255, 71, 87, 0.3); }
+
+.result-box .result-title { font-weight: 700; margin-bottom: 0.5rem; font-size: 1rem; }
+.result-box.correct .result-title { color: #2ed573; }
+.result-box.partial .result-title { color: #ffa502; }
+.result-box.wrong .result-title   { color: #ff4757; }
+
+.result-box .result-body { color: rgba(255,255,255,0.8); }
+
+@keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .soc-grid { grid-template-columns: 1fr; }
+    .telemetry-row { grid-template-columns: 1fr; }
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="sandbox-page">
+    <div class="sandbox-header">
+        <div>
+            <h1>Endpoint Alert Triage</h1>
+            <p>Review the process execution tree and telemetry data to determine the appropriate response.</p>
+        </div>
+        <a href="{{ url_for('analysis.learn') }}" class="return-link">← Back to Learning Hub</a>
+    </div>
+
+    <div class="soc-grid">
+        <!-- Left: Alert Queue -->
+        <div class="alert-queue-panel">
+            <div class="queue-title">Active Alerts</div>
+            <div class="alert-card sev-critical active">
+                <div class="time">10:42:15 UTC</div>
+                <div class="title">Suspicious PowerShell Execution</div>
+                <div class="host">HOST: DESKTOP-FIN-04</div>
+            </div>
+            <div class="alert-card sev-low">
+                <div class="time">10:35:22 UTC</div>
+                <div class="title">Multiple Failed Logins</div>
+                <div class="host">HOST: SRV-APP-01</div>
+            </div>
+            <div class="alert-card sev-medium">
+                <div class="time">09:12:05 UTC</div>
+                <div class="title">Large Data Transfer</div>
+                <div class="host">HOST: DESKTOP-HR-02</div>
+            </div>
+        </div>
+
+        <!-- Right: Detail Panel -->
+        <div class="details-panel">
+            <div class="details-top">
+                <div>
+                    <h2>Suspicious PowerShell Execution (Encoded Command)</h2>
+                    <div class="rule">Rule Triggered: T1059.001 — Command and Scripting Interpreter</div>
+                </div>
+                <span class="badge-critical">Critical</span>
+            </div>
+
+            <div class="section-label">Process Execution Tree</div>
+            <div class="tree-box"><span class="node">wininit.exe (PID: 644)</span>
+<span class="indent">└─</span><span class="node">services.exe (PID: 720)</span>
+<span class="indent">   └─</span><span class="node">svchost.exe (PID: 980)</span>
+<span class="indent">      └─</span><span class="node">explorer.exe (PID: 2412)</span>
+<span class="indent">         └─</span><span class="node">WINWORD.EXE (PID: 5122)</span>
+<span class="indent">            └─</span><span class="node bad">cmd.exe (PID: 7891)</span>
+<span class="indent">               └─</span><span class="node bad">powershell.exe (PID: 8820) -ExecutionPolicy Bypass -e JABzAD0ATgBlAHcALQBPAGIA…</span></div>
+
+            <div class="section-label">Telemetry Data</div>
+            <div class="telemetry-row">
+                <div class="tel-card">
+                    <div class="label">Command Line Decoded</div>
+                    <div class="value warn">$s=New-Object IO.MemoryStream(Convert::FromBase64String("H4sI…"));IEX (New-Object IO.StreamReader(New-Object IO.Compression.GzipStream($s,[IO.Compression.CompressionMode]::Decompress))).ReadToEnd();</div>
+                </div>
+                <div class="tel-card">
+                    <div class="label">Network Connections (PID 8820)</div>
+                    <div class="value danger">TCP 192.168.1.105:49152 → 185.15.x.x:443 (ESTABLISHED)</div>
+                </div>
+            </div>
+
+            <div class="action-row" id="actionBar">
+                <button class="act-btn" onclick="respond('fp')">Mark False Positive</button>
+                <button class="act-btn warn" onclick="respond('monitor')">Monitor Only</button>
+                <button class="act-btn crit" onclick="respond('quarantine')">Quarantine Host</button>
+            </div>
+
+            <div class="result-box" id="resultBox">
+                <div class="result-title" id="resultTitle"></div>
+                <div class="result-body" id="resultBody"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function respond(choice) {
+        const box = document.getElementById('resultBox');
+        const title = document.getElementById('resultTitle');
+        const body = document.getElementById('resultBody');
+        const bar = document.getElementById('actionBar');
+
+        box.className = 'result-box';
+
+        if (choice === 'quarantine') {
+            box.classList.add('correct', 'show');
+            title.textContent = '✓ Correct — Host Quarantined';
+            body.textContent = 'A Word document spawning a hidden, Base64-encoded PowerShell script with an external network connection is highly indicative of a malicious macro payload. Quarantining the host prevents lateral movement and data exfiltration.';
+        } else if (choice === 'monitor') {
+            box.classList.add('partial', 'show');
+            title.textContent = '⚠ Too Slow — Threat Persists';
+            body.textContent = 'By just monitoring an active reverse shell or dropper, you allow the attacker to establish persistence or exfiltrate data. Immediate quarantine is the correct first-response for this severity of alert.';
+        } else {
+            box.classList.add('wrong', 'show');
+            title.textContent = '✗ Critical Error — Compromised';
+            body.textContent = 'Marking a spawned PowerShell command with a Base64 payload launched from an Office document as a False Positive would allow a complete system compromise. This is a textbook malicious macro chain.';
+        }
+
+        bar.style.opacity = '0.4';
+        bar.style.pointerEvents = 'none';
+    }
+</script>
+{% endblock %}

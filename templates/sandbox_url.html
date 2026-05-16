@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% block title %}URL Inspection Sandbox - CyberVantage{% endblock %}
+
+{% block extra_styles %}
+<style>
+/* Modern Glass UI overrides */
+.sandbox-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: slideUp 0.8s ease-out;
+}
+
+.sandbox-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sandbox-title { 
+    color: #fff; 
+    font-size: 2rem; 
+    font-weight: 800; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.sandbox-subtitle { color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-top: 0.5rem; }
+
+.return-link { color: #667eea; text-decoration: none; font-size: 0.9rem; transition: color 0.3s; font-weight: 500; }
+.return-link:hover { color: #764ba2; }
+
+.url-analyzer {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 2.5rem;
+}
+
+.analyzer-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    align-items: center;
+}
+
+.url-input {
+    flex-grow: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 1rem 1.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.url-input:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
+}
+
+.analyze-btn {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    border: 1px solid rgba(102, 126, 234, 0.5);
+    padding: 1rem 2rem;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 8px;
+    transition: all 0.3s;
+    font-size: 1.1rem;
+}
+
+.analyze-btn:hover {
+    background: rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.results-grid.visible { opacity: 1; }
+
+.analysis-panel {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+}
+
+.panel-title {
+    color: #fff;
+    font-weight: bold;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.breakdown-row { margin-bottom: 1rem; }
+.breakdown-label { color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 1px;}
+.breakdown-value { color: #fff; font-size: 1rem; word-break: break-all; font-family: 'JetBrains Mono', monospace; }
+
+.threat-highlight {
+    color: #ff4757;
+    font-weight: bold;
+    position: relative;
+    cursor: help;
+    border-bottom: 1px dashed #ff4757;
+}
+
+.redirect-chain { margin-top: 1.5rem; }
+.redirect-step {
+    padding: 1rem;
+    border-left: 3px solid rgba(255,255,255,0.2);
+    margin-left: 0.5rem;
+    margin-bottom: 1rem;
+    color: rgba(255,255,255,0.8);
+    font-size: 0.95rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 0 8px 8px 0;
+}
+.redirect-step.malicious { border-color: #ff4757; color: #ff4757; background: rgba(255, 71, 87, 0.05); }
+
+.action-bar {
+    margin-top: 3rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-action {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+.btn-action:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+
+.btn-action.danger { background: rgba(255, 71, 87, 0.1); border-color: rgba(255, 71, 87, 0.3); color: #ff4757; }
+.btn-action.danger:hover { background: rgba(255, 71, 87, 0.2); }
+
+.score-panel {
+    margin-top: 2rem;
+    background: rgba(46, 213, 115, 0.1);
+    border: 1px solid #2ed573;
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: none;
+}
+.score-panel.visible { display: block; animation: slideUp 0.5s ease-out; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sandbox-container">
+    <div class="sandbox-header">
+        <div>
+            <h1 class="sandbox-title">URL Inspection Sandbox</h1>
+            <p class="sandbox-subtitle">Analyze deceptive links for typosquatting, fake login routes, and hidden redirect behavior.</p>
+        </div>
+        <a href="{{ url_for('analysis.learn') }}" class="return-link">← Return to Learning Hub</a>
+    </div>
+
+    <div class="url-analyzer glass-container">
+        <div class="analyzer-header">
+            <input type="text" class="url-input" value="https://www.micros0ft-login-secure.com/auth/v2/session?token=ey893j&redir=yes" readonly>
+            <button class="analyze-btn" onclick="analyzeUrl()">Decode URL</button>
+        </div>
+
+        <div class="results-grid" id="resultsGrid">
+            <div class="analysis-panel glass-container">
+                <div class="panel-title">URL Structure Breakdown</div>
+                <div class="breakdown-row">
+                    <div class="breakdown-label">Protocol:</div>
+                    <div class="breakdown-value" style="color: #2ed573;">https://</div>
+                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 0.25rem;">(SSL does NOT mean safe, it just means connection is encrypted)</div>
+                </div>
+                <div class="breakdown-row">
+                    <div class="breakdown-label">Subdomain:</div>
+                    <div class="breakdown-value">www.</div>
+                </div>
+                <div class="breakdown-row">
+                    <div class="breakdown-label">Root Domain:</div>
+                    <div class="breakdown-value threat-highlight" title="Typosquatting: using '0' instead of 'o' and adding '-login-secure' to appear legitimate.">micros0ft-login-secure.com</div>
+                    <div style="font-size: 0.8rem; color: #ff4757; margin-top: 0.25rem;">[THREAT DETECTED: Typosquatting / Lookalike Domain]</div>
+                </div>
+                <div class="breakdown-row">
+                    <div class="breakdown-label">Path:</div>
+                    <div class="breakdown-value">/auth/v2/session</div>
+                </div>
+            </div>
+
+            <div class="analysis-panel glass-container">
+                <div class="panel-title">Behavioral Analysis</div>
+                <div style="color: rgba(255,255,255,0.7); margin-bottom: 1rem;">Tracing redirect chain...</div>
+                
+                <div class="redirect-chain">
+                    <div class="redirect-step">
+                        <strong>STEP 1:</strong> Initial Click<br>
+                        <span style="font-size: 0.8rem; opacity: 0.8;">micros0ft-login-secure.com (HTTP 302 Redirect)</span>
+                    </div>
+                    <div class="redirect-step">
+                        <strong>STEP 2:</strong> CAPTCHA Check<br>
+                        <span style="font-size: 0.8rem; opacity: 0.8;">cloudflare-validation-fake.net (HTTP 301 Redirect)</span>
+                    </div>
+                    <div class="redirect-step malicious">
+                        <strong>STEP 3:</strong> Final Destination<br>
+                        <span style="font-size: 0.8rem; opacity: 0.8;">[CREDENTIAL HARVESTING PAGE DETECTED]<br>IP: 194.55.x.x (Russian Federation)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar" style="display: none;" id="actionBar">
+            <button class="btn-action danger" onclick="takeAction('block')">Block Domain</button>
+            <button class="btn-action" onclick="takeAction('allow')">Allow Traffic</button>
+        </div>
+
+        <div class="score-panel" id="scorePanel">
+            <div style="color: #2ed573; font-weight: bold; margin-bottom: 0.5rem; font-size: 1.1rem;">Analysis Complete</div>
+            <div id="scoreMessage" style="color: rgba(255,255,255,0.9); line-height: 1.5;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function analyzeUrl() {
+        const grid = document.getElementById('resultsGrid');
+        const actionBar = document.getElementById('actionBar');
+        const btn = document.querySelector('.analyze-btn');
+        
+        btn.innerHTML = "[DECODING...]";
+        btn.style.color = "var(--amber)";
+        btn.style.borderColor = "var(--amber)";
+        
+        setTimeout(() => {
+            btn.innerHTML = "[ANALYSIS_COMPLETE]";
+            btn.style.color = "var(--green)";
+            btn.style.borderColor = "var(--green)";
+            
+            grid.classList.add('visible');
+            actionBar.style.display = 'flex';
+        }, 1500);
+    }
+
+    function takeAction(action) {
+        const panel = document.getElementById('scorePanel');
+        const msg = document.getElementById('scoreMessage');
+        
+        panel.classList.remove('visible');
+        void panel.offsetWidth;
+        
+        if (action === 'block') {
+            msg.innerHTML = "Excellent! You analyzed the URL, identified the typosquatting domain ('micros0ft' with a zero), and successfully blocked the malicious traffic before any harm was done.";
+            panel.style.borderColor = "var(--green)";
+            panel.style.background = "rgba(0, 255, 65, 0.1)";
+        } else {
+            msg.innerHTML = "Critical Error! You allowed traffic to a known typosquatted domain leading to a credential harvesting server. Always verify the Root Domain.";
+            panel.style.borderColor = "var(--red)";
+            panel.style.background = "rgba(255, 0, 85, 0.1)";
+        }
+        
+        panel.classList.add('visible');
+    }
+</script>
+{% endblock %}
