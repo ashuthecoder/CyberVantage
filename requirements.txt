@@ -28,4 +28,4 @@ flask-sqlalchemy==3.1.1
 psycopg2-binary==2.9.9
 
 # --- Misc Utilities ---
-python-dotenv==1.0.0
+python-dotenv==1.2.2
